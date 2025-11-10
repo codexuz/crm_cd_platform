@@ -30,14 +30,6 @@ RUN npm ci --only=production && npm cache clean --force
 # Copy built application from builder stage
 COPY --from=builder /usr/src/app/dist ./dist
 
-# Create non-root user
-RUN addgroup -g 1001 -S nodejs
-RUN adduser -S nestjs -u 1001
-
-# Change ownership
-RUN chown -R nestjs:nodejs /usr/src/app
-USER nestjs
-
 # Expose port
 EXPOSE 3000
 
