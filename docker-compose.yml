@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_USERNAME=${DB_USERNAME:-root}
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - DB_DATABASE=${DB_DATABASE:-crm_cd_platform}
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key}
+    depends_on:
+      - mysql
+    networks:
+      - app-network
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.crm-app.rule=Host(`app.${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.crm-app.tls=true"
+      - "traefik.http.routers.crm-app.tls.certresolver=letsencrypt"
+      # Wildcard subdomain routing
+      - "traefik.http.routers.crm-wildcard.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.${DOMAIN:-localhost}`)"
+      - "traefik.http.routers.crm-wildcard.tls=true"
+      - "traefik.http.routers.crm-wildcard.tls.certresolver=letsencrypt"
+      - "traefik.http.services.crm-app.loadbalancer.server.port=3000"
+
+  mysql:
+    image: mysql:8.0
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD:-password}
+      - MYSQL_DATABASE=${DB_DATABASE:-crm_cd_platform}
+      - MYSQL_USER=${DB_USERNAME:-app_user}
+      - MYSQL_PASSWORD=${DB_PASSWORD:-password}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    ports:
+      - "3306:3306"
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  traefik:
+    image: traefik:v2.10
+    command:
+      - --api.dashboard=true
+      - --api.insecure=true
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --certificatesresolvers.letsencrypt.acme.tlschallenge=true
+      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:-admin@example.com}
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Traefik dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - traefik_letsencrypt:/letsencrypt
+    networks:
+      - app-network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+  traefik_letsencrypt:
+
+networks:
+  app-network:
+    driver: bridge

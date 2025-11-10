@@ -1,0 +1,81 @@
+{
+  "name": "CRM CD Platform",
+  "description": "Multi-tenant CRM and IELTS platform with subdomain routing",
+  "services": [
+    {
+      "name": "crm-app",
+      "type": "application",
+      "source": {
+        "type": "git",
+        "repository": "https://github.com/your-username/crm_cd_platform.git",
+        "branch": "main"
+      },
+      "build": {
+        "dockerfile": "Dockerfile"
+      },
+      "domains": [
+        {
+          "domain": "*.yourdomain.com",
+          "redirect": false
+        },
+        {
+          "domain": "yourdomain.com", 
+          "redirect": true,
+          "redirectTo": "app.yourdomain.com"
+        }
+      ],
+      "environment": [
+        {
+          "key": "NODE_ENV",
+          "value": "production"
+        },
+        {
+          "key": "PORT", 
+          "value": "3000"
+        }
+      ],
+      "volumes": [],
+      "networks": ["crm-network"],
+      "healthcheck": {
+        "enabled": true,
+        "path": "/health",
+        "interval": 30,
+        "timeout": 10,
+        "retries": 3
+      }
+    },
+    {
+      "name": "mysql",
+      "type": "database",
+      "image": "mysql:8.0",
+      "environment": [
+        {
+          "key": "MYSQL_ROOT_PASSWORD",
+          "value": "${DB_PASSWORD}"
+        },
+        {
+          "key": "MYSQL_DATABASE", 
+          "value": "${DB_DATABASE}"
+        }
+      ],
+      "volumes": [
+        {
+          "source": "mysql_data",
+          "target": "/var/lib/mysql"
+        }
+      ],
+      "networks": ["crm-network"]
+    }
+  ],
+  "networks": [
+    {
+      "name": "crm-network",
+      "external": false
+    }
+  ],
+  "volumes": [
+    {
+      "name": "mysql_data"
+    }
+  ]
+}
