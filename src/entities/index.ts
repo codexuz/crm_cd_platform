@@ -24,3 +24,5 @@ export type {
   Option,
 } from './ielts-question.entity';
 export { IeltsAudio } from './ielts-audio.entity';
+export { TestAssignment, TestAssignmentStatus } from './test-assignment.entity';
+export { TestResult, TestResultStatus } from './test-result.entity';
