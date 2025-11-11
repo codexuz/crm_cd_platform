@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IELTS Test Builder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div x-data="testBuilder()" class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">IELTS Test Builder</h1>
+            <p class="text-gray-600">Create comprehensive IELTS tests with listening and reading sections</p>
+        </div>
+
+        <!-- Test Information -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Test Information</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Test Title</label>
+                    <input 
+                        type="text" 
+                        x-model="testData.title"
+                        placeholder="e.g., IELTS Academic Test - Practice Set 1"
+                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">For CDI</label>
+                    <select x-model="testData.for_cdi" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
+            </div>
+            <div class="mt-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <textarea 
+                    x-model="testData.description"
+                    placeholder="Describe the test content and objectives..."
+                    rows="3"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                ></textarea>
+            </div>
+        </div>
+
+        <!-- Section Tabs -->
+        <div class="bg-white rounded-lg shadow-md mb-8">
+            <div class="border-b border-gray-200">
+                <nav class="flex space-x-8 px-6" aria-label="Tabs">
+                    <button 
+                        @click="activeTab = 'listening'"
+                        :class="activeTab === 'listening' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
+                    >
+                        <i class="fas fa-headphones mr-2"></i>Listening
+                    </button>
+                    <button 
+                        @click="activeTab = 'reading'"
+                        :class="activeTab === 'reading' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
+                    >
+                        <i class="fas fa-book-open mr-2"></i>Reading
+                    </button>
+                    <button 
+                        @click="activeTab = 'preview'"
+                        :class="activeTab === 'preview' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                        class="whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
+                    >
+                        <i class="fas fa-eye mr-2"></i>Preview
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Listening Section -->
+            <div x-show="activeTab === 'listening'" class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800">Listening Section</h3>
+                    <button 
+                        @click="addListeningPart()"
+                        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium"
+                    >
+                        <i class="fas fa-plus mr-2"></i>Add Part
+                    </button>
+                </div>
+
+                <template x-for="(part, index) in listeningData.parts" :key="index">
+                    <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-medium text-gray-800" x-text="`Part ${index + 1}`"></h4>
+                            <button 
+                                @click="removeListeningPart(index)"
+                                class="text-red-500 hover:text-red-700"
+                            >
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Part Type</label>
+                                <select x-model="part.part" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="PART_1">Part 1</option>
+                                    <option value="PART_2">Part 2</option>
+                                    <option value="PART_3">Part 3</option>
+                                    <option value="PART_4">Part 4</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Number of Questions</label>
+                                <input 
+                                    type="number" 
+                                    x-model.number="part.question.number_of_questions"
+                                    min="1" max="15"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                            </div>
+                        </div>
+
+                        <!-- Audio Configuration -->
+                        <div class="mb-4">
+                            <h5 class="font-medium text-gray-700 mb-2">Audio Configuration</h5>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Audio URL</label>
+                                    <input 
+                                        type="url" 
+                                        x-model="part.audio.url"
+                                        placeholder="https://example.com/audio.mp3"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Duration (seconds)</label>
+                                    <input 
+                                        type="number" 
+                                        x-model.number="part.audio.duration"
+                                        placeholder="180"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">File Name</label>
+                                    <input 
+                                        type="text" 
+                                        x-model="part.audio.file_name"
+                                        placeholder="listening_part1.mp3"
+                                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    >
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Question Content -->
+                        <div>
+                            <h5 class="font-medium text-gray-700 mb-2">Question Content</h5>
+                            <button 
+                                @click="addQuestionContent(part.question.content)"
+                                class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-sm mb-3"
+                            >
+                                <i class="fas fa-plus mr-1"></i>Add Question Section
+                            </button>
+
+                            <template x-for="(content, contentIndex) in part.question.content" :key="contentIndex">
+                                <div class="bg-white rounded border p-3 mb-3">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <span class="text-sm font-medium text-gray-600" x-text="`Section ${contentIndex + 1}`"></span>
+                                        <button 
+                                            @click="part.question.content.splice(contentIndex, 1)"
+                                            class="text-red-500 hover:text-red-700 text-sm"
+                                        >
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Question Type</label>
+                                            <select x-model="content.type" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
+                                                <option value="completion">Completion</option>
+                                                <option value="multiple-choice">Multiple Choice</option>
+                                                <option value="multi-select">Multi Select</option>
+                                                <option value="selection">Selection (True/False)</option>
+                                                <option value="matching">Matching</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Section ID</label>
+                                            <input 
+                                                type="text" 
+                                                x-model="content.id"
+                                                placeholder="qc_001"
+                                                class="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                                            >
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Title</label>
+                                        <input 
+                                            type="text" 
+                                            x-model="content.title"
+                                            placeholder="e.g., Form Completion"
+                                            class="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                                        >
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Instructions</label>
+                                        <textarea 
+                                            x-model="content.condition"
+                                            placeholder="e.g., Complete the form below. Write NO MORE THAN TWO WORDS for each answer."
+                                            rows="2"
+                                            class="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                                        ></textarea>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Reading Section -->
+            <div x-show="activeTab === 'reading'" class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800">Reading Section</h3>
+                    <button 
+                        @click="addReadingPart()"
+                        class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium"
+                    >
+                        <i class="fas fa-plus mr-2"></i>Add Part
+                    </button>
+                </div>
+
+                <template x-for="(part, index) in readingData.parts" :key="index">
+                    <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-medium text-gray-800" x-text="`Part ${index + 1}`"></h4>
+                            <button 
+                                @click="removeReadingPart(index)"
+                                class="text-red-500 hover:text-red-700"
+                            >
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Part Type</label>
+                                <select x-model="part.part" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <option value="PART_1">Part 1</option>
+                                    <option value="PART_2">Part 2</option>
+                                    <option value="PART_3">Part 3</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Number of Questions</label>
+                                <input 
+                                    type="number" 
+                                    x-model.number="part.question.number_of_questions"
+                                    min="1" max="15"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                            </div>
+                        </div>
+
+                        <!-- Reading Passage -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Reading Passage</label>
+                            <textarea 
+                                x-model="part.passage"
+                                placeholder="Enter the reading passage text here..."
+                                rows="8"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            ></textarea>
+                        </div>
+
+                        <!-- Question Content (similar to listening) -->
+                        <div>
+                            <h5 class="font-medium text-gray-700 mb-2">Question Content</h5>
+                            <button 
+                                @click="addQuestionContent(part.question.content)"
+                                class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded-md text-sm mb-3"
+                            >
+                                <i class="fas fa-plus mr-1"></i>Add Question Section
+                            </button>
+
+                            <template x-for="(content, contentIndex) in part.question.content" :key="contentIndex">
+                                <div class="bg-white rounded border p-3 mb-3">
+                                    <div class="flex justify-between items-center mb-3">
+                                        <span class="text-sm font-medium text-gray-600" x-text="`Section ${contentIndex + 1}`"></span>
+                                        <button 
+                                            @click="part.question.content.splice(contentIndex, 1)"
+                                            class="text-red-500 hover:text-red-700 text-sm"
+                                        >
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Question Type</label>
+                                            <select x-model="content.type" class="w-full px-2 py-1 border border-gray-300 rounded text-sm">
+                                                <option value="completion">Completion</option>
+                                                <option value="multiple-choice">Multiple Choice</option>
+                                                <option value="multi-select">Multi Select</option>
+                                                <option value="selection">Selection (True/False)</option>
+                                                <option value="matching">Matching</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Section ID</label>
+                                            <input 
+                                                type="text" 
+                                                x-model="content.id"
+                                                placeholder="qc_001"
+                                                class="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                                            >
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Title</label>
+                                        <input 
+                                            type="text" 
+                                            x-model="content.title"
+                                            placeholder="e.g., Multiple Choice Questions"
+                                            class="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                                        >
+                                    </div>
+
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Instructions</label>
+                                        <textarea 
+                                            x-model="content.condition"
+                                            placeholder="e.g., Choose the correct letter, A, B, C or D."
+                                            rows="2"
+                                            class="w-full px-2 py-1 border border-gray-300 rounded text-sm"
+                                        ></textarea>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Preview Section -->
+            <div x-show="activeTab === 'preview'" class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-lg font-semibold text-gray-800">Test Preview</h3>
+                    <div class="space-x-2">
+                        <button 
+                            @click="exportTest()"
+                            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium"
+                        >
+                            <i class="fas fa-download mr-2"></i>Export JSON
+                        </button>
+                        <button 
+                            @click="copyToClipboard()"
+                            class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium"
+                        >
+                            <i class="fas fa-copy mr-2"></i>Copy JSON
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-gray-900 text-green-400 p-4 rounded-lg overflow-auto max-h-96">
+                    <pre x-text="generateJSON()"></pre>
+                </div>
+
+                <!-- Test Summary -->
+                <div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <div class="flex items-center">
+                            <i class="fas fa-headphones text-blue-500 text-xl mr-3"></i>
+                            <div>
+                                <p class="text-sm font-medium text-gray-700">Listening Parts</p>
+                                <p class="text-2xl font-bold text-blue-600" x-text="listeningData.parts.length"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <div class="flex items-center">
+                            <i class="fas fa-book-open text-green-500 text-xl mr-3"></i>
+                            <div>
+                                <p class="text-sm font-medium text-gray-700">Reading Parts</p>
+                                <p class="text-2xl font-bold text-green-600" x-text="readingData.parts.length"></p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-lg">
+                        <div class="flex items-center">
+                            <i class="fas fa-question-circle text-purple-500 text-xl mr-3"></i>
+                            <div>
+                                <p class="text-sm font-medium text-gray-700">Total Questions</p>
+                                <p class="text-2xl font-bold text-purple-600" x-text="getTotalQuestions()"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function testBuilder() {
+            return {
+                activeTab: 'listening',
+                testData: {
+                    title: '',
+                    description: '',
+                    for_cdi: false
+                },
+                listeningData: {
+                    title: '',
+                    description: '',
+                    for_cdi: false,
+                    parts: []
+                },
+                readingData: {
+                    title: '',
+                    description: '',
+                    for_cdi: false,
+                    parts: []
+                },
+
+                addListeningPart() {
+                    this.listeningData.parts.push({
+                        part: 'PART_1',
+                        question: {
+                            content: [],
+                            number_of_questions: 10
+                        },
+                        audio: {
+                            url: '',
+                            file_name: '',
+                            duration: null,
+                            file_size: null
+                        },
+                        answers: {}
+                    });
+                },
+
+                removeListeningPart(index) {
+                    this.listeningData.parts.splice(index, 1);
+                },
+
+                addReadingPart() {
+                    this.readingData.parts.push({
+                        part: 'PART_1',
+                        question: {
+                            content: [],
+                            number_of_questions: 13
+                        },
+                        passage: '',
+                        answers: {}
+                    });
+                },
+
+                removeReadingPart(index) {
+                    this.readingData.parts.splice(index, 1);
+                },
+
+                addQuestionContent(contentArray) {
+                    contentArray.push({
+                        id: `qc_${Date.now()}`,
+                        type: 'multiple-choice',
+                        title: '',
+                        condition: '',
+                        content: '',
+                        questions: [],
+                        options: [],
+                        limit: null,
+                        showOptions: true,
+                        optionsTitle: ''
+                    });
+                },
+
+                getTotalQuestions() {
+                    let total = 0;
+                    this.listeningData.parts.forEach(part => {
+                        total += part.question.number_of_questions || 0;
+                    });
+                    this.readingData.parts.forEach(part => {
+                        total += part.question.number_of_questions || 0;
+                    });
+                    return total;
+                },
+
+                generateJSON() {
+                    const testObject = {
+                        test: this.testData,
+                        listening: this.listeningData.parts.length > 0 ? this.listeningData : null,
+                        reading: this.readingData.parts.length > 0 ? this.readingData : null
+                    };
+                    return JSON.stringify(testObject, null, 2);
+                },
+
+                exportTest() {
+                    const testData = this.generateJSON();
+                    const blob = new Blob([testData], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `ielts-test-${Date.now()}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                },
+
+                async copyToClipboard() {
+                    try {
+                        await navigator.clipboard.writeText(this.generateJSON());
+                        alert('JSON copied to clipboard!');
+                    } catch (err) {
+                        console.error('Failed to copy: ', err);
+                        alert('Failed to copy to clipboard');
+                    }
+                },
+
+                init() {
+                    // Initialize with sample data
+                    this.testData = {
+                        title: 'IELTS Academic Test - Practice Set 1',
+                        description: 'A comprehensive IELTS Academic test designed for intermediate to advanced students preparing for their IELTS examination.',
+                        for_cdi: true
+                    };
+
+                    this.listeningData = {
+                        title: 'IELTS Listening Test - Academic Module',
+                        description: 'A comprehensive listening test with 4 parts covering everyday conversations and academic lectures.',
+                        for_cdi: true,
+                        parts: []
+                    };
+
+                    this.readingData = {
+                        title: 'IELTS Reading Test - Academic Module',
+                        description: 'A comprehensive reading test featuring three passages with increasing difficulty levels.',
+                        for_cdi: false,
+                        parts: []
+                    };
+                }
+            }
+        }
+    </script>
+</body>
+</html>
