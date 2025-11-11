@@ -20,9 +20,9 @@ export class CreateUserDto {
   @IsNotEmpty()
   password: string;
 
-  @ApiProperty({ example: 1, description: 'Center ID' })
-  @IsNotEmpty()
-  center_id: number;
+  @ApiPropertyOptional({ example: 1, description: 'Center ID (optional for initial user creation)' })
+  @IsOptional()
+  center_id?: number;
 
   @ApiPropertyOptional({ 
     example: [RoleName.STUDENT], 

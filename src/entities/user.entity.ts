@@ -37,7 +37,7 @@ export class User {
   @Column()
   password: string;
 
-  @Column()
+  @Column({ nullable: true })
   center_id: number;
 
   @Column({ default: true })
@@ -50,7 +50,7 @@ export class User {
   updated_at: Date;
 
   // Relations
-  @ManyToOne(() => Center, (center) => center.users)
+  @ManyToOne(() => Center, (center) => center.users, { nullable: true })
   @JoinColumn({ name: 'center_id' })
   center: Center;
 
