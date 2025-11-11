@@ -14,3 +14,20 @@ services:
       - DB_DATABASE=${DB_DATABASE}
       - JWT_SECRET=${JWT_SECRET}
     restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+
+      - "traefik.http.routers.http.entrypoints=http"
+      - "traefik.http.routers.http.rule=HostRegexp(`{subdomain:.+}.edumoacademy.uz`)"
+      - "traefik.http.routers.http.middlewares=redirect-to-https"
+      - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
+
+      - "traefik.http.routers.https.entrypoints=https"
+      - "traefik.http.routers.https.rule=HostRegexp(`{subdomain:.+}.edumoacademy.uz`)"
+      - "traefik.http.routers.https.tls=true"
+      - "traefik.http.routers.https.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.https.middlewares=gzip"
+
+      - "traefik.http.middlewares.gzip.compress=true"
+
+      - "traefik.http.services.main.loadbalancer.server.port=3000"
