@@ -1,4 +1,8 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ConflictException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -19,7 +23,7 @@ export class AuthService {
 
   async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
-    
+
     // Find user with roles
     const user = await this.userRepository.findOne({
       where: { email, is_active: true },
@@ -34,7 +38,8 @@ export class AuthService {
       sub: user.id,
       email: user.email,
       center_id: user.center_id,
-      roles: user.roles.map(role => role.role_name),
+      roles: user.roles.map((role) => role.role_name),
+      is_super_admin: user.is_super_admin,
     };
 
     return {
@@ -44,7 +49,8 @@ export class AuthService {
         name: user.name,
         email: user.email,
         center_id: user.center_id,
-        roles: user.roles.map(role => role.role_name),
+        is_super_admin: user.is_super_admin,
+        roles: user.roles.map((role) => role.role_name),
       },
     };
   }
@@ -58,7 +64,9 @@ export class AuthService {
     });
 
     if (existingUser) {
-      throw new ConflictException('User with this email or phone already exists');
+      throw new ConflictException(
+        'User with this email or phone already exists',
+      );
     }
 
     // Hash password
@@ -103,7 +111,7 @@ export class AuthService {
       userId: user.id,
       email: user.email,
       center_id: user.center_id,
-      roles: user.roles.map(role => role.role_name),
+      roles: user.roles.map((role) => role.role_name),
     };
   }
 }
