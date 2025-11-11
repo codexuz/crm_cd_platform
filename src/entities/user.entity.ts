@@ -38,7 +38,7 @@ export class User {
   password: string;
 
   @Column({ nullable: true })
-  center_id: number; // Null for super admin
+  center_id: number | null; // Null for super admin
 
   @Column({ default: false })
   is_super_admin: boolean; // Super admin has access to all tenants

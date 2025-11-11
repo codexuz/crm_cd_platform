@@ -40,7 +40,7 @@ export class Role {
   description: string;
 
   @Column({ nullable: true })
-  center_id: number; // Null for super admin roles, specific for tenant roles
+  center_id: number | null; // Null for super admin roles, specific for tenant roles
 
   @Column({ default: false })
   is_system_role: boolean; // True for predefined roles (super_admin, admin, etc.)
