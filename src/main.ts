@@ -35,7 +35,6 @@ async function bootstrap() {
     .addTag('Leads', 'Lead management and CRM')
     .addTag('Groups', 'Student groups management')
     .addTag('Payments', 'Payment management')
-    .addTag('Tests', 'IELTS test management')
     .addTag('Salary', 'Teacher salary management')
     .build();
 
