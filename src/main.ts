@@ -7,11 +7,13 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Global validation pipe
-  app.useGlobalPipes(new ValidationPipe({
-    transform: true,
-    whitelist: true,
-    forbidNonWhitelisted: true,
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
 
   // CORS configuration
   app.enableCors({
@@ -22,7 +24,9 @@ async function bootstrap() {
   // Swagger configuration
   const config = new DocumentBuilder()
     .setTitle('CRM + IELTS Platform API')
-    .setDescription('A comprehensive CRM and Computer-delivered IELTS platform for learning centers')
+    .setDescription(
+      'A comprehensive CRM and Computer-delivered IELTS platform for learning centers',
+    )
     .setVersion('1.0')
     .addBearerAuth()
     .addTag('Authentication', 'Authentication endpoints')
@@ -44,8 +48,11 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
-  
-  console.log(`🚀 CRM + IELTS Platform is running on: http://localhost:${port}`);
-  console.log(`📚 Swagger documentation available at: http://localhost:${port}/api`);
+  console.log(
+    `🚀 CRM + IELTS Platform is running on: http://localhost:${port}`,
+  );
+  console.log(
+    `📚 Swagger documentation available at: http://localhost:${port}/api`,
+  );
 }
 bootstrap();

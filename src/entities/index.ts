@@ -9,3 +9,18 @@ export { TeacherSalary, SalaryStatus } from './teacher-salary.entity';
 export { Test, TestType, TestStatus } from './test.entity';
 export { TestSection, SectionType } from './test-section.entity';
 export { Question, QuestionType } from './question.entity';
+export { IeltsTest } from './ielts-test.entity';
+export { IeltsListening } from './ielts-listening.entity';
+export {
+  IeltsListeningPart,
+  ListeningPart,
+} from './ielts-listening-part.entity';
+export { IeltsReading } from './ielts-reading.entity';
+export { IeltsReadingPart, ReadingPart } from './ielts-reading-part.entity';
+export { IeltsQuestion, QuestionContentType } from './ielts-question.entity';
+export type {
+  QuestionContent,
+  MultipleChoiceQuestion,
+  Option,
+} from './ielts-question.entity';
+export { IeltsAudio } from './ielts-audio.entity';

@@ -12,6 +12,13 @@ import {
   Test,
   TestSection,
   Question,
+  IeltsTest,
+  IeltsListening,
+  IeltsListeningPart,
+  IeltsReading,
+  IeltsReadingPart,
+  IeltsQuestion,
+  IeltsAudio,
 } from '../entities';
 
 export const getDatabaseConfig = (
@@ -35,6 +42,13 @@ export const getDatabaseConfig = (
     Test,
     TestSection,
     Question,
+    IeltsTest,
+    IeltsListening,
+    IeltsListeningPart,
+    IeltsReading,
+    IeltsReadingPart,
+    IeltsQuestion,
+    IeltsAudio,
   ],
   synchronize: configService.get<string>('NODE_ENV') === 'development',
   logging: configService.get<string>('NODE_ENV') === 'development',

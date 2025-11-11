@@ -11,6 +11,10 @@ import { Lead } from './lead.entity';
 import { Group } from './group.entity';
 import { Payment } from './payment.entity';
 import { Test } from './test.entity';
+import { TeacherSalary } from './teacher-salary.entity';
+import { IeltsTest } from './ielts-test.entity';
+import { IeltsListening } from './ielts-listening.entity';
+import { IeltsReading } from './ielts-reading.entity';
 
 @Entity('centers')
 export class Center {
@@ -62,4 +66,16 @@ export class Center {
 
   @OneToMany(() => Test, (test) => test.center)
   tests: Test[];
+
+  @OneToMany(() => TeacherSalary, (salary) => salary.center)
+  teacher_salaries: TeacherSalary[];
+
+  @OneToMany(() => IeltsTest, (test) => test.center)
+  ielts_tests: IeltsTest[];
+
+  @OneToMany(() => IeltsListening, (listening) => listening.center)
+  ielts_listenings: IeltsListening[];
+
+  @OneToMany(() => IeltsReading, (reading) => reading.center)
+  ielts_readings: IeltsReading[];
 }

@@ -1,10 +1,18 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { User } from './user.entity';
+import { Center } from './center.entity';
 
 export enum SalaryStatus {
   PENDING = 'pending',
   PAID = 'paid',
-  OVERDUE = 'overdue'
+  OVERDUE = 'overdue',
 }
 
 @Entity('teacher_salary')
@@ -15,6 +23,9 @@ export class TeacherSalary {
   @Column()
   teacher_id: number;
 
+  @Column({ nullable: true })
+  center_id: number;
+
   @Column({ length: 7 }) // Format: YYYY-MM
   month: string;
 
@@ -24,7 +35,7 @@ export class TeacherSalary {
   @Column({
     type: 'enum',
     enum: SalaryStatus,
-    default: SalaryStatus.PENDING
+    default: SalaryStatus.PENDING,
   })
   status: SalaryStatus;
 
@@ -50,7 +61,11 @@ export class TeacherSalary {
   created_at: Date;
 
   // Relations
-  @ManyToOne(() => User, user => user.salaries)
+  @ManyToOne(() => User, (user) => user.salaries)
   @JoinColumn({ name: 'teacher_id' })
   teacher: User;
+
+  @ManyToOne(() => Center, (center) => center.teacher_salaries)
+  @JoinColumn({ name: 'center_id' })
+  center: Center;
 }
