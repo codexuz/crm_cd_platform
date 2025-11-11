@@ -57,82 +57,7 @@ export class UpdateIeltsTestDto {
   is_active?: boolean;
 }
 
-export class CreateListeningDto {
-  @IsString()
-  title: string;
-
-  @IsOptional()
-  @IsString()
-  description?: string;
-
-  @IsOptional()
-  @IsBoolean()
-  for_cdi?: boolean;
-
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateListeningPartDto)
-  parts: CreateListeningPartDto[];
-}
-
-export class CreateListeningPartDto {
-  @IsEnum(['PART_1', 'PART_2', 'PART_3', 'PART_4'])
-  part: string;
-
-  @ValidateNested()
-  @Type(() => CreateQuestionDto)
-  question: CreateQuestionDto;
-
-  @ValidateNested()
-  @Type(() => CreateAudioDto)
-  audio: CreateAudioDto;
-
-  @IsOptional()
-  answers?: Record<string, any>;
-}
-
-export class CreateReadingDto {
-  @IsOptional()
-  @IsString()
-  title?: string;
-
-  @IsOptional()
-  @IsString()
-  description?: string;
-
-  @IsOptional()
-  @IsBoolean()
-  for_cdi?: boolean;
-
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateReadingPartDto)
-  parts: CreateReadingPartDto[];
-}
-
-export class CreateReadingPartDto {
-  @IsEnum(['PART_1', 'PART_2', 'PART_3'])
-  part: string;
-
-  @ValidateNested()
-  @Type(() => CreateQuestionDto)
-  question: CreateQuestionDto;
-
-  @IsString()
-  passage: string;
-
-  @IsOptional()
-  answers?: Record<string, any>;
-}
-
-export class CreateQuestionDto {
-  @IsArray()
-  content: QuestionContentDto[];
-
-  @IsNumber()
-  number_of_questions: number;
-}
-
+// Define base classes first (used by Type() decorators)
 export class QuestionContentDto {
   @IsString()
   id: string;
@@ -173,6 +98,14 @@ export class QuestionContentDto {
   optionsTitle?: string;
 }
 
+export class CreateQuestionDto {
+  @IsArray()
+  content: QuestionContentDto[];
+
+  @IsNumber()
+  number_of_questions: number;
+}
+
 export class CreateAudioDto {
   @IsString()
   url: string;
@@ -188,4 +121,73 @@ export class CreateAudioDto {
   @IsOptional()
   @IsNumber()
   file_size?: number;
+}
+
+// Now define classes that use the above classes
+export class CreateListeningPartDto {
+  @IsEnum(['PART_1', 'PART_2', 'PART_3', 'PART_4'])
+  part: string;
+
+  @ValidateNested()
+  @Type(() => CreateQuestionDto)
+  question: CreateQuestionDto;
+
+  @ValidateNested()
+  @Type(() => CreateAudioDto)
+  audio: CreateAudioDto;
+
+  @IsOptional()
+  answers?: Record<string, any>;
+}
+
+export class CreateListeningDto {
+  @IsString()
+  title: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  for_cdi?: boolean;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateListeningPartDto)
+  parts: CreateListeningPartDto[];
+}
+
+export class CreateReadingPartDto {
+  @IsEnum(['PART_1', 'PART_2', 'PART_3'])
+  part: string;
+
+  @ValidateNested()
+  @Type(() => CreateQuestionDto)
+  question: CreateQuestionDto;
+
+  @IsString()
+  passage: string;
+
+  @IsOptional()
+  answers?: Record<string, any>;
+}
+
+export class CreateReadingDto {
+  @IsOptional()
+  @IsString()
+  title?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  for_cdi?: boolean;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateReadingPartDto)
+  parts: CreateReadingPartDto[];
 }
