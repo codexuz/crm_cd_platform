@@ -1,6 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '../app.module';
-import { Repository } from 'typeorm';
+import { Repository, IsNull } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import {
   Role,
@@ -346,7 +346,7 @@ async function seed() {
       },
     ];
 
-    const createdPrivileges = [];
+    const createdPrivileges: Privilege[] = [];
     for (const privData of privilegeData) {
       const existing = await privilegeRepository.findOne({
         where: { privilege_name: privData.privilege_name },
@@ -370,7 +370,7 @@ async function seed() {
 
     // Super Admin Role (no center_id)
     let superAdminRole = await roleRepository.findOne({
-      where: { role_name: RoleName.SUPER_ADMIN, center_id: null },
+      where: { role_name: RoleName.SUPER_ADMIN, center_id: IsNull() },
       relations: ['privileges'],
     });
 
@@ -397,7 +397,7 @@ async function seed() {
       where: { email: 'superadmin@edumoacademy.uz' },
     });
 
-    let superAdmin;
+    let superAdmin: User;
     if (!existingSuperAdmin) {
       const hashedPassword = await bcrypt.hash('SuperAdmin@2025', 10);
 
