@@ -1,7 +1,6 @@
-export { Center, SubscriptionPlan } from './center.entity';
+export { Center } from './center.entity';
 export { User } from './user.entity';
 export { Role, RoleName } from './role.entity';
-export { Privilege, PrivilegeName } from './privilege.entity';
 export { Lead, LeadStatus, InterestLevel } from './lead.entity';
 export { LeadTrailLesson, LessonStatus } from './lead-trail-lesson.entity';
 export { Group, GroupLevel } from './group.entity';

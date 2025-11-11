@@ -11,14 +11,6 @@ import { Lead } from './lead.entity';
 import { Group } from './group.entity';
 import { Payment } from './payment.entity';
 import { Test } from './test.entity';
-import { Role } from './role.entity';
-
-export enum SubscriptionPlan {
-  FREE = 'free',
-  BASIC = 'basic',
-  PROFESSIONAL = 'professional',
-  ENTERPRISE = 'enterprise',
-}
 
 @Entity('centers')
 export class Center {
@@ -49,29 +41,6 @@ export class Center {
   @Column({ default: true })
   is_active: boolean;
 
-  // Subscription & Tenant Management
-  @Column({
-    type: 'enum',
-    enum: SubscriptionPlan,
-    default: SubscriptionPlan.FREE,
-  })
-  subscription_plan: SubscriptionPlan;
-
-  @Column({ type: 'date', nullable: true })
-  subscription_start_date: Date;
-
-  @Column({ type: 'date', nullable: true })
-  subscription_end_date: Date;
-
-  @Column({ default: 10 })
-  max_users: number; // Based on subscription plan
-
-  @Column({ default: 100 })
-  max_students: number; // Based on subscription plan
-
-  @Column({ type: 'simple-json', nullable: true })
-  features: string[]; // List of enabled features based on plan
-
   @CreateDateColumn()
   created_at: Date;
 
@@ -93,7 +62,4 @@ export class Center {
 
   @OneToMany(() => Test, (test) => test.center)
   tests: Test[];
-
-  @OneToMany(() => Role, (role) => role.center)
-  roles: Role[];
 }

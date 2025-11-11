@@ -39,7 +39,6 @@ export class AuthService {
       email: user.email,
       center_id: user.center_id,
       roles: user.roles.map((role) => role.role_name),
-      is_super_admin: user.is_super_admin,
     };
 
     return {
@@ -49,7 +48,6 @@ export class AuthService {
         name: user.name,
         email: user.email,
         center_id: user.center_id,
-        is_super_admin: user.is_super_admin,
         roles: user.roles.map((role) => role.role_name),
       },
     };

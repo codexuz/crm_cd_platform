@@ -6,9 +6,8 @@ import { ConfigService } from '@nestjs/config';
 export interface JwtPayload {
   sub: number;
   email: string;
-  center_id: number | null;
+  center_id: number;
   roles: string[];
-  is_super_admin?: boolean;
 }
 
 @Injectable()
@@ -27,7 +26,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       email: payload.email,
       center_id: payload.center_id,
       roles: payload.roles,
-      is_super_admin: payload.is_super_admin || false,
     };
   }
 }

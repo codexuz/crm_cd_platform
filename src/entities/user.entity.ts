@@ -37,11 +37,8 @@ export class User {
   @Column()
   password: string;
 
-  @Column({ nullable: true })
-  center_id: number | null; // Null for super admin
-
-  @Column({ default: false })
-  is_super_admin: boolean; // Super admin has access to all tenants
+  @Column()
+  center_id: number;
 
   @Column({ default: true })
   is_active: boolean;
@@ -53,7 +50,7 @@ export class User {
   updated_at: Date;
 
   // Relations
-  @ManyToOne(() => Center, (center) => center.users, { nullable: true })
+  @ManyToOne(() => Center, (center) => center.users)
   @JoinColumn({ name: 'center_id' })
   center: Center;
 

@@ -1,14 +1,41 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
+import {
+  Center,
+  User,
+  Role,
+  Lead,
+  LeadTrailLesson,
+  Group,
+  Payment,
+  TeacherSalary,
+  Test,
+  TestSection,
+  Question,
+} from '../entities';
 
-export const getDatabaseConfig = (configService: ConfigService): TypeOrmModuleOptions => ({
+export const getDatabaseConfig = (
+  configService: ConfigService,
+): TypeOrmModuleOptions => ({
   type: 'mysql',
   host: configService.get<string>('DB_HOST', 'localhost'),
   port: configService.get<number>('DB_PORT', 3306),
   username: configService.get<string>('DB_USER', 'root'),
   password: configService.get<string>('DB_PASSWORD', ''),
   database: configService.get<string>('DB_NAME', 'crm_platform'),
-  entities: [__dirname + '/../entities/*.entity{.ts,.js}'],
+  entities: [
+    Center,
+    User,
+    Role,
+    Lead,
+    LeadTrailLesson,
+    Group,
+    Payment,
+    TeacherSalary,
+    Test,
+    TestSection,
+    Question,
+  ],
   synchronize: configService.get<string>('NODE_ENV') === 'development',
   logging: configService.get<string>('NODE_ENV') === 'development',
 });
