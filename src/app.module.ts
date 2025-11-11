@@ -1,4 +1,4 @@
-import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
@@ -12,8 +12,7 @@ import { GroupsModule } from './modules/groups/groups.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { SalaryModule } from './modules/salary/salary.module';
 import { HealthModule } from './health/health.module';
-import { TenantMiddleware } from './common/middleware/tenant.middleware';
-import { Center } from './entities';
+import { IeltsModule } from './modules/ielts/ielts.module';
 
 @Module({
   imports: [
@@ -26,7 +25,6 @@ import { Center } from './entities';
       useFactory: getDatabaseConfig,
       inject: [ConfigService],
     }),
-    TypeOrmModule.forFeature([Center]), // For TenantMiddleware
     AuthModule,
     CentersModule,
     UsersModule,
@@ -35,14 +33,9 @@ import { Center } from './entities';
     PaymentsModule,
     SalaryModule,
     HealthModule,
+    IeltsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(TenantMiddleware)
-      .forRoutes('*'); // Apply to all routes
-  }
-}
+export class AppModule {}

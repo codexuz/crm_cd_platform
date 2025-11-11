@@ -1,9 +1,18 @@
-import { Injectable, NotFoundException, ConflictException, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { User, Role, RoleName } from '../../entities';
-import { CreateUserDto, UpdateUserDto, ChangePasswordDto } from './dto/user.dto';
+import {
+  CreateUserDto,
+  UpdateUserDto,
+  ChangePasswordDto,
+} from './dto/user.dto';
 
 @Injectable()
 export class UsersService {
@@ -15,7 +24,13 @@ export class UsersService {
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<User> {
-    const { email, phone, password, roles: roleNames, ...userData } = createUserDto;
+    const {
+      email,
+      phone,
+      password,
+      roles: roleNames,
+      ...userData
+    } = createUserDto;
 
     // Check if user already exists
     const existingUser = await this.userRepository.findOne({
@@ -23,7 +38,9 @@ export class UsersService {
     });
 
     if (existingUser) {
-      throw new ConflictException('User with this email or phone already exists');
+      throw new ConflictException(
+        'User with this email or phone already exists',
+      );
     }
 
     // Hash password
@@ -45,8 +62,10 @@ export class UsersService {
   }
 
   async findAll(centerId?: number): Promise<User[]> {
-    const whereCondition = centerId ? { center_id: centerId, is_active: true } : { is_active: true };
-    
+    const whereCondition = centerId
+      ? { center_id: centerId, is_active: true }
+      : { is_active: true };
+
     return this.userRepository.find({
       where: whereCondition,
       relations: ['roles', 'center'],
@@ -106,12 +125,14 @@ export class UsersService {
       const existingUser = await this.userRepository.findOne({
         where: [
           { email: updateData.email },
-          { phone: updateData.phone }
-        ].filter(condition => Object.values(condition)[0] !== undefined),
+          { phone: updateData.phone },
+        ].filter((condition) => Object.values(condition)[0] !== undefined),
       });
 
       if (existingUser && existingUser.id !== id) {
-        throw new ConflictException('User with this email or phone already exists');
+        throw new ConflictException(
+          'User with this email or phone already exists',
+        );
       }
     }
 
@@ -126,7 +147,10 @@ export class UsersService {
     return this.userRepository.save(user);
   }
 
-  async changePassword(userId: number, changePasswordDto: ChangePasswordDto): Promise<void> {
+  async changePassword(
+    userId: number,
+    changePasswordDto: ChangePasswordDto,
+  ): Promise<void> {
     const { currentPassword, newPassword } = changePasswordDto;
     const user = await this.userRepository.findOne({ where: { id: userId } });
 
@@ -135,14 +159,17 @@ export class UsersService {
     }
 
     // Verify current password
-    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    const isCurrentPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.password,
+    );
     if (!isCurrentPasswordValid) {
       throw new UnauthorizedException('Current password is incorrect');
     }
 
     // Hash new password
     const hashedNewPassword = await bcrypt.hash(newPassword, 10);
-    
+
     await this.userRepository.update(userId, { password: hashedNewPassword });
   }
 
@@ -152,7 +179,7 @@ export class UsersService {
 
   private async getRolesByNames(roleNames: RoleName[]): Promise<Role[]> {
     const roles = await this.roleRepository.find({
-      where: roleNames.map(name => ({ role_name: name })),
+      where: roleNames.map((name) => ({ role_name: name })),
     });
 
     if (roles.length !== roleNames.length) {
@@ -165,7 +192,12 @@ export class UsersService {
   async getUserStats(userId: number) {
     const user = await this.userRepository.findOne({
       where: { id: userId },
-      relations: ['assigned_leads', 'teaching_groups', 'payments', 'trail_lessons_taught'],
+      relations: [
+        'assigned_leads',
+        'teaching_groups',
+        'payments',
+        'trail_lessons_taught',
+      ],
     });
 
     if (!user) {

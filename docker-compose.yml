@@ -17,17 +17,22 @@ services:
     labels:
       - "traefik.enable=true"
 
+      # HTTP Router (redirect to HTTPS)
       - "traefik.http.routers.http.entrypoints=http"
-      - "traefik.http.routers.http.rule=HostRegexp(`{subdomain:.+}.edumoacademy.uz`)"
+      - "traefik.http.routers.http.rule=Host(`edumoacademy.uz`) || Host(`www.edumoacademy.uz`)"
       - "traefik.http.routers.http.middlewares=redirect-to-https"
       - "traefik.http.middlewares.redirect-to-https.redirectscheme.scheme=https"
 
+      # HTTPS Router (main domain)
       - "traefik.http.routers.https.entrypoints=https"
-      - "traefik.http.routers.https.rule=HostRegexp(`{subdomain:.+}.edumoacademy.uz`)"
+      - "traefik.http.routers.https.rule=Host(`edumoacademy.uz`) || Host(`www.edumoacademy.uz`)"
       - "traefik.http.routers.https.tls=true"
       - "traefik.http.routers.https.tls.certresolver=letsencrypt"
       - "traefik.http.routers.https.middlewares=gzip"
 
+      # Compression middleware
       - "traefik.http.middlewares.gzip.compress=true"
 
+      # Service configuration
       - "traefik.http.services.main.loadbalancer.server.port=3000"
+

@@ -1,15 +1,15 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
-import { TenantRequest } from '../middleware/tenant.middleware';
 
 export const GetTenant = createParamDecorator(
   (data: string | undefined, ctx: ExecutionContext) => {
-    const request: TenantRequest = ctx.switchToHttp().getRequest();
-    const tenant = request.tenant;
+    const request = ctx.switchToHttp().getRequest();
+    const user = request.user; // User object from JWT (set by JwtAuthGuard)
 
-    if (!tenant) {
+    if (!user || !user.center_id) {
       return null;
     }
 
-    return data ? tenant[data as keyof typeof tenant] : tenant;
+    // Return center_id from JWT token
+    return user.center_id;
   },
 );
