@@ -2,10 +2,6 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { IeltsController } from './ielts.controller';
 import { IeltsService } from './ielts.service';
-import { TestAssignmentController } from './test-assignment.controller';
-import { TestAssignmentService } from './test-assignment.service';
-import { StudentDashboardController } from './student-dashboard.controller';
-import { StudentDashboardService } from './student-dashboard.service';
 import {
   IeltsTest,
   IeltsListening,
@@ -36,18 +32,12 @@ import {
   ],
   controllers: [
     IeltsController, 
-    TestAssignmentController, 
-    StudentDashboardController
   ],
   providers: [
-    IeltsService, 
-    TestAssignmentService, 
-    StudentDashboardService
+    IeltsService,
   ],
   exports: [
-    IeltsService, 
-    TestAssignmentService, 
-    StudentDashboardService
+    IeltsService,
   ],
 })
 export class IeltsModule {}

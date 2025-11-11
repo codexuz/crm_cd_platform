@@ -9,8 +9,6 @@ import {
 } from '../../entities';
 import { CentersService } from './centers.service';
 import { CentersController } from './centers.controller';
-import { CenterManagementService } from './center-management.service';
-import { CenterManagementController } from './center-management.controller';
 
 @Module({
   imports: [
@@ -24,15 +22,12 @@ import { CenterManagementController } from './center-management.controller';
   ],
   controllers: [
     CentersController, 
-    CenterManagementController
   ],
   providers: [
     CentersService, 
-    CenterManagementService
   ],
   exports: [
     CentersService, 
-    CenterManagementService
   ],
 })
 export class CentersModule {}
