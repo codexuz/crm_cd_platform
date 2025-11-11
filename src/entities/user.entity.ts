@@ -1,4 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, ManyToMany, JoinTable, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+  ManyToMany,
+  JoinTable,
+  OneToMany,
+} from 'typeorm';
 import { Center } from './center.entity';
 import { Role } from './role.entity';
 import { Lead } from './lead.entity';
@@ -26,8 +37,11 @@ export class User {
   @Column()
   password: string;
 
-  @Column()
-  center_id: number;
+  @Column({ nullable: true })
+  center_id: number; // Null for super admin
+
+  @Column({ default: false })
+  is_super_admin: boolean; // Super admin has access to all tenants
 
   @Column({ default: true })
   is_active: boolean;
@@ -39,33 +53,33 @@ export class User {
   updated_at: Date;
 
   // Relations
-  @ManyToOne(() => Center, center => center.users)
+  @ManyToOne(() => Center, (center) => center.users, { nullable: true })
   @JoinColumn({ name: 'center_id' })
   center: Center;
 
-  @ManyToMany(() => Role, role => role.users)
+  @ManyToMany(() => Role, (role) => role.users)
   @JoinTable({
     name: 'user_roles',
     joinColumn: { name: 'user_id', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' }
+    inverseJoinColumn: { name: 'role_id', referencedColumnName: 'id' },
   })
   roles: Role[];
 
-  @OneToMany(() => Lead, lead => lead.assigned_to_user)
+  @OneToMany(() => Lead, (lead) => lead.assigned_to_user)
   assigned_leads: Lead[];
 
-  @OneToMany(() => Group, group => group.teacher)
+  @OneToMany(() => Group, (group) => group.teacher)
   teaching_groups: Group[];
 
-  @OneToMany(() => Payment, payment => payment.student)
+  @OneToMany(() => Payment, (payment) => payment.student)
   payments: Payment[];
 
-  @OneToMany(() => LeadTrailLesson, lesson => lesson.teacher)
+  @OneToMany(() => LeadTrailLesson, (lesson) => lesson.teacher)
   trail_lessons_taught: LeadTrailLesson[];
 
-  @OneToMany(() => LeadTrailLesson, lesson => lesson.added_by_user)
+  @OneToMany(() => LeadTrailLesson, (lesson) => lesson.added_by_user)
   trail_lessons_added: LeadTrailLesson[];
 
-  @OneToMany(() => TeacherSalary, salary => salary.teacher)
+  @OneToMany(() => TeacherSalary, (salary) => salary.teacher)
   salaries: TeacherSalary[];
 }
