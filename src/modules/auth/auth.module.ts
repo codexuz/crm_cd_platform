@@ -8,6 +8,8 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
 import { GoogleStrategy } from './google.strategy';
+import { GoogleStudentStrategy } from './google-student.strategy';
+import { GoogleTeacherStrategy } from './google-teacher.strategy';
 
 @Module({
   imports: [
@@ -25,7 +27,7 @@ import { GoogleStrategy } from './google.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, GoogleStrategy],
+  providers: [AuthService, JwtStrategy, GoogleStrategy, GoogleStudentStrategy, GoogleTeacherStrategy],
   exports: [AuthService],
 })
 export class AuthModule {}

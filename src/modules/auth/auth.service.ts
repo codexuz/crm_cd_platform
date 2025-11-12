@@ -120,6 +120,7 @@ export class AuthService {
     avatar_url: string;
     provider: string;
     accessToken: string;
+    preferredRole?: string;
   }): Promise<any> {
     // Check if user already exists by google_id or email
     let user = await this.userRepository.findOne({
@@ -140,12 +141,20 @@ export class AuthService {
       }
     } else {
       // Create new user from Google profile
-      const studentRole = await this.roleRepository.findOne({
-        where: { role_name: RoleName.STUDENT },
+      let targetRole = RoleName.STUDENT; // default
+      
+      if (googleUser.preferredRole === 'teacher') {
+        targetRole = RoleName.TEACHER;
+      } else if (googleUser.preferredRole === 'student') {
+        targetRole = RoleName.STUDENT;
+      }
+
+      const role = await this.roleRepository.findOne({
+        where: { role_name: targetRole },
       });
 
-      if (!studentRole) {
-        throw new Error('Student role not found');
+      if (!role) {
+        throw new Error(`${targetRole} role not found`);
       }
 
       user = this.userRepository.create({
@@ -155,7 +164,7 @@ export class AuthService {
         avatar_url: googleUser.avatar_url,
         provider: googleUser.provider,
         phone: '', // Will need to be set later
-        roles: [studentRole],
+        roles: [role],
       });
 
       await this.userRepository.save(user);
@@ -214,5 +223,13 @@ export class AuthService {
         roles: user.roles.map((role) => role.role_name),
       },
     };
+  }
+
+  verifyToken(token: string): any {
+    try {
+      return this.jwtService.verify(token);
+    } catch (error) {
+      throw new UnauthorizedException('Invalid token');
+    }
   }
 }
