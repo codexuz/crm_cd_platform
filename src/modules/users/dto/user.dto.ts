@@ -20,9 +20,9 @@ export class CreateUserDto {
   @IsNotEmpty()
   password: string;
 
-  @ApiPropertyOptional({ example: 1, description: 'Center ID (optional for initial user creation)' })
+  @ApiPropertyOptional({ example: 'uuid-string', description: 'Center ID (optional for initial user creation)' })
   @IsOptional()
-  center_id?: number;
+  center_id?: string;
 
   @ApiPropertyOptional({ 
     example: [RoleName.STUDENT], 
@@ -49,9 +49,9 @@ export class UpdateUserDto {
   @IsOptional()
   phone?: string;
 
-  @ApiPropertyOptional({ example: 1, description: 'Center ID' })
+  @ApiPropertyOptional({ example: 'uuid-string', description: 'Center ID' })
   @IsOptional()
-  center_id?: number;
+  center_id?: string;
 
   @ApiPropertyOptional({ example: true, description: 'User active status' })
   @IsOptional()

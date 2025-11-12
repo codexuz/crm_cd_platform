@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { CreateUserDto, UpdateUserDto, ChangePasswordDto } from './dto/user.dto';
@@ -28,7 +28,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Get all users' })
   @ApiQuery({ name: 'centerId', required: false, type: 'number' })
   @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
-  findAll(@Query('centerId') centerId?: number) {
+  findAll(@Query('centerId') centerId?: string) {
     return this.usersService.findAll(centerId);
   }
 
@@ -38,14 +38,14 @@ export class UsersController {
   @ApiQuery({ name: 'centerId', required: false, type: 'number' })
   findByRole(
     @Param('role') role: RoleName,
-    @Query('centerId') centerId?: number,
+    @Query('centerId') centerId?: string,
   ) {
     return this.usersService.findByRole(role, centerId);
   }
 
   @Get('profile')
   @ApiOperation({ summary: 'Get current user profile' })
-  getProfile(@GetUser('userId') userId: number) {
+  getProfile(@GetUser('userId') userId: string) {
     return this.usersService.findOne(userId);
   }
 
@@ -53,7 +53,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Get user by ID' })
   @ApiResponse({ status: 200, description: 'User retrieved successfully' })
   @ApiResponse({ status: 404, description: 'User not found' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id') id: string) {
     return this.usersService.findOne(id);
   }
 
@@ -61,7 +61,7 @@ export class UsersController {
   @Roles(RoleName.ADMIN, RoleName.MANAGER)
   @ApiOperation({ summary: 'Update user' })
   @ApiResponse({ status: 200, description: 'User updated successfully' })
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateUserDto: UpdateUserDto) {
+  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(id, updateUserDto);
   }
 
@@ -69,7 +69,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Change user password' })
   @ApiResponse({ status: 200, description: 'Password changed successfully' })
   changePassword(
-    @GetUser('userId') userId: number,
+    @GetUser('userId') userId: string,
     @Body() changePasswordDto: ChangePasswordDto,
   ) {
     return this.usersService.changePassword(userId, changePasswordDto);
@@ -79,7 +79,7 @@ export class UsersController {
   @Roles(RoleName.ADMIN)
   @ApiOperation({ summary: 'Delete user' })
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id') id: string) {
     return this.usersService.remove(id);
   }
 }

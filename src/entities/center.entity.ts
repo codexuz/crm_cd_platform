@@ -10,7 +10,6 @@ import { User } from './user.entity';
 import { Lead } from './lead.entity';
 import { Group } from './group.entity';
 import { Payment } from './payment.entity';
-import { Test } from './test.entity';
 import { TeacherSalary } from './teacher-salary.entity';
 import { IeltsTest } from './ielts-test.entity';
 import { IeltsListening } from './ielts-listening.entity';
@@ -18,8 +17,8 @@ import { IeltsReading } from './ielts-reading.entity';
 
 @Entity('centers')
 export class Center {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ length: 200 })
   name: string;
@@ -31,7 +30,7 @@ export class Center {
   address: string;
 
   @Column()
-  owner_id: number;
+  owner_id: string;
 
   @Column({ length: 50, nullable: true })
   phone: string;
@@ -63,9 +62,6 @@ export class Center {
 
   @OneToMany(() => Payment, (payment) => payment.center)
   payments: Payment[];
-
-  @OneToMany(() => Test, (test) => test.center)
-  tests: Test[];
 
   @OneToMany(() => TeacherSalary, (salary) => salary.center)
   teacher_salaries: TeacherSalary[];

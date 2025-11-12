@@ -112,4 +112,107 @@ export class AuthService {
       roles: user.roles.map((role) => role.role_name),
     };
   }
+
+  async validateGoogleUser(googleUser: {
+    google_id: string;
+    email: string;
+    name: string;
+    avatar_url: string;
+    provider: string;
+    accessToken: string;
+  }): Promise<any> {
+    // Check if user already exists by google_id or email
+    let user = await this.userRepository.findOne({
+      where: [
+        { google_id: googleUser.google_id },
+        { email: googleUser.email },
+      ],
+      relations: ['roles'],
+    });
+
+    if (user) {
+      // Update existing user with Google information if needed
+      if (!user.google_id) {
+        user.google_id = googleUser.google_id;
+        user.avatar_url = googleUser.avatar_url;
+        user.provider = googleUser.provider;
+        await this.userRepository.save(user);
+      }
+    } else {
+      // Create new user from Google profile
+      const studentRole = await this.roleRepository.findOne({
+        where: { role_name: RoleName.STUDENT },
+      });
+
+      if (!studentRole) {
+        throw new Error('Student role not found');
+      }
+
+      user = this.userRepository.create({
+        name: googleUser.name,
+        email: googleUser.email,
+        google_id: googleUser.google_id,
+        avatar_url: googleUser.avatar_url,
+        provider: googleUser.provider,
+        phone: '', // Will need to be set later
+        roles: [studentRole],
+      });
+
+      await this.userRepository.save(user);
+    }
+
+    // Generate JWT token
+    const payload: JwtPayload = {
+      sub: user.id,
+      email: user.email,
+      center_id: user.center_id,
+      roles: user.roles.map((role) => role.role_name),
+    };
+
+    return {
+      access_token: this.jwtService.sign(payload),
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        center_id: user.center_id,
+        avatar_url: user.avatar_url,
+        provider: user.provider,
+        roles: user.roles.map((role) => role.role_name),
+      },
+    };
+  }
+
+  async completeProfile(userId: string, profileData: { phone: string; center_id?: string }) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['roles'],
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Update user with profile completion data
+    user.phone = profileData.phone;
+    if (profileData.center_id) {
+      user.center_id = profileData.center_id;
+    }
+
+    await this.userRepository.save(user);
+
+    return {
+      message: 'Profile completed successfully',
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        center_id: user.center_id,
+        avatar_url: user.avatar_url,
+        provider: user.provider,
+        roles: user.roles.map((role) => role.role_name),
+      },
+    };
+  }
 }

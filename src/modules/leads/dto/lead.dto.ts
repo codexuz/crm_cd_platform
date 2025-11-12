@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsOptional, IsEnum, IsEmail, IsDateString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsEnum, IsEmail, IsDateString, IsString } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { InterestLevel, LeadStatus } from '../../../entities';
 
@@ -24,13 +24,15 @@ export class CreateLeadDto {
   @IsEnum(InterestLevel)
   interest_level: InterestLevel;
 
-  @ApiProperty({ example: 1, description: 'Center ID' })
+  @ApiProperty({ example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', description: 'Center ID' })
   @IsNotEmpty()
-  center_id: number;
+  @IsString()
+  center_id: string;
 
-  @ApiPropertyOptional({ example: 5, description: 'Assigned user ID' })
+  @ApiPropertyOptional({ example: 'b2c3d4e5-f6g7-8901-bcde-f12345678901', description: 'Assigned user ID' })
   @IsOptional()
-  assigned_to?: number;
+  @IsString()
+  assigned_to?: string;
 
   @ApiPropertyOptional({ example: 'Interested in IELTS preparation', description: 'Notes about the lead' })
   @IsOptional()
@@ -74,9 +76,10 @@ export class UpdateLeadDto {
   @IsEnum(LeadStatus)
   status?: LeadStatus;
 
-  @ApiPropertyOptional({ example: 5, description: 'Assigned user ID' })
+  @ApiPropertyOptional({ example: 'b2c3d4e5-f6g7-8901-bcde-f12345678901', description: 'Assigned user ID' })
   @IsOptional()
-  assigned_to?: number;
+  @IsString()
+  assigned_to?: string;
 
   @ApiPropertyOptional({ example: 'Updated notes', description: 'Notes about the lead' })
   @IsOptional()

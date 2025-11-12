@@ -32,7 +32,33 @@ export class RegisterDto {
   @MinLength(6)
   password: string;
 
-  @ApiPropertyOptional({ example: 1, description: 'Center ID (optional for initial user creation)' })
+  @ApiPropertyOptional({ example: 'uuid-string', description: 'Center ID (optional for initial user creation)' })
   @IsOptional()
-  center_id?: number;
+  center_id?: string;
+}
+
+export class GoogleAuthResponseDto {
+  @ApiProperty({ example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...', description: 'JWT access token' })
+  access_token: string;
+
+  @ApiProperty({ description: 'User information' })
+  user: {
+    id: string;
+    name: string;
+    email: string;
+    center_id: string | null;
+    avatar_url: string | null;
+    provider: string;
+    roles: string[];
+  };
+}
+
+export class CompleteProfileDto {
+  @ApiProperty({ example: '+1234567890', description: 'User phone number' })
+  @IsNotEmpty()
+  phone: string;
+
+  @ApiPropertyOptional({ example: 'uuid-string', description: 'Center ID to assign user to' })
+  @IsOptional()
+  center_id?: string;
 }

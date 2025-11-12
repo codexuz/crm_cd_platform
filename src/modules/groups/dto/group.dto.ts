@@ -16,15 +16,15 @@ export class CreateGroupDto {
   @IsEnum(GroupLevel)
   level: GroupLevel;
 
-  @ApiProperty({ example: 1, description: 'Teacher user ID' })
+  @ApiProperty({ example: 'uuid-string', description: 'Teacher user ID' })
   @IsNotEmpty()
-  @IsNumber()
-  teacher_id: number;
+  @IsString()
+  teacher_id: string;
 
-  @ApiProperty({ example: 1, description: 'Center ID' })
+  @ApiProperty({ example: 'uuid-string', description: 'Center ID' })
   @IsNotEmpty()
-  @IsNumber()
-  center_id: number;
+  @IsString()
+  center_id: string;
 
   @ApiPropertyOptional({ example: 'Intensive IELTS preparation course', description: 'Group description' })
   @IsOptional()
@@ -41,11 +41,11 @@ export class CreateGroupDto {
   @IsNumber()
   max_students?: number;
 
-  @ApiPropertyOptional({ example: [1, 2, 3], description: 'Array of student user IDs' })
+  @ApiPropertyOptional({ example: ['uuid-1', 'uuid-2', 'uuid-3'], description: 'Array of student user IDs' })
   @IsOptional()
   @IsArray()
-  @IsNumber({}, { each: true })
-  student_ids?: number[];
+  @IsString({ each: true })
+  student_ids?: string[];
 }
 
 export class UpdateGroupDto {
@@ -63,10 +63,10 @@ export class UpdateGroupDto {
   @IsEnum(GroupLevel)
   level?: GroupLevel;
 
-  @ApiPropertyOptional({ example: 1, description: 'Teacher user ID' })
+  @ApiPropertyOptional({ example: 'uuid-string', description: 'Teacher user ID' })
   @IsOptional()
-  @IsNumber()
-  teacher_id?: number;
+  @IsString()
+  teacher_id?: string;
 
   @ApiPropertyOptional({ example: 'Updated description', description: 'Group description' })
   @IsOptional()
@@ -90,15 +90,15 @@ export class UpdateGroupDto {
 }
 
 export class AddStudentToGroupDto {
-  @ApiProperty({ example: [1, 2, 3], description: 'Array of student user IDs to add' })
+  @ApiProperty({ example: ['uuid-1', 'uuid-2', 'uuid-3'], description: 'Array of student user IDs to add' })
   @IsArray()
-  @IsNumber({}, { each: true })
-  student_ids: number[];
+  @IsString({ each: true })
+  student_ids: string[];
 }
 
 export class RemoveStudentFromGroupDto {
-  @ApiProperty({ example: [1, 2], description: 'Array of student user IDs to remove' })
+  @ApiProperty({ example: ['uuid-1', 'uuid-2'], description: 'Array of student user IDs to remove' })
   @IsArray()
-  @IsNumber({}, { each: true })
-  student_ids: number[];
+  @IsString({ each: true })
+  student_ids: string[];
 }

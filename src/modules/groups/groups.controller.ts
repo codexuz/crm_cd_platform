@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { GroupsService } from './groups.service';
 import { CreateGroupDto, UpdateGroupDto, AddStudentToGroupDto, RemoveStudentFromGroupDto } from './dto/group.dto';
@@ -26,13 +26,13 @@ export class GroupsController {
   @Get()
   @Roles(RoleName.ADMIN, RoleName.MANAGER, RoleName.TEACHER)
   @ApiOperation({ summary: 'Get all groups' })
-  @ApiQuery({ name: 'centerId', required: false, type: 'number' })
-  @ApiQuery({ name: 'teacherId', required: false, type: 'number' })
+  @ApiQuery({ name: 'centerId', required: false, type: 'string' })
+  @ApiQuery({ name: 'teacherId', required: false, type: 'string' })
   @ApiQuery({ name: 'level', required: false, enum: GroupLevel })
   @ApiResponse({ status: 200, description: 'Groups retrieved successfully' })
   findAll(
-    @Query('centerId') centerId?: number,
-    @Query('teacherId') teacherId?: number,
+    @Query('centerId') centerId?: string,
+    @Query('teacherId') teacherId?: string,
     @Query('level') level?: GroupLevel,
   ) {
     return this.groupsService.findAll(centerId, teacherId, level);
@@ -41,11 +41,11 @@ export class GroupsController {
   @Get('my-groups')
   @Roles(RoleName.TEACHER)
   @ApiOperation({ summary: 'Get groups taught by current user' })
-  @ApiQuery({ name: 'centerId', required: false, type: 'number' })
+  @ApiQuery({ name: 'centerId', required: false, type: 'string' })
   @ApiResponse({ status: 200, description: 'Teacher groups retrieved successfully' })
   findMyGroups(
-    @GetUser('userId') userId: number,
-    @Query('centerId') centerId?: number,
+    @GetUser('userId') userId: string,
+    @Query('centerId') centerId?: string,
   ) {
     return this.groupsService.findByTeacher(userId, centerId);
   }
@@ -63,7 +63,7 @@ export class GroupsController {
   @ApiOperation({ summary: 'Get group by ID' })
   @ApiResponse({ status: 200, description: 'Group retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Group not found' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id') id: string) {
     return this.groupsService.findOne(id);
   }
 
@@ -73,7 +73,7 @@ export class GroupsController {
   @ApiResponse({ status: 200, description: 'Group updated successfully' })
   @ApiResponse({ status: 404, description: 'Group not found' })
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateGroupDto: UpdateGroupDto,
   ) {
     return this.groupsService.update(id, updateGroupDto);
@@ -86,7 +86,7 @@ export class GroupsController {
   @ApiResponse({ status: 404, description: 'Group not found' })
   @ApiResponse({ status: 400, description: 'Invalid student IDs or capacity exceeded' })
   addStudents(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() addStudentDto: AddStudentToGroupDto,
   ) {
     return this.groupsService.addStudentsToGroup(id, addStudentDto.student_ids);
@@ -98,7 +98,7 @@ export class GroupsController {
   @ApiResponse({ status: 200, description: 'Students removed from group successfully' })
   @ApiResponse({ status: 404, description: 'Group not found' })
   removeStudents(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() removeStudentDto: RemoveStudentFromGroupDto,
   ) {
     return this.groupsService.removeStudentsFromGroup(id, removeStudentDto.student_ids);
@@ -109,7 +109,7 @@ export class GroupsController {
   @ApiOperation({ summary: 'Delete group' })
   @ApiResponse({ status: 200, description: 'Group deleted successfully' })
   @ApiResponse({ status: 404, description: 'Group not found' })
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id') id: string) {
     return this.groupsService.remove(id);
   }
 }

@@ -61,7 +61,7 @@ export class UsersService {
     return this.userRepository.save(user);
   }
 
-  async findAll(centerId?: number): Promise<User[]> {
+  async findAll(centerId?: string): Promise<User[]> {
     const whereCondition = centerId
       ? { center_id: centerId, is_active: true }
       : { is_active: true };
@@ -73,7 +73,7 @@ export class UsersService {
     });
   }
 
-  async findOne(id: number): Promise<User> {
+  async findOne(id: string): Promise<User> {
     const user = await this.userRepository.findOne({
       where: { id, is_active: true },
       relations: ['roles', 'center', 'assigned_leads', 'teaching_groups'],
@@ -93,7 +93,7 @@ export class UsersService {
     });
   }
 
-  async findByCenter(centerId: number): Promise<User[]> {
+  async findByCenter(centerId: string): Promise<User[]> {
     return this.userRepository.find({
       where: { center_id: centerId, is_active: true },
       relations: ['roles'],
@@ -101,7 +101,7 @@ export class UsersService {
     });
   }
 
-  async findByRole(roleName: RoleName, centerId?: number): Promise<User[]> {
+  async findByRole(roleName: RoleName, centerId?: string): Promise<User[]> {
     const query = this.userRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.roles', 'role')
@@ -116,7 +116,7 @@ export class UsersService {
     return query.getMany();
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findOne(id);
     const { roles: roleNames, ...updateData } = updateUserDto;
 
@@ -148,7 +148,7 @@ export class UsersService {
   }
 
   async changePassword(
-    userId: number,
+    userId: string,
     changePasswordDto: ChangePasswordDto,
   ): Promise<void> {
     const { currentPassword, newPassword } = changePasswordDto;
@@ -173,7 +173,7 @@ export class UsersService {
     await this.userRepository.update(userId, { password: hashedNewPassword });
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: string): Promise<void> {
     await this.userRepository.update(id, { is_active: false });
   }
 
@@ -189,7 +189,7 @@ export class UsersService {
     return roles;
   }
 
-  async getUserStats(userId: number) {
+  async getUserStats(userId: string) {
     const user = await this.userRepository.findOne({
       where: { id: userId },
       relations: [

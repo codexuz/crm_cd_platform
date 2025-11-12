@@ -13,8 +13,8 @@ export enum GroupLevel {
 
 @Entity('groups')
 export class Group {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ length: 100 })
   group_name: string;
@@ -26,10 +26,10 @@ export class Group {
   level: GroupLevel;
 
   @Column()
-  teacher_id: number;
+  teacher_id: string;
 
   @Column()
-  center_id: number;
+  center_id: string;
 
   @Column('text', { nullable: true })
   description: string;

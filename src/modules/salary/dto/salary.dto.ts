@@ -3,10 +3,10 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { SalaryStatus } from '../../../entities';
 
 export class CreateTeacherSalaryDto {
-  @ApiProperty({ example: 1, description: 'Teacher user ID' })
+  @ApiProperty({ example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890', description: 'Teacher user ID' })
   @IsNotEmpty()
-  @IsNumber()
-  teacher_id: number;
+  @IsString()
+  teacher_id: string;
 
   @ApiProperty({ example: '2024-12', description: 'Salary month (YYYY-MM format)' })
   @IsNotEmpty()

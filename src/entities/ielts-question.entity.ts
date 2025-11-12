@@ -18,11 +18,11 @@ export enum QuestionContentType {
 
 @Entity('ielts_questions')
 export class IeltsQuestion {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ nullable: true })
-  center_id: number;
+  center_id: string;
 
   @Column({ type: 'simple-json' })
   content: QuestionContent[]; // Array of question sections

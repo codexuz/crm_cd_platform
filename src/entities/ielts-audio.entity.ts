@@ -11,8 +11,8 @@ import { User } from './user.entity';
 
 @Entity('ielts_audio')
 export class IeltsAudio {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ length: 500 })
   url: string; // URL to the audio file (could be MinIO, S3, etc.)
@@ -27,10 +27,10 @@ export class IeltsAudio {
   file_size: number; // File size in bytes
 
   @Column({ nullable: true })
-  center_id: number;
+  center_id: string;
 
   @Column({ nullable: true })
-  uploaded_by: number;
+  uploaded_by: string;
 
   @CreateDateColumn()
   uploaded_at: Date;

@@ -21,8 +21,8 @@ import { Exclude } from 'class-transformer';
 
 @Entity('users')
 export class User {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ length: 100 })
   name: string;
@@ -34,11 +34,20 @@ export class User {
   email: string;
 
   @Exclude()
-  @Column()
+  @Column({ nullable: true })
   password: string;
 
+  @Column({ length: 255, nullable: true, unique: true })
+  google_id: string;
+
+  @Column({ length: 500, nullable: true })
+  avatar_url: string;
+
+  @Column({ length: 50, default: 'local' })
+  provider: string; // 'local', 'google', etc.
+
   @Column({ nullable: true })
-  center_id: number;
+  center_id: string;
 
   @Column({ default: true })
   is_active: boolean;

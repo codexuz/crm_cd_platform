@@ -6,9 +6,6 @@ export { LeadTrailLesson, LessonStatus } from './lead-trail-lesson.entity';
 export { Group, GroupLevel } from './group.entity';
 export { Payment, PaymentMethod, PaymentStatus } from './payment.entity';
 export { TeacherSalary, SalaryStatus } from './teacher-salary.entity';
-export { Test, TestType, TestStatus } from './test.entity';
-export { TestSection, SectionType } from './test-section.entity';
-export { Question, QuestionType } from './question.entity';
 export { IeltsTest } from './ielts-test.entity';
 export { IeltsListening } from './ielts-listening.entity';
 export {
@@ -24,5 +21,3 @@ export type {
   Option,
 } from './ielts-question.entity';
 export { IeltsAudio } from './ielts-audio.entity';
-export { TestAssignment, TestAssignmentStatus } from './test-assignment.entity';
-export { TestResult, TestResultStatus } from './test-result.entity';

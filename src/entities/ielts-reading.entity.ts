@@ -16,8 +16,8 @@ import { IeltsTest } from './ielts-test.entity';
 
 @Entity('ielts_reading')
 export class IeltsReading {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ length: 200, nullable: true })
   title: string;
@@ -26,13 +26,13 @@ export class IeltsReading {
   description: string;
 
   @Column({ nullable: true })
-  center_id: number;
+  center_id: string;
 
   @Column({ nullable: true })
-  created_by: number;
+  created_by: string;
 
   @Column({ nullable: true })
-  updated_by: number;
+  updated_by: string;
 
   @Column({ default: false })
   for_cdi: boolean;

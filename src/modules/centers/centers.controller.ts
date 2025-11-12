@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseIntPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { CentersService } from './centers.service';
 import { CreateCenterDto, UpdateCenterDto } from './dto/center.dto';
@@ -36,7 +36,7 @@ export class CentersController {
   @Roles(RoleName.ADMIN, RoleName.MANAGER)
   @ApiOperation({ summary: 'Get centers owned by current user' })
   @ApiResponse({ status: 200, description: 'Centers retrieved successfully' })
-  findMyOwned(@GetUser('userId') userId: number) {
+  findMyOwned(@GetUser('userId') userId: string) {
     return this.centersService.findByOwner(userId);
   }
 
@@ -44,7 +44,7 @@ export class CentersController {
   @ApiOperation({ summary: 'Get center by ID' })
   @ApiResponse({ status: 200, description: 'Center retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Center not found' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id') id: string) {
     return this.centersService.findOne(id);
   }
 
@@ -52,7 +52,7 @@ export class CentersController {
   @Roles(RoleName.ADMIN, RoleName.MANAGER)
   @ApiOperation({ summary: 'Get center statistics' })
   @ApiResponse({ status: 200, description: 'Statistics retrieved successfully' })
-  getStats(@Param('id', ParseIntPipe) id: number) {
+  getStats(@Param('id') id: string) {
     return this.centersService.getCenterStats(id);
   }
 
@@ -63,9 +63,9 @@ export class CentersController {
   @ApiResponse({ status: 403, description: 'Forbidden - Only owner can update' })
   @ApiResponse({ status: 404, description: 'Center not found' })
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateCenterDto: UpdateCenterDto,
-    @GetUser('userId') userId: number,
+    @GetUser('userId') userId: string,
   ) {
     return this.centersService.update(id, updateCenterDto, userId);
   }
@@ -77,8 +77,8 @@ export class CentersController {
   @ApiResponse({ status: 403, description: 'Forbidden - Only owner can delete' })
   @ApiResponse({ status: 404, description: 'Center not found' })
   remove(
-    @Param('id', ParseIntPipe) id: number,
-    @GetUser('userId') userId: number,
+    @Param('id') id: string,
+    @GetUser('userId') userId: string,
   ) {
     return this.centersService.remove(id, userId);
   }

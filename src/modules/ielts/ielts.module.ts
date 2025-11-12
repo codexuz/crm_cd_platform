@@ -10,8 +10,6 @@ import {
   IeltsReadingPart,
   IeltsQuestion,
   IeltsAudio,
-  TestAssignment,
-  TestResult,
   User,
 } from '../../entities';
 
@@ -25,8 +23,6 @@ import {
       IeltsReadingPart,
       IeltsQuestion,
       IeltsAudio,
-      TestAssignment,
-      TestResult,
       User,
     ]),
   ],

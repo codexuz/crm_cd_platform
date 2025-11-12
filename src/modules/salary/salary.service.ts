@@ -40,7 +40,7 @@ export class SalaryService {
     return this.salaryRepository.save(salary);
   }
 
-  async findAll(centerId?: number, status?: SalaryStatus, month?: string): Promise<TeacherSalary[]> {
+  async findAll(centerId?: string, status?: SalaryStatus, month?: string): Promise<TeacherSalary[]> {
     const queryBuilder = this.salaryRepository
       .createQueryBuilder('salary')
       .leftJoinAndSelect('salary.teacher', 'teacher')
@@ -63,7 +63,7 @@ export class SalaryService {
     return queryBuilder.getMany();
   }
 
-  async findOne(id: number): Promise<TeacherSalary> {
+  async findOne(id: string): Promise<TeacherSalary> {
     const salary = await this.salaryRepository.findOne({
       where: { id },
       relations: ['teacher', 'teacher.center'],
@@ -76,7 +76,7 @@ export class SalaryService {
     return salary;
   }
 
-  async findByTeacher(teacherId: number, year?: number): Promise<TeacherSalary[]> {
+  async findByTeacher(teacherId: string, year?: number): Promise<TeacherSalary[]> {
     const queryBuilder = this.salaryRepository
       .createQueryBuilder('salary')
       .where('salary.teacher_id = :teacherId', { teacherId })
@@ -89,7 +89,7 @@ export class SalaryService {
     return queryBuilder.getMany();
   }
 
-  async update(id: number, updateSalaryDto: UpdateTeacherSalaryDto): Promise<TeacherSalary> {
+  async update(id: string, updateSalaryDto: UpdateTeacherSalaryDto): Promise<TeacherSalary> {
     await this.findOne(id); // Ensure salary record exists
 
     const updateData = {
@@ -101,7 +101,7 @@ export class SalaryService {
     return this.findOne(id);
   }
 
-  async markAsPaid(id: number, markPaidDto: MarkSalaryPaidDto): Promise<TeacherSalary> {
+  async markAsPaid(id: string, markPaidDto: MarkSalaryPaidDto): Promise<TeacherSalary> {
     const salary = await this.findOne(id);
 
     if (salary.status === SalaryStatus.PAID) {
@@ -118,12 +118,12 @@ export class SalaryService {
     return this.findOne(id);
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: string): Promise<void> {
     await this.findOne(id); // Ensure salary record exists
     await this.salaryRepository.delete(id);
   }
 
-  async getSalaryStats(centerId?: number, year?: number) {
+  async getSalaryStats(centerId?: string, year?: number) {
     const queryBuilder = this.salaryRepository
       .createQueryBuilder('salary')
       .leftJoin('salary.teacher', 'teacher');
@@ -178,7 +178,7 @@ export class SalaryService {
     };
   }
 
-  async generateMonthlySalaries(centerId: number, month: string, hourlyRate: number = 25): Promise<TeacherSalary[]> {
+  async generateMonthlySalaries(centerId: string, month: string, hourlyRate: number = 25): Promise<TeacherSalary[]> {
     // Find all teachers in the center
     const teachers = await this.userRepository
       .createQueryBuilder('user')
@@ -223,7 +223,7 @@ export class SalaryService {
     return generatedSalaries;
   }
 
-  async getTeacherSalarySummary(teacherId: number, year?: number) {
+  async getTeacherSalarySummary(teacherId: string, year?: number) {
     const queryBuilder = this.salaryRepository
       .createQueryBuilder('salary')
       .where('salary.teacher_id = :teacherId', { teacherId });

@@ -21,7 +21,7 @@ export class PaymentsService {
     return this.paymentRepository.save(payment);
   }
 
-  async findAll(centerId?: number, status?: PaymentStatus): Promise<Payment[]> {
+  async findAll(centerId?: string, status?: PaymentStatus): Promise<Payment[]> {
     const queryBuilder = this.paymentRepository
       .createQueryBuilder('payment')
       .leftJoinAndSelect('payment.center', 'center')
@@ -39,7 +39,7 @@ export class PaymentsService {
     return queryBuilder.getMany();
   }
 
-  async findOne(id: number): Promise<Payment> {
+  async findOne(id: string): Promise<Payment> {
     const payment = await this.paymentRepository.findOne({
       where: { id },
       relations: ['center', 'student'],
@@ -52,7 +52,7 @@ export class PaymentsService {
     return payment;
   }
 
-  async findByStudent(studentId: number): Promise<Payment[]> {
+  async findByStudent(studentId: string): Promise<Payment[]> {
     return this.paymentRepository.find({
       where: { student_id: studentId },
       relations: ['center'],
@@ -60,7 +60,7 @@ export class PaymentsService {
     });
   }
 
-  async findByDateRange(startDate: string, endDate: string, centerId?: number): Promise<Payment[]> {
+  async findByDateRange(startDate: string, endDate: string, centerId?: string): Promise<Payment[]> {
     const queryBuilder = this.paymentRepository
       .createQueryBuilder('payment')
       .leftJoinAndSelect('payment.center', 'center')
@@ -78,7 +78,7 @@ export class PaymentsService {
     return queryBuilder.getMany();
   }
 
-  async update(id: number, updatePaymentDto: UpdatePaymentDto): Promise<Payment> {
+  async update(id: string, updatePaymentDto: UpdatePaymentDto): Promise<Payment> {
     await this.findOne(id); // Ensure payment exists
 
     const updateData = {
@@ -90,12 +90,12 @@ export class PaymentsService {
     return this.findOne(id);
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: string): Promise<void> {
     await this.findOne(id); // Ensure payment exists
     await this.paymentRepository.delete(id);
   }
 
-  async getPaymentStats(centerId?: number, month?: string) {
+  async getPaymentStats(centerId?: string, month?: string) {
     const queryBuilder = this.paymentRepository.createQueryBuilder('payment');
     
     if (centerId) {

@@ -19,11 +19,11 @@ export enum ListeningPart {
 
 @Entity('ielts_listening_parts')
 export class IeltsListeningPart {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ nullable: true })
-  listening_id: number;
+  listening_id: string;
 
   @Column({
     type: 'enum',
@@ -32,10 +32,10 @@ export class IeltsListeningPart {
   part: ListeningPart;
 
   @Column({ nullable: true })
-  question_id: number;
+  question_id: string;
 
   @Column({ nullable: true })
-  audio_id: number;
+  audio_id: string;
 
   @Column({ type: 'simple-json', nullable: true })
   answers: Record<string, any>; // Stores answer keys

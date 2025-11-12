@@ -54,7 +54,7 @@ export class CentersService {
     });
   }
 
-  async findOne(id: number): Promise<Center> {
+  async findOne(id: string): Promise<Center> {
     const center = await this.centerRepository.findOne({
       where: { id, is_active: true },
       relations: ['users', 'leads', 'groups'],
@@ -67,14 +67,14 @@ export class CentersService {
     return center;
   }
 
-  async findByOwner(owner_id: number): Promise<Center[]> {
+  async findByOwner(owner_id: string): Promise<Center[]> {
     return this.centerRepository.find({
       where: { owner_id, is_active: true },
       order: { created_at: 'DESC' },
     });
   }
 
-  async update(id: number, updateCenterDto: UpdateCenterDto, userId: number): Promise<Center> {
+  async update(id: string, updateCenterDto: UpdateCenterDto, userId: string): Promise<Center> {
     const center = await this.findOne(id);
     
     // Check if user is the owner (you can enhance this with proper authorization)
@@ -86,7 +86,7 @@ export class CentersService {
     return this.findOne(id);
   }
 
-  async remove(id: number, userId: number): Promise<void> {
+  async remove(id: string, userId: string): Promise<void> {
     const center = await this.findOne(id);
     
     // Check if user is the owner
@@ -97,7 +97,7 @@ export class CentersService {
     await this.centerRepository.update(id, { is_active: false });
   }
 
-  async getCenterStats(centerId: number) {
+  async getCenterStats(centerId: string) {
     const center = await this.centerRepository.findOne({
       where: { id: centerId },
       relations: ['users', 'leads', 'groups', 'payments', 'tests'],
@@ -111,7 +111,6 @@ export class CentersService {
       totalUsers: center.users?.length || 0,
       totalLeads: center.leads?.length || 0,
       totalGroups: center.groups?.length || 0,
-      totalTests: center.tests?.length || 0,
       totalPayments: center.payments?.length || 0,
     };
   }

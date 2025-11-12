@@ -18,11 +18,11 @@ export enum PaymentStatus {
 
 @Entity('payments')
 export class Payment {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
-  student_id: number;
+  student_id: string;
 
   @Column('decimal', { precision: 10, scale: 2 })
   amount: number;
@@ -44,7 +44,7 @@ export class Payment {
   status: PaymentStatus;
 
   @Column()
-  center_id: number;
+  center_id: string;
 
   @Column('text', { nullable: true })
   description: string;

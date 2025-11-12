@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { LeadsService } from './leads.service';
 import { CreateLeadDto, UpdateLeadDto } from './dto/lead.dto';
@@ -26,11 +26,11 @@ export class LeadsController {
   @Get()
   @Roles(RoleName.ADMIN, RoleName.MANAGER, RoleName.TEACHER)
   @ApiOperation({ summary: 'Get all leads' })
-  @ApiQuery({ name: 'centerId', required: false, type: 'number' })
+  @ApiQuery({ name: 'centerId', required: false, type: 'string' })
   @ApiQuery({ name: 'status', required: false, enum: LeadStatus })
   @ApiResponse({ status: 200, description: 'Leads retrieved successfully' })
   findAll(
-    @Query('centerId') centerId?: number,
+    @Query('centerId') centerId?: string,
     @Query('status') status?: LeadStatus,
   ) {
     return this.leadsService.findAll(centerId, status);
@@ -39,11 +39,11 @@ export class LeadsController {
   @Get('assigned-to-me')
   @Roles(RoleName.MANAGER, RoleName.TEACHER)
   @ApiOperation({ summary: 'Get leads assigned to current user' })
-  @ApiQuery({ name: 'centerId', required: false, type: 'number' })
+  @ApiQuery({ name: 'centerId', required: false, type: 'string' })
   @ApiResponse({ status: 200, description: 'Assigned leads retrieved successfully' })
   findAssignedToMe(
-    @GetUser('userId') userId: number,
-    @Query('centerId') centerId?: number,
+    @GetUser('userId') userId: string,
+    @Query('centerId') centerId?: string,
   ) {
     return this.leadsService.findByAssignedUser(userId, centerId);
   }
@@ -51,9 +51,9 @@ export class LeadsController {
   @Get('stats')
   @Roles(RoleName.ADMIN, RoleName.MANAGER)
   @ApiOperation({ summary: 'Get lead statistics' })
-  @ApiQuery({ name: 'centerId', required: false, type: 'number' })
+  @ApiQuery({ name: 'centerId', required: false, type: 'string' })
   @ApiResponse({ status: 200, description: 'Lead statistics retrieved successfully' })
-  getStats(@Query('centerId') centerId?: number) {
+  getStats(@Query('centerId') centerId?: string) {
     return this.leadsService.getLeadStats(centerId);
   }
 
@@ -61,7 +61,7 @@ export class LeadsController {
   @ApiOperation({ summary: 'Get lead by ID' })
   @ApiResponse({ status: 200, description: 'Lead retrieved successfully' })
   @ApiResponse({ status: 404, description: 'Lead not found' })
-  findOne(@Param('id', ParseIntPipe) id: number) {
+  findOne(@Param('id') id: string) {
     return this.leadsService.findOne(id);
   }
 
@@ -71,9 +71,9 @@ export class LeadsController {
   @ApiResponse({ status: 200, description: 'Lead updated successfully' })
   @ApiResponse({ status: 404, description: 'Lead not found' })
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateLeadDto: UpdateLeadDto,
-    @GetUser('userId') userId: number,
+    @GetUser('userId') userId: string,
   ) {
     return this.leadsService.update(id, updateLeadDto, userId);
   }
@@ -83,7 +83,7 @@ export class LeadsController {
   @ApiOperation({ summary: 'Convert lead to student' })
   @ApiResponse({ status: 200, description: 'Lead converted to student successfully' })
   @ApiResponse({ status: 404, description: 'Lead not found' })
-  convertToStudent(@Param('id', ParseIntPipe) id: number) {
+  convertToStudent(@Param('id') id: string) {
     return this.leadsService.convertToStudent(id);
   }
 
@@ -93,8 +93,8 @@ export class LeadsController {
   @ApiResponse({ status: 200, description: 'Lead deleted successfully' })
   @ApiResponse({ status: 404, description: 'Lead not found' })
   remove(
-    @Param('id', ParseIntPipe) id: number,
-    @GetUser('userId') userId: number,
+    @Param('id') id: string,
+    @GetUser('userId') userId: string,
   ) {
     return this.leadsService.remove(id, userId);
   }

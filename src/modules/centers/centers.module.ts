@@ -4,8 +4,6 @@ import {
   Center, 
   User, 
   Role, 
-  TestAssignment, 
-  TestResult 
 } from '../../entities';
 import { CentersService } from './centers.service';
 import { CentersController } from './centers.controller';
@@ -16,8 +14,6 @@ import { CentersController } from './centers.controller';
       Center, 
       User, 
       Role, 
-      TestAssignment, 
-      TestResult
     ])
   ],
   controllers: [

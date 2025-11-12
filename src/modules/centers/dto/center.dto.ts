@@ -14,9 +14,9 @@ export class CreateCenterDto {
   @IsOptional()
   address?: string;
 
-  @ApiProperty({ example: 1, description: 'Owner user ID' })
+  @ApiProperty({ example: 'uuid-string', description: 'Owner user ID' })
   @IsNotEmpty()
-  owner_id: number;
+  owner_id: string;
 
   @ApiPropertyOptional({ example: '+1234567890', description: 'Center phone number' })
   @IsOptional()

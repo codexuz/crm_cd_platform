@@ -20,7 +20,7 @@ export class LeadsService {
     return this.leadRepository.save(lead);
   }
 
-  async findAll(centerId?: number, status?: LeadStatus): Promise<Lead[]> {
+  async findAll(centerId?: string, status?: LeadStatus): Promise<Lead[]> {
     const queryBuilder = this.leadRepository
       .createQueryBuilder('lead')
       .leftJoinAndSelect('lead.center', 'center')
@@ -39,7 +39,7 @@ export class LeadsService {
     return queryBuilder.getMany();
   }
 
-  async findOne(id: number): Promise<Lead> {
+  async findOne(id: string): Promise<Lead> {
     const lead = await this.leadRepository.findOne({
       where: { id },
       relations: ['center', 'assigned_to_user', 'trail_lessons', 'trail_lessons.teacher'],
@@ -52,7 +52,7 @@ export class LeadsService {
     return lead;
   }
 
-  async findByAssignedUser(userId: number, centerId?: number): Promise<Lead[]> {
+  async findByAssignedUser(userId: string, centerId?: string): Promise<Lead[]> {
     const queryBuilder = this.leadRepository
       .createQueryBuilder('lead')
       .leftJoinAndSelect('lead.center', 'center')
@@ -67,7 +67,7 @@ export class LeadsService {
     return queryBuilder.getMany();
   }
 
-  async update(id: number, updateLeadDto: UpdateLeadDto, userId?: number): Promise<Lead> {
+  async update(id: string, updateLeadDto: UpdateLeadDto, userId?: string): Promise<Lead> {
     const lead = await this.findOne(id);
 
     // Optional: Check if user has permission to update this lead
@@ -82,7 +82,7 @@ export class LeadsService {
     return this.findOne(id);
   }
 
-  async remove(id: number, userId?: number): Promise<void> {
+  async remove(id: string, userId?: string): Promise<void> {
     const lead = await this.findOne(id);
     
     // Optional: Add permission checks here
@@ -90,7 +90,7 @@ export class LeadsService {
     await this.leadRepository.delete(id);
   }
 
-  async getLeadStats(centerId?: number) {
+  async getLeadStats(centerId?: string) {
     const queryBuilder = this.leadRepository.createQueryBuilder('lead');
     
     if (centerId) {
@@ -124,7 +124,7 @@ export class LeadsService {
     };
   }
 
-  async convertToStudent(leadId: number): Promise<{ message: string }> {
+  async convertToStudent(leadId: string): Promise<{ message: string }> {
     const lead = await this.findOne(leadId);
     
     // Update lead status to enrolled

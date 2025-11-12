@@ -20,8 +20,8 @@ export enum InterestLevel {
 
 @Entity('leads')
 export class Lead {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ length: 100 })
   name: string;
@@ -40,10 +40,10 @@ export class Lead {
   interest_level: InterestLevel;
 
   @Column({ nullable: true })
-  assigned_to: number;
+  assigned_to: string;
 
   @Column()
-  center_id: number;
+  center_id: string;
 
   @Column({
     type: 'enum',

@@ -11,14 +11,14 @@ export enum LessonStatus {
 
 @Entity('lead_trail_lessons')
 export class LeadTrailLesson {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
-  lead_id: number;
+  lead_id: string;
 
   @Column()
-  teacher_id: number;
+  teacher_id: string;
 
   @Column({
     type: 'enum',
@@ -31,7 +31,7 @@ export class LeadTrailLesson {
   note: string;
 
   @Column()
-  added_by: number;
+  added_by: string;
 
   @Column('datetime', { nullable: true })
   lesson_date: Date;

@@ -17,14 +17,14 @@ export enum SalaryStatus {
 
 @Entity('teacher_salary')
 export class TeacherSalary {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
-  teacher_id: number;
+  teacher_id: string;
 
   @Column({ nullable: true })
-  center_id: number;
+  center_id: string;
 
   @Column({ length: 7 }) // Format: YYYY-MM
   month: string;

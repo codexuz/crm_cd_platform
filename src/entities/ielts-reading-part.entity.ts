@@ -17,11 +17,11 @@ export enum ReadingPart {
 
 @Entity('ielts_reading_parts')
 export class IeltsReadingPart {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column({ nullable: true })
-  reading_id: number;
+  reading_id: string;
 
   @Column({
     type: 'enum',
@@ -30,7 +30,7 @@ export class IeltsReadingPart {
   part: ReadingPart;
 
   @Column({ nullable: true })
-  question_id: number;
+  question_id: string;
 
   @Column('longtext', { nullable: true })
   passage: string; // The reading passage/text

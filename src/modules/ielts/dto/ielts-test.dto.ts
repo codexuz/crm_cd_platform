@@ -37,19 +37,19 @@ export class CreateIeltsTestDto {
 
   @ApiPropertyOptional({
     description: 'ID of the associated listening test',
-    example: 123
+    example: 'uuid-string-listening'
   })
   @IsOptional()
-  @IsNumber()
-  listening_id?: number;
+  @IsString()
+  listening_id?: string;
 
   @ApiPropertyOptional({
     description: 'ID of the associated reading test',
-    example: 456
+    example: 'uuid-string-reading'
   })
   @IsOptional()
-  @IsNumber()
-  reading_id?: number;
+  @IsString()
+  reading_id?: string;
 }
 
 export class UpdateIeltsTestDto {
@@ -79,19 +79,19 @@ export class UpdateIeltsTestDto {
 
   @ApiPropertyOptional({
     description: 'ID of the associated listening test',
-    example: 789
+    example: 'uuid-string-listening-update'
   })
   @IsOptional()
-  @IsNumber()
-  listening_id?: number;
+  @IsString()
+  listening_id?: string;
 
   @ApiPropertyOptional({
     description: 'ID of the associated reading test',
-    example: 101112
+    example: 'uuid-string-reading-update'
   })
   @IsOptional()
-  @IsNumber()
-  reading_id?: number;
+  @IsString()
+  reading_id?: string;
 
   @ApiPropertyOptional({
     description: 'Whether the test is active/available',

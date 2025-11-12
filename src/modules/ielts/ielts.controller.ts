@@ -7,7 +7,6 @@ import {
   Body,
   Param,
   UseGuards,
-  ParseIntPipe,
 } from '@nestjs/common';
 import { IeltsService } from './ielts.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -29,31 +28,31 @@ export class IeltsController {
   @Post('tests')
   async createTest(
     @Body() createTestDto: CreateIeltsTestDto,
-    @GetTenant() centerId: number,
-    @GetUser('sub') userId: number,
+    @GetTenant() centerId: string,
+    @GetUser('sub') userId: string,
   ) {
     return await this.ieltsService.createTest(createTestDto, centerId, userId);
   }
 
   @Get('tests')
-  async getAllTests(@GetTenant() centerId: number) {
+  async getAllTests(@GetTenant() centerId: string) {
     return await this.ieltsService.getAllTests(centerId);
   }
 
   @Get('tests/:id')
   async getTestById(
-    @Param('id', ParseIntPipe) id: number,
-    @GetTenant() centerId: number,
+    @Param('id') id: string,
+    @GetTenant() centerId: string,
   ) {
     return await this.ieltsService.getTestById(id, centerId);
   }
 
   @Put('tests/:id')
   async updateTest(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateTestDto: UpdateIeltsTestDto,
-    @GetTenant() centerId: number,
-    @GetUser('sub') userId: number,
+    @GetTenant() centerId: string,
+    @GetUser('sub') userId: string,
   ) {
     return await this.ieltsService.updateTest(
       id,
@@ -65,8 +64,8 @@ export class IeltsController {
 
   @Delete('tests/:id')
   async deleteTest(
-    @Param('id', ParseIntPipe) id: number,
-    @GetTenant() centerId: number,
+    @Param('id') id: string,
+    @GetTenant() centerId: string,
   ) {
     await this.ieltsService.deleteTest(id, centerId);
     return { message: 'Test deleted successfully' };
@@ -76,8 +75,8 @@ export class IeltsController {
   @Post('listening')
   async createListening(
     @Body() createListeningDto: CreateListeningDto,
-    @GetTenant() centerId: number,
-    @GetUser('sub') userId: number,
+    @GetTenant() centerId: string,
+    @GetUser('sub') userId: string,
   ) {
     return await this.ieltsService.createListening(
       createListeningDto,
@@ -87,14 +86,14 @@ export class IeltsController {
   }
 
   @Get('listening')
-  async getAllListenings(@GetTenant() centerId: number) {
+  async getAllListenings(@GetTenant() centerId: string) {
     return await this.ieltsService.getAllListenings(centerId);
   }
 
   @Get('listening/:id')
   async getListeningById(
-    @Param('id', ParseIntPipe) id: number,
-    @GetTenant() centerId: number,
+    @Param('id') id: string,
+    @GetTenant() centerId: string,
   ) {
     return await this.ieltsService.getListeningById(id, centerId);
   }
@@ -103,8 +102,8 @@ export class IeltsController {
   @Post('reading')
   async createReading(
     @Body() createReadingDto: CreateReadingDto,
-    @GetTenant() centerId: number,
-    @GetUser('sub') userId: number,
+    @GetTenant() centerId: string,
+    @GetUser('sub') userId: string,
   ) {
     return await this.ieltsService.createReading(
       createReadingDto,
@@ -114,14 +113,14 @@ export class IeltsController {
   }
 
   @Get('reading')
-  async getAllReadings(@GetTenant() centerId: number) {
+  async getAllReadings(@GetTenant() centerId: string) {
     return await this.ieltsService.getAllReadings(centerId);
   }
 
   @Get('reading/:id')
   async getReadingById(
-    @Param('id', ParseIntPipe) id: number,
-    @GetTenant() centerId: number,
+    @Param('id') id: string,
+    @GetTenant() centerId: string,
   ) {
     return await this.ieltsService.getReadingById(id, centerId);
   }
@@ -135,8 +134,8 @@ export class IeltsController {
       listening: CreateListeningDto;
       reading: CreateReadingDto;
     },
-    @GetTenant() centerId: number,
-    @GetUser('sub') userId: number,
+    @GetTenant() centerId: string,
+    @GetUser('sub') userId: string,
   ) {
     return await this.ieltsService.createCompleteTest(
       body.test,
