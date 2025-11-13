@@ -46,7 +46,7 @@ export class CentersController {
   }
 
   @Get()
-  @Roles(RoleName.ADMIN, RoleName.MANAGER)
+  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER)
   @ApiOperation({ summary: 'Get all centers' })
   @ApiResponse({ status: 200, description: 'Centers retrieved successfully' })
   findAll() {
@@ -54,7 +54,7 @@ export class CentersController {
   }
 
   @Get('my-centers')
-  @Roles(RoleName.ADMIN, RoleName.MANAGER)
+  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER)
   @ApiOperation({ summary: 'Get centers owned by current user' })
   @ApiResponse({ status: 200, description: 'Centers retrieved successfully' })
   findMyOwned(@GetUser('userId') userId: string) {
@@ -70,7 +70,7 @@ export class CentersController {
   }
 
   @Get(':id/stats')
-  @Roles(RoleName.ADMIN, RoleName.MANAGER)
+  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER)
   @ApiOperation({ summary: 'Get center statistics' })
   @ApiResponse({
     status: 200,

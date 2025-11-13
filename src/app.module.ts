@@ -11,6 +11,8 @@ import { LeadsModule } from './modules/leads/leads.module';
 import { GroupsModule } from './modules/groups/groups.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { SalaryModule } from './modules/salary/salary.module';
+import { AttendanceModule } from './modules/attendance/attendance.module';
+import { SettingsModule } from './modules/settings/settings.module';
 import { HealthModule } from './health/health.module';
 import { IeltsModule } from './modules/ielts/ielts.module';
 
@@ -32,6 +34,8 @@ import { IeltsModule } from './modules/ielts/ielts.module';
     GroupsModule,
     PaymentsModule,
     SalaryModule,
+    AttendanceModule,
+    SettingsModule,
     HealthModule,
     IeltsModule,
   ],

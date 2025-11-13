@@ -1,7 +1,27 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { SalaryService } from './salary.service';
-import { CreateTeacherSalaryDto, UpdateTeacherSalaryDto, MarkSalaryPaidDto } from './dto/salary.dto';
+import {
+  CreateTeacherSalaryDto,
+  UpdateTeacherSalaryDto,
+  MarkSalaryPaidDto,
+} from './dto/salary.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -16,21 +36,35 @@ export class SalaryController {
   constructor(private readonly salaryService: SalaryService) {}
 
   @Post()
-  @Roles(RoleName.ADMIN, RoleName.MANAGER)
+  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER)
   @ApiOperation({ summary: 'Create a new salary record' })
-  @ApiResponse({ status: 201, description: 'Salary record created successfully' })
-  @ApiResponse({ status: 400, description: 'Salary record already exists for this month' })
+  @ApiResponse({
+    status: 201,
+    description: 'Salary record created successfully',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Salary record already exists for this month',
+  })
   create(@Body() createSalaryDto: CreateTeacherSalaryDto) {
     return this.salaryService.create(createSalaryDto);
   }
 
   @Get()
-  @Roles(RoleName.ADMIN, RoleName.MANAGER)
+  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER)
   @ApiOperation({ summary: 'Get all salary records' })
   @ApiQuery({ name: 'centerId', required: false, type: 'string' })
   @ApiQuery({ name: 'status', required: false, enum: SalaryStatus })
-  @ApiQuery({ name: 'month', required: false, type: 'string', description: 'Format: YYYY-MM' })
-  @ApiResponse({ status: 200, description: 'Salary records retrieved successfully' })
+  @ApiQuery({
+    name: 'month',
+    required: false,
+    type: 'string',
+    description: 'Format: YYYY-MM',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Salary records retrieved successfully',
+  })
   findAll(
     @Query('centerId') centerId?: string,
     @Query('status') status?: SalaryStatus,
@@ -43,7 +77,10 @@ export class SalaryController {
   @Roles(RoleName.TEACHER)
   @ApiOperation({ summary: 'Get current teacher salary records' })
   @ApiQuery({ name: 'year', required: false, type: 'number' })
-  @ApiResponse({ status: 200, description: 'Teacher salary records retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Teacher salary records retrieved successfully',
+  })
   getMysalary(
     @GetUser('userId') teacherId: string,
     @Query('year') year?: number,
@@ -55,7 +92,10 @@ export class SalaryController {
   @Roles(RoleName.TEACHER)
   @ApiOperation({ summary: 'Get current teacher salary summary' })
   @ApiQuery({ name: 'year', required: false, type: 'number' })
-  @ApiResponse({ status: 200, description: 'Teacher salary summary retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Teacher salary summary retrieved successfully',
+  })
   getMySalarySummary(
     @GetUser('userId') teacherId: string,
     @Query('year') year?: number,
@@ -64,22 +104,27 @@ export class SalaryController {
   }
 
   @Get('stats')
-  @Roles(RoleName.ADMIN, RoleName.MANAGER)
+  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER)
   @ApiOperation({ summary: 'Get salary statistics' })
   @ApiQuery({ name: 'centerId', required: false, type: 'string' })
   @ApiQuery({ name: 'year', required: false, type: 'number' })
-  @ApiResponse({ status: 200, description: 'Salary statistics retrieved successfully' })
-  getStats(
-    @Query('centerId') centerId?: string,
-    @Query('year') year?: number,
-  ) {
+  @ApiResponse({
+    status: 200,
+    description: 'Salary statistics retrieved successfully',
+  })
+  getStats(@Query('centerId') centerId?: string, @Query('year') year?: number) {
     return this.salaryService.getSalaryStats(centerId, year);
   }
 
   @Post('generate-monthly')
-  @Roles(RoleName.ADMIN, RoleName.MANAGER)
-  @ApiOperation({ summary: 'Generate monthly salaries for all teachers in a center' })
-  @ApiResponse({ status: 201, description: 'Monthly salaries generated successfully' })
+  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER)
+  @ApiOperation({
+    summary: 'Generate monthly salaries for all teachers in a center',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Monthly salaries generated successfully',
+  })
   generateMonthlySalaries(
     @Body() body: { centerId: string; month: string; hourlyRate?: number },
   ) {
@@ -91,10 +136,13 @@ export class SalaryController {
   }
 
   @Get('teacher/:teacherId')
-  @Roles(RoleName.ADMIN, RoleName.MANAGER)
+  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER)
   @ApiOperation({ summary: 'Get salary records for specific teacher' })
   @ApiQuery({ name: 'year', required: false, type: 'number' })
-  @ApiResponse({ status: 200, description: 'Teacher salary records retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Teacher salary records retrieved successfully',
+  })
   findByTeacher(
     @Param('teacherId') teacherId: string,
     @Query('year') year?: number,
@@ -103,10 +151,13 @@ export class SalaryController {
   }
 
   @Get('teacher/:teacherId/summary')
-  @Roles(RoleName.ADMIN, RoleName.MANAGER)
+  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER)
   @ApiOperation({ summary: 'Get salary summary for specific teacher' })
   @ApiQuery({ name: 'year', required: false, type: 'number' })
-  @ApiResponse({ status: 200, description: 'Teacher salary summary retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Teacher salary summary retrieved successfully',
+  })
   getTeacherSummary(
     @Param('teacherId') teacherId: string,
     @Query('year') year?: number,
@@ -116,16 +167,22 @@ export class SalaryController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Get salary record by ID' })
-  @ApiResponse({ status: 200, description: 'Salary record retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Salary record retrieved successfully',
+  })
   @ApiResponse({ status: 404, description: 'Salary record not found' })
   findOne(@Param('id') id: string) {
     return this.salaryService.findOne(id);
   }
 
   @Patch(':id')
-  @Roles(RoleName.ADMIN, RoleName.MANAGER)
+  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER)
   @ApiOperation({ summary: 'Update salary record' })
-  @ApiResponse({ status: 200, description: 'Salary record updated successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Salary record updated successfully',
+  })
   @ApiResponse({ status: 404, description: 'Salary record not found' })
   update(
     @Param('id') id: string,
@@ -135,22 +192,25 @@ export class SalaryController {
   }
 
   @Patch(':id/mark-paid')
-  @Roles(RoleName.ADMIN, RoleName.MANAGER)
+  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER)
   @ApiOperation({ summary: 'Mark salary as paid' })
-  @ApiResponse({ status: 200, description: 'Salary marked as paid successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Salary marked as paid successfully',
+  })
   @ApiResponse({ status: 400, description: 'Salary already marked as paid' })
   @ApiResponse({ status: 404, description: 'Salary record not found' })
-  markAsPaid(
-    @Param('id') id: string,
-    @Body() markPaidDto: MarkSalaryPaidDto,
-  ) {
+  markAsPaid(@Param('id') id: string, @Body() markPaidDto: MarkSalaryPaidDto) {
     return this.salaryService.markAsPaid(id, markPaidDto);
   }
 
   @Delete(':id')
-  @Roles(RoleName.ADMIN)
+  @Roles(RoleName.ADMIN, RoleName.OWNER)
   @ApiOperation({ summary: 'Delete salary record' })
-  @ApiResponse({ status: 200, description: 'Salary record deleted successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Salary record deleted successfully',
+  })
   @ApiResponse({ status: 404, description: 'Salary record not found' })
   remove(@Param('id') id: string) {
     return this.salaryService.remove(id);

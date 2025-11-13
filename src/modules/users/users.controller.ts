@@ -1,7 +1,27 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { UsersService } from './users.service';
-import { CreateUserDto, UpdateUserDto, ChangePasswordDto } from './dto/user.dto';
+import {
+  CreateUserDto,
+  UpdateUserDto,
+  ChangePasswordDto,
+} from './dto/user.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -16,7 +36,7 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  @Roles(RoleName.ADMIN, RoleName.MANAGER)
+  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER)
   @ApiOperation({ summary: 'Create a new user' })
   @ApiResponse({ status: 201, description: 'User created successfully' })
   create(@Body() createUserDto: CreateUserDto) {
@@ -24,7 +44,7 @@ export class UsersController {
   }
 
   @Get()
-  @Roles(RoleName.ADMIN, RoleName.MANAGER)
+  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER)
   @ApiOperation({ summary: 'Get all users' })
   @ApiQuery({ name: 'centerId', required: false, type: 'number' })
   @ApiResponse({ status: 200, description: 'Users retrieved successfully' })
@@ -33,7 +53,7 @@ export class UsersController {
   }
 
   @Get('by-role/:role')
-  @Roles(RoleName.ADMIN, RoleName.MANAGER)
+  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER)
   @ApiOperation({ summary: 'Get users by role' })
   @ApiQuery({ name: 'centerId', required: false, type: 'number' })
   findByRole(
@@ -58,7 +78,7 @@ export class UsersController {
   }
 
   @Patch(':id')
-  @Roles(RoleName.ADMIN, RoleName.MANAGER)
+  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER)
   @ApiOperation({ summary: 'Update user' })
   @ApiResponse({ status: 200, description: 'User updated successfully' })
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
@@ -76,7 +96,7 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @Roles(RoleName.ADMIN)
+  @Roles(RoleName.ADMIN, RoleName.OWNER)
   @ApiOperation({ summary: 'Delete user' })
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
   remove(@Param('id') id: string) {

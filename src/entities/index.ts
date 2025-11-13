@@ -1,11 +1,13 @@
 export { Center } from './center.entity';
 export { User } from './user.entity';
 export { Role, RoleName } from './role.entity';
-export { Lead, LeadStatus, InterestLevel } from './lead.entity';
+export { Lead, LeadStatus } from './lead.entity';
 export { LeadTrailLesson, LessonStatus } from './lead-trail-lesson.entity';
 export { Group, GroupLevel } from './group.entity';
 export { Payment, PaymentMethod, PaymentStatus } from './payment.entity';
 export { TeacherSalary, SalaryStatus } from './teacher-salary.entity';
+export { Attendance, AttendanceStatus } from './attendance.entity';
+export { CenterSettings, ModuleName } from './center-settings.entity';
 export { IeltsTest } from './ielts-test.entity';
 export { IeltsListening } from './ielts-listening.entity';
 export {

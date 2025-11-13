@@ -1,4 +1,13 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+  OneToMany,
+} from 'typeorm';
 import { Center } from './center.entity';
 import { User } from './user.entity';
 import { LeadTrailLesson } from './lead-trail-lesson.entity';
@@ -6,16 +15,8 @@ import { LeadTrailLesson } from './lead-trail-lesson.entity';
 export enum LeadStatus {
   NEW = 'new',
   CONTACTED = 'contacted',
-  INTERESTED = 'interested',
   ENROLLED = 'enrolled',
-  REJECTED = 'rejected',
-  LOST = 'lost'
-}
-
-export enum InterestLevel {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high'
+  LOST = 'lost',
 }
 
 @Entity('leads')
@@ -30,14 +31,10 @@ export class Lead {
   phone: string;
 
   @Column({ length: 100, nullable: true })
-  email: string;
+  parent_name: string;
 
-  @Column({
-    type: 'enum',
-    enum: InterestLevel,
-    default: InterestLevel.MEDIUM
-  })
-  interest_level: InterestLevel;
+  @Column({ length: 20, nullable: true })
+  parent_phone: string;
 
   @Column({ nullable: true })
   assigned_to: string;
@@ -48,7 +45,7 @@ export class Lead {
   @Column({
     type: 'enum',
     enum: LeadStatus,
-    default: LeadStatus.NEW
+    default: LeadStatus.NEW,
   })
   status: LeadStatus;
 
@@ -65,14 +62,14 @@ export class Lead {
   updated_at: Date;
 
   // Relations
-  @ManyToOne(() => Center, center => center.leads)
+  @ManyToOne(() => Center, (center) => center.leads)
   @JoinColumn({ name: 'center_id' })
   center: Center;
 
-  @ManyToOne(() => User, user => user.assigned_leads, { nullable: true })
+  @ManyToOne(() => User, (user) => user.assigned_leads, { nullable: true })
   @JoinColumn({ name: 'assigned_to' })
   assigned_to_user: User;
 
-  @OneToMany(() => LeadTrailLesson, lesson => lesson.lead)
+  @OneToMany(() => LeadTrailLesson, (lesson) => lesson.lead)
   trail_lessons: LeadTrailLesson[];
 }
