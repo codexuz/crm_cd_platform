@@ -24,13 +24,17 @@ import {
 } from './dto/salary.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { SubscriptionGuard } from '../../common/guards/subscription.guard';
+import { ModuleAccessGuard } from '../../common/guards/module-access.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { RequiresModules } from '../../common/decorators/subscription.decorator';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 import { RoleName, SalaryStatus } from '../../entities';
 
 @ApiTags('Salary')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, SubscriptionGuard, ModuleAccessGuard)
+@RequiresModules('salary')
 @Controller('salary')
 export class SalaryController {
   constructor(private readonly salaryService: SalaryService) {}

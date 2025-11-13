@@ -8,6 +8,11 @@ export { Payment, PaymentMethod, PaymentStatus } from './payment.entity';
 export { TeacherSalary, SalaryStatus } from './teacher-salary.entity';
 export { Attendance, AttendanceStatus } from './attendance.entity';
 export { CenterSettings, ModuleName } from './center-settings.entity';
+export {
+  Subscription,
+  SubscriptionPlan,
+  SubscriptionStatus,
+} from './subscription.entity';
 export { IeltsTest } from './ielts-test.entity';
 export { IeltsListening } from './ielts-listening.entity';
 export {

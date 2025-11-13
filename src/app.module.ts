@@ -13,6 +13,7 @@ import { PaymentsModule } from './modules/payments/payments.module';
 import { SalaryModule } from './modules/salary/salary.module';
 import { AttendanceModule } from './modules/attendance/attendance.module';
 import { SettingsModule } from './modules/settings/settings.module';
+import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { HealthModule } from './health/health.module';
 import { IeltsModule } from './modules/ielts/ielts.module';
 
@@ -36,6 +37,7 @@ import { IeltsModule } from './modules/ielts/ielts.module';
     SalaryModule,
     AttendanceModule,
     SettingsModule,
+    SubscriptionsModule,
     HealthModule,
     IeltsModule,
   ],

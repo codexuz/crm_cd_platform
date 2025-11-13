@@ -24,12 +24,16 @@ import {
 } from './dto/attendance.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { SubscriptionGuard } from '../../common/guards/subscription.guard';
+import { ModuleAccessGuard } from '../../common/guards/module-access.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { RequiresModules } from '../../common/decorators/subscription.decorator';
 import { RoleName } from '../../entities';
 
 @ApiTags('Attendance')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, SubscriptionGuard, ModuleAccessGuard)
+@RequiresModules('attendance')
 @Controller('attendance')
 export class AttendanceController {
   constructor(private readonly attendanceService: AttendanceService) {}

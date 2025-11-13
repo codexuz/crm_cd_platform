@@ -11,6 +11,7 @@ import {
   IeltsQuestion,
   IeltsAudio,
   User,
+  Subscription,
 } from '../../entities';
 
 @Module({
@@ -24,16 +25,11 @@ import {
       IeltsQuestion,
       IeltsAudio,
       User,
+      Subscription,
     ]),
   ],
-  controllers: [
-    IeltsController, 
-  ],
-  providers: [
-    IeltsService,
-  ],
-  exports: [
-    IeltsService,
-  ],
+  controllers: [IeltsController],
+  providers: [IeltsService],
+  exports: [IeltsService],
 })
 export class IeltsModule {}

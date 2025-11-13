@@ -10,6 +10,9 @@ import {
 } from '@nestjs/common';
 import { IeltsService } from './ielts.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
+import { SubscriptionGuard } from '../../common/guards/subscription.guard';
+import { ModuleAccessGuard } from '../../common/guards/module-access.guard';
+import { RequiresModules } from '../../common/decorators/subscription.decorator';
 import { GetTenant } from '../../common/decorators/get-tenant.decorator';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 import {
@@ -20,7 +23,8 @@ import {
 } from './dto/ielts-test.dto';
 
 @Controller('ielts')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, SubscriptionGuard, ModuleAccessGuard)
+@RequiresModules('ielts')
 export class IeltsController {
   constructor(private readonly ieltsService: IeltsService) {}
 
@@ -40,10 +44,7 @@ export class IeltsController {
   }
 
   @Get('tests/:id')
-  async getTestById(
-    @Param('id') id: string,
-    @GetTenant() centerId: string,
-  ) {
+  async getTestById(@Param('id') id: string, @GetTenant() centerId: string) {
     return await this.ieltsService.getTestById(id, centerId);
   }
 
@@ -63,10 +64,7 @@ export class IeltsController {
   }
 
   @Delete('tests/:id')
-  async deleteTest(
-    @Param('id') id: string,
-    @GetTenant() centerId: string,
-  ) {
+  async deleteTest(@Param('id') id: string, @GetTenant() centerId: string) {
     await this.ieltsService.deleteTest(id, centerId);
     return { message: 'Test deleted successfully' };
   }
@@ -118,10 +116,7 @@ export class IeltsController {
   }
 
   @Get('reading/:id')
-  async getReadingById(
-    @Param('id') id: string,
-    @GetTenant() centerId: string,
-  ) {
+  async getReadingById(@Param('id') id: string, @GetTenant() centerId: string) {
     return await this.ieltsService.getReadingById(id, centerId);
   }
 

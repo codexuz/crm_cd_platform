@@ -20,13 +20,17 @@ import { PaymentsService } from './payments.service';
 import { CreatePaymentDto, UpdatePaymentDto } from './dto/payment.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { SubscriptionGuard } from '../../common/guards/subscription.guard';
+import { ModuleAccessGuard } from '../../common/guards/module-access.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { RequiresModules } from '../../common/decorators/subscription.decorator';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 import { RoleName, PaymentStatus } from '../../entities';
 
 @ApiTags('Payments')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, SubscriptionGuard, ModuleAccessGuard)
+@RequiresModules('payments')
 @Controller('payments')
 export class PaymentsController {
   constructor(private readonly paymentsService: PaymentsService) {}

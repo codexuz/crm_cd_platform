@@ -20,13 +20,17 @@ import { LeadsService } from './leads.service';
 import { CreateLeadDto, UpdateLeadDto } from './dto/lead.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
+import { SubscriptionGuard } from '../../common/guards/subscription.guard';
+import { ModuleAccessGuard } from '../../common/guards/module-access.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { RequiresModules } from '../../common/decorators/subscription.decorator';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 import { RoleName, LeadStatus } from '../../entities';
 
 @ApiTags('Leads')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, RolesGuard, SubscriptionGuard, ModuleAccessGuard)
+@RequiresModules('leads')
 @Controller('leads')
 export class LeadsController {
   constructor(private readonly leadsService: LeadsService) {}
