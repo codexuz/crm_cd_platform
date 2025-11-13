@@ -16,6 +16,7 @@ import { TeacherSalary } from './teacher-salary.entity';
 import { IeltsTest } from './ielts-test.entity';
 import { IeltsListening } from './ielts-listening.entity';
 import { IeltsReading } from './ielts-reading.entity';
+import { IeltsWriting } from './ielts-writing.entity';
 
 @Entity('centers')
 export class Center {
@@ -80,4 +81,7 @@ export class Center {
 
   @OneToMany(() => IeltsReading, (reading) => reading.center)
   ielts_readings: IeltsReading[];
+
+  @OneToMany(() => IeltsWriting, (writing) => writing.center)
+  ielts_writings: IeltsWriting[];
 }

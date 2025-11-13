@@ -7,16 +7,21 @@ import {
   IeltsListeningPart,
   IeltsReading,
   IeltsReadingPart,
+  IeltsWriting,
+  IeltsWritingTask,
   IeltsQuestion,
   IeltsAudio,
   ListeningPart,
   ReadingPart,
+  WritingTask,
+  WritingTaskType,
 } from '../../entities';
 import {
   CreateIeltsTestDto,
   UpdateIeltsTestDto,
   CreateListeningDto,
   CreateReadingDto,
+  CreateWritingDto,
 } from './dto/ielts-test.dto';
 
 @Injectable()
@@ -32,6 +37,10 @@ export class IeltsService {
     private readingRepository: Repository<IeltsReading>,
     @InjectRepository(IeltsReadingPart)
     private readingPartRepository: Repository<IeltsReadingPart>,
+    @InjectRepository(IeltsWriting)
+    private writingRepository: Repository<IeltsWriting>,
+    @InjectRepository(IeltsWritingTask)
+    private writingTaskRepository: Repository<IeltsWritingTask>,
     @InjectRepository(IeltsQuestion)
     private questionRepository: Repository<IeltsQuestion>,
     @InjectRepository(IeltsAudio)
@@ -262,11 +271,78 @@ export class IeltsService {
     });
   }
 
-  // Create complete test with listening and reading
+  // Writing CRUD
+  async createWriting(
+    createWritingDto: CreateWritingDto,
+    centerId: string,
+    userId: string,
+  ): Promise<IeltsWriting> {
+    const { tasks, ...writingData } = createWritingDto;
+
+    // Create writing
+    const writing = this.writingRepository.create({
+      ...writingData,
+      center_id: centerId,
+      created_by: userId,
+    });
+    const savedWriting = await this.writingRepository.save(writing);
+
+    // Create tasks
+    for (const taskDto of tasks) {
+      const task = this.writingTaskRepository.create({
+        writing_id: savedWriting.id,
+        task: taskDto.task as WritingTask,
+        task_type: taskDto.task_type as WritingTaskType,
+        prompt: taskDto.prompt,
+        visual_url: taskDto.visual_url,
+        min_words: taskDto.min_words || (taskDto.task === 'TASK_1' ? 150 : 250),
+        time_minutes:
+          taskDto.time_minutes || (taskDto.task === 'TASK_1' ? 20 : 40),
+        sample_answer: taskDto.sample_answer || {},
+        assessment_criteria: taskDto.assessment_criteria || {},
+      });
+      await this.writingTaskRepository.save(task);
+    }
+
+    const result = await this.writingRepository.findOne({
+      where: { id: savedWriting.id },
+      relations: ['tasks'],
+    });
+
+    if (!result) {
+      throw new NotFoundException('Failed to create writing test');
+    }
+
+    return result;
+  }
+
+  async getWritingById(id: string, centerId: string): Promise<IeltsWriting> {
+    const writing = await this.writingRepository.findOne({
+      where: { id, center_id: centerId },
+      relations: ['tasks'],
+    });
+
+    if (!writing) {
+      throw new NotFoundException(`Writing with ID ${id} not found`);
+    }
+
+    return writing;
+  }
+
+  async getAllWritings(centerId: string): Promise<IeltsWriting[]> {
+    return await this.writingRepository.find({
+      where: { center_id: centerId, is_active: true },
+      relations: ['tasks'],
+      order: { created_at: 'DESC' },
+    });
+  }
+
+  // Create complete test with listening, reading, and writing
   async createCompleteTest(
     testData: CreateIeltsTestDto,
     listeningData: CreateListeningDto,
     readingData: CreateReadingDto,
+    writingData: CreateWritingDto,
     centerId: string,
     userId: string,
   ): Promise<IeltsTest> {
@@ -283,6 +359,13 @@ export class IeltsService {
     // Create reading with test_id reference
     await this.createReading(
       { ...readingData, test_id: test.id },
+      centerId,
+      userId,
+    );
+
+    // Create writing with test_id reference
+    await this.createWriting(
+      { ...writingData, test_id: test.id },
       centerId,
       userId,
     );

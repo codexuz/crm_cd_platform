@@ -17,6 +17,8 @@ import {
   IeltsListeningPart,
   IeltsReading,
   IeltsReadingPart,
+  IeltsWriting,
+  IeltsWritingTask,
   IeltsQuestion,
   IeltsAudio,
 } from '../entities';
@@ -47,6 +49,8 @@ export const getDatabaseConfig = (
     IeltsListeningPart,
     IeltsReading,
     IeltsReadingPart,
+    IeltsWriting,
+    IeltsWritingTask,
     IeltsQuestion,
     IeltsAudio,
   ],

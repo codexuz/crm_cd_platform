@@ -461,3 +461,150 @@ export class CreateReadingDto {
   @Type(() => CreateReadingPartDto)
   parts: CreateReadingPartDto[];
 }
+
+export class CreateWritingTaskDto {
+  @ApiProperty({
+    description: 'Writing task identifier',
+    enum: ['TASK_1', 'TASK_2'],
+    example: 'TASK_1',
+  })
+  @IsEnum(['TASK_1', 'TASK_2'])
+  task: string;
+
+  @ApiProperty({
+    description: 'Type of writing task',
+    enum: ['academic_task_1', 'general_task_1', 'task_2'],
+    example: 'academic_task_1',
+  })
+  @IsEnum(['academic_task_1', 'general_task_1', 'task_2'])
+  task_type: string;
+
+  @ApiProperty({
+    description: 'The writing task prompt/question',
+    example:
+      'The chart below shows the percentage of households in owned and rented accommodation in England and Wales between 1918 and 2011. Summarize the information by selecting and reporting the main features, and make comparisons where relevant.',
+  })
+  @IsString()
+  prompt: string;
+
+  @ApiPropertyOptional({
+    description:
+      'URL to visual content (chart, graph, diagram) for Academic Task 1',
+    example: 'https://example.com/images/chart-housing-1918-2011.png',
+  })
+  @IsOptional()
+  @IsString()
+  visual_url?: string;
+
+  @ApiPropertyOptional({
+    description: 'Minimum word count required',
+    example: 150,
+  })
+  @IsOptional()
+  @IsNumber()
+  min_words?: number;
+
+  @ApiPropertyOptional({
+    description: 'Suggested time in minutes',
+    example: 20,
+  })
+  @IsOptional()
+  @IsNumber()
+  time_minutes?: number;
+
+  @ApiPropertyOptional({
+    description: 'Sample answer with band score and examiner comments',
+    example: {
+      text: 'The chart illustrates the changes in housing tenure...',
+      band_score: 7.5,
+      examiner_comments: 'Good overview with clear comparisons.',
+    },
+  })
+  @IsOptional()
+  sample_answer?: {
+    text?: string;
+    band_score?: number;
+    examiner_comments?: string;
+  };
+
+  @ApiPropertyOptional({
+    description: 'Assessment criteria for this task',
+    example: {
+      task_achievement: 'Fully addresses all parts of the task',
+      coherence_cohesion: 'Logically organized with clear progression',
+      lexical_resource: 'Wide range of vocabulary used accurately',
+      grammatical_range: 'Wide range of structures with flexibility',
+    },
+  })
+  @IsOptional()
+  assessment_criteria?: {
+    task_achievement?: string;
+    coherence_cohesion?: string;
+    lexical_resource?: string;
+    grammatical_range?: string;
+  };
+}
+
+export class CreateWritingDto {
+  @ApiPropertyOptional({
+    description: 'Title of the writing test',
+    example: 'IELTS Writing Test - Academic Module',
+  })
+  @IsOptional()
+  @IsString()
+  title?: string;
+
+  @ApiPropertyOptional({
+    description: 'Description of the writing test',
+    example:
+      'A comprehensive writing test with Task 1 (visual description) and Task 2 (essay writing).',
+  })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Whether this test is for CDI (Cambridge Development Institute)',
+    example: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  for_cdi?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'ID of the associated IELTS test',
+    example: 'uuid-string-test',
+  })
+  @IsOptional()
+  @IsString()
+  test_id?: string;
+
+  @ApiProperty({
+    description: 'Array of writing tasks (1-2)',
+    type: [CreateWritingTaskDto],
+    example: [
+      {
+        task: 'TASK_1',
+        task_type: 'academic_task_1',
+        prompt:
+          'The chart shows the percentage of households in owned and rented accommodation...',
+        visual_url: 'https://example.com/images/chart.png',
+        min_words: 150,
+        time_minutes: 20,
+      },
+      {
+        task: 'TASK_2',
+        task_type: 'task_2',
+        prompt:
+          'Some people believe that technology has made our lives more complicated. To what extent do you agree or disagree?',
+        min_words: 250,
+        time_minutes: 40,
+      },
+    ],
+  })
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateWritingTaskDto)
+  tasks: CreateWritingTaskDto[];
+}

@@ -21,6 +21,12 @@ export {
 } from './ielts-listening-part.entity';
 export { IeltsReading } from './ielts-reading.entity';
 export { IeltsReadingPart, ReadingPart } from './ielts-reading-part.entity';
+export { IeltsWriting } from './ielts-writing.entity';
+export {
+  IeltsWritingTask,
+  WritingTask,
+  WritingTaskType,
+} from './ielts-writing-task.entity';
 export { IeltsQuestion, QuestionContentType } from './ielts-question.entity';
 export type {
   QuestionContent,

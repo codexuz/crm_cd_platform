@@ -6,20 +6,20 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  OneToMany,
   OneToOne,
 } from 'typeorm';
 import { Center } from './center.entity';
 import { User } from './user.entity';
-import { IeltsListening } from './ielts-listening.entity';
-import { IeltsReading } from './ielts-reading.entity';
-import { IeltsWriting } from './ielts-writing.entity';
+import { IeltsWritingTask } from './ielts-writing-task.entity';
+import { IeltsTest } from './ielts-test.entity';
 
-@Entity('ielts_tests')
-export class IeltsTest {
+@Entity('ielts_writing')
+export class IeltsWriting {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ length: 200 })
+  @Column({ length: 200, nullable: true })
   title: string;
 
   @Column('text', { nullable: true })
@@ -35,7 +35,10 @@ export class IeltsTest {
   updated_by: string;
 
   @Column({ default: false })
-  for_cdi: boolean; // For CDI (Cambridge, etc.)
+  for_cdi: boolean;
+
+  @Column({ nullable: true })
+  test_id: string;
 
   @Column({ default: true })
   is_active: boolean;
@@ -47,7 +50,7 @@ export class IeltsTest {
   updated_at: Date;
 
   // Relations
-  @ManyToOne(() => Center, (center) => center.ielts_tests)
+  @ManyToOne(() => Center, (center) => center.ielts_writings)
   @JoinColumn({ name: 'center_id' })
   center: Center;
 
@@ -59,12 +62,10 @@ export class IeltsTest {
   @JoinColumn({ name: 'updated_by' })
   updater: User;
 
-  @OneToOne(() => IeltsListening, (listening) => listening.test)
-  listening: IeltsListening;
+  @OneToMany(() => IeltsWritingTask, (task) => task.writing)
+  tasks: IeltsWritingTask[];
 
-  @OneToOne(() => IeltsReading, (reading) => reading.test)
-  reading: IeltsReading;
-
-  @OneToOne(() => IeltsWriting, (writing) => writing.test)
-  writing: IeltsWriting;
+  @OneToOne(() => IeltsTest, (test) => test.writing)
+  @JoinColumn({ name: 'test_id' })
+  test: IeltsTest;
 }

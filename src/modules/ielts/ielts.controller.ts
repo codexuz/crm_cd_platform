@@ -20,6 +20,7 @@ import {
   UpdateIeltsTestDto,
   CreateListeningDto,
   CreateReadingDto,
+  CreateWritingDto,
 } from './dto/ielts-test.dto';
 
 @Controller('ielts')
@@ -120,7 +121,31 @@ export class IeltsController {
     return await this.ieltsService.getReadingById(id, centerId);
   }
 
-  // Create complete test (with listening and reading)
+  // Writing endpoints
+  @Post('writing')
+  async createWriting(
+    @Body() createWritingDto: CreateWritingDto,
+    @GetTenant() centerId: string,
+    @GetUser('sub') userId: string,
+  ) {
+    return await this.ieltsService.createWriting(
+      createWritingDto,
+      centerId,
+      userId,
+    );
+  }
+
+  @Get('writing')
+  async getAllWritings(@GetTenant() centerId: string) {
+    return await this.ieltsService.getAllWritings(centerId);
+  }
+
+  @Get('writing/:id')
+  async getWritingById(@Param('id') id: string, @GetTenant() centerId: string) {
+    return await this.ieltsService.getWritingById(id, centerId);
+  }
+
+  // Create complete test (with listening, reading, and writing)
   @Post('tests/complete')
   async createCompleteTest(
     @Body()
@@ -128,6 +153,7 @@ export class IeltsController {
       test: CreateIeltsTestDto;
       listening: CreateListeningDto;
       reading: CreateReadingDto;
+      writing: CreateWritingDto;
     },
     @GetTenant() centerId: string,
     @GetUser('sub') userId: string,
@@ -136,6 +162,7 @@ export class IeltsController {
       body.test,
       body.listening,
       body.reading,
+      body.writing,
       centerId,
       userId,
     );
