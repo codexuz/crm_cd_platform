@@ -45,33 +45,7 @@ export class AuthController {
     return this.authService.register(registerDto);
   }
 
-  @Get('google')
-  @UseGuards(AuthGuard('google'))
-  @ApiOperation({ summary: 'Initiate Google OAuth authentication' })
-  @ApiResponse({ status: 302, description: 'Redirects to Google OAuth' })
-  googleAuth() {
-    // Initiates the Google OAuth2 login flow
-  }
 
-  @Get('google/student')
-  @UseGuards(AuthGuard('google-student'))
-  @ApiOperation({
-    summary: 'Initiate Google OAuth authentication for students',
-  })
-  @ApiResponse({ status: 302, description: 'Redirects to Google OAuth' })
-  googleAuthStudent() {
-    // Role will be handled in the callback
-  }
-
-  @Get('google/teacher')
-  @UseGuards(AuthGuard('google-teacher'))
-  @ApiOperation({
-    summary: 'Initiate Google OAuth authentication for teachers',
-  })
-  @ApiResponse({ status: 302, description: 'Redirects to Google OAuth' })
-  googleAuthTeacher() {
-    // Role will be handled in the callback
-  }
 
   @Get('google/owner')
   @UseGuards(AuthGuard('google-owner'))
@@ -83,62 +57,8 @@ export class AuthController {
     // Role will be handled in the callback
   }
 
-  @Get('google/callback')
-  @UseGuards(AuthGuard('google'))
-  @ApiOperation({ summary: 'Google OAuth callback' })
-  @ApiResponse({
-    status: 302,
-    description: 'Redirects to frontend with auth token',
-  })
-  googleAuthRedirect(@Req() req: any, @Res() res: Response) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-    const { access_token, user } = req.user;
+ 
 
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const redirectUrl = `${frontendUrl}/auth/callback?token=${access_token}&user=${encodeURIComponent(JSON.stringify(user))}`;
-
-    res.redirect(redirectUrl);
-  }
-
-  @Get('google/student/callback')
-  @UseGuards(AuthGuard('google-student'))
-  @ApiOperation({ summary: 'Google OAuth callback for students' })
-  @ApiResponse({
-    status: 302,
-    description: 'Redirects to frontend with auth token',
-  })
-  googleStudentAuthRedirect(@Req() req: any, @Res() res: Response) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-    const { access_token, user } = req.user;
-
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const userWithRole = { ...user, roleType: 'student' };
-
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const redirectUrl = `${frontendUrl}/auth/callback?token=${access_token}&user=${encodeURIComponent(JSON.stringify(userWithRole))}&type=student`;
-
-    res.redirect(redirectUrl);
-  }
-
-  @Get('google/teacher/callback')
-  @UseGuards(AuthGuard('google-teacher'))
-  @ApiOperation({ summary: 'Google OAuth callback for teachers' })
-  @ApiResponse({
-    status: 302,
-    description: 'Redirects to frontend with auth token',
-  })
-  googleTeacherAuthRedirect(@Req() req: any, @Res() res: Response) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-    const { access_token, user } = req.user;
-
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const userWithRole = { ...user, roleType: 'teacher' };
-
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const redirectUrl = `${frontendUrl}/auth/callback?token=${access_token}&user=${encodeURIComponent(JSON.stringify(userWithRole))}&type=teacher`;
-
-    res.redirect(redirectUrl);
-  }
 
   @Get('google/owner/callback')
   @UseGuards(AuthGuard('google-owner'))
@@ -160,57 +80,8 @@ export class AuthController {
     res.redirect(redirectUrl);
   }
 
-  @Get('callback')
-  @ApiOperation({ summary: 'Handle auth callback with token' })
-  @ApiResponse({
-    status: 200,
-    description: 'Processes auth token and redirects to dashboard',
-  })
-  handleCallback(@Req() req: Request, @Res() res: Response) {
-    const token = req.query.token as string;
 
-    if (!token) {
-      return res.status(400).json({
-        message: 'No token provided',
-        error: 'Bad Request',
-        statusCode: 400,
-      });
-    }
-
-    // Verify the token and get user info
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const decoded = this.authService.verifyToken(token);
-
-      const script = `
-        <script>
-          localStorage.setItem('authToken', '${token}');
-          localStorage.setItem('user', '${JSON.stringify(decoded).replace(/'/g, "\\'")}');
-          window.location.href = '/dashboard.html';
-        </script>
-      `;
-
-      res.send(`
-        <!DOCTYPE html>
-        <html>
-          <head>
-            <title>Login Successful</title>
-          </head>
-          <body>
-            <h2>Login successful! Redirecting to dashboard...</h2>
-            ${script}
-          </body>
-        </html>
-      `);
-    } catch {
-      return res.status(401).json({
-        message: 'Invalid token',
-        error: 'Unauthorized',
-        statusCode: 401,
-      });
-    }
-  }
-
+  
   @Patch('complete-profile')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Complete user profile after Google OAuth' })
