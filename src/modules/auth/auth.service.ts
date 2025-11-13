@@ -182,7 +182,7 @@ export class AuthService {
         google_id: googleUser.google_id,
         avatar_url: googleUser.avatar_url,
         provider: googleUser.provider,
-        phone: undefined, 
+        phone: undefined,
         roles: [role],
       });
 
