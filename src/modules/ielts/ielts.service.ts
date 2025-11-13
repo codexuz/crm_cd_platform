@@ -11,6 +11,7 @@ import {
   IeltsWritingTask,
   IeltsQuestion,
   IeltsAudio,
+  User,
   ListeningPart,
   ReadingPart,
   WritingTask,
@@ -45,14 +46,27 @@ export class IeltsService {
     private questionRepository: Repository<IeltsQuestion>,
     @InjectRepository(IeltsAudio)
     private audioRepository: Repository<IeltsAudio>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
   ) {}
+
+  private async getCenterIdFromUser(userId: string): Promise<string> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      select: ['center_id'],
+    });
+    if (!user || !user.center_id) {
+      throw new NotFoundException('User center not found');
+    }
+    return user.center_id;
+  }
 
   // IELTS Test CRUD
   async createTest(
     createTestDto: CreateIeltsTestDto,
-    centerId: string,
     userId: string,
   ): Promise<IeltsTest> {
+    const centerId = await this.getCenterIdFromUser(userId);
     const test = this.ieltsTestRepository.create({
       ...createTestDto,
       center_id: centerId,
@@ -61,7 +75,8 @@ export class IeltsService {
     return await this.ieltsTestRepository.save(test);
   }
 
-  async getAllTests(centerId: string): Promise<IeltsTest[]> {
+  async getAllTests(userId: string): Promise<IeltsTest[]> {
+    const centerId = await this.getCenterIdFromUser(userId);
     return this.ieltsTestRepository.find({
       where: { center_id: centerId, is_active: true },
       relations: ['listening', 'reading'],
@@ -69,7 +84,8 @@ export class IeltsService {
     });
   }
 
-  async getTestById(id: string, centerId: string): Promise<IeltsTest> {
+  async getTestById(id: string, userId: string): Promise<IeltsTest> {
+    const centerId = await this.getCenterIdFromUser(userId);
     const test = await this.ieltsTestRepository.findOne({
       where: { id, center_id: centerId },
       relations: [
@@ -93,17 +109,16 @@ export class IeltsService {
   async updateTest(
     id: string,
     updateTestDto: UpdateIeltsTestDto,
-    centerId: string,
     userId: string,
   ): Promise<IeltsTest> {
-    const test = await this.getTestById(id, centerId);
+    const test = await this.getTestById(id, userId);
     Object.assign(test, updateTestDto);
     test.updated_by = userId;
     return await this.ieltsTestRepository.save(test);
   }
 
-  async deleteTest(id: string, centerId: string): Promise<void> {
-    const test = await this.getTestById(id, centerId);
+  async deleteTest(id: string, userId: string): Promise<void> {
+    const test = await this.getTestById(id, userId);
     test.is_active = false;
     await this.ieltsTestRepository.save(test);
   }
@@ -111,9 +126,9 @@ export class IeltsService {
   // Listening CRUD
   async createListening(
     createListeningDto: CreateListeningDto,
-    centerId: string,
     userId: string,
   ): Promise<IeltsListening> {
+    const centerId = await this.getCenterIdFromUser(userId);
     const { parts, ...listeningData } = createListeningDto;
 
     // Create listening
@@ -177,10 +192,8 @@ export class IeltsService {
     return result;
   }
 
-  async getListeningById(
-    id: string,
-    centerId: string,
-  ): Promise<IeltsListening> {
+  async getListeningById(id: string, userId: string): Promise<IeltsListening> {
+    const centerId = await this.getCenterIdFromUser(userId);
     const listening = await this.listeningRepository.findOne({
       where: { id, center_id: centerId },
       relations: ['parts', 'parts.question', 'parts.audio'],
@@ -193,7 +206,8 @@ export class IeltsService {
     return listening;
   }
 
-  async getAllListenings(centerId: string): Promise<IeltsListening[]> {
+  async getAllListenings(userId: string): Promise<IeltsListening[]> {
+    const centerId = await this.getCenterIdFromUser(userId);
     return await this.listeningRepository.find({
       where: { center_id: centerId, is_active: true },
       relations: ['parts'],
@@ -204,9 +218,9 @@ export class IeltsService {
   // Reading CRUD
   async createReading(
     createReadingDto: CreateReadingDto,
-    centerId: string,
     userId: string,
   ): Promise<IeltsReading> {
+    const centerId = await this.getCenterIdFromUser(userId);
     const { parts, ...readingData } = createReadingDto;
 
     // Create reading
@@ -250,7 +264,8 @@ export class IeltsService {
     return result;
   }
 
-  async getReadingById(id: string, centerId: string): Promise<IeltsReading> {
+  async getReadingById(id: string, userId: string): Promise<IeltsReading> {
+    const centerId = await this.getCenterIdFromUser(userId);
     const reading = await this.readingRepository.findOne({
       where: { id, center_id: centerId },
       relations: ['parts', 'parts.question'],
@@ -263,7 +278,8 @@ export class IeltsService {
     return reading;
   }
 
-  async getAllReadings(centerId: string): Promise<IeltsReading[]> {
+  async getAllReadings(userId: string): Promise<IeltsReading[]> {
+    const centerId = await this.getCenterIdFromUser(userId);
     return await this.readingRepository.find({
       where: { center_id: centerId, is_active: true },
       relations: ['parts'],
@@ -274,9 +290,9 @@ export class IeltsService {
   // Writing CRUD
   async createWriting(
     createWritingDto: CreateWritingDto,
-    centerId: string,
     userId: string,
   ): Promise<IeltsWriting> {
+    const centerId = await this.getCenterIdFromUser(userId);
     const { tasks, ...writingData } = createWritingDto;
 
     // Create writing
@@ -316,7 +332,8 @@ export class IeltsService {
     return result;
   }
 
-  async getWritingById(id: string, centerId: string): Promise<IeltsWriting> {
+  async getWritingById(id: string, userId: string): Promise<IeltsWriting> {
+    const centerId = await this.getCenterIdFromUser(userId);
     const writing = await this.writingRepository.findOne({
       where: { id, center_id: centerId },
       relations: ['tasks'],
@@ -329,7 +346,8 @@ export class IeltsService {
     return writing;
   }
 
-  async getAllWritings(centerId: string): Promise<IeltsWriting[]> {
+  async getAllWritings(userId: string): Promise<IeltsWriting[]> {
+    const centerId = await this.getCenterIdFromUser(userId);
     return await this.writingRepository.find({
       where: { center_id: centerId, is_active: true },
       relations: ['tasks'],
@@ -343,33 +361,20 @@ export class IeltsService {
     listeningData: CreateListeningDto,
     readingData: CreateReadingDto,
     writingData: CreateWritingDto,
-    centerId: string,
     userId: string,
   ): Promise<IeltsTest> {
     // Create test first
-    const test = await this.createTest(testData, centerId, userId);
+    const test = await this.createTest(testData, userId);
 
     // Create listening with test_id reference
-    await this.createListening(
-      { ...listeningData, test_id: test.id },
-      centerId,
-      userId,
-    );
+    await this.createListening({ ...listeningData, test_id: test.id }, userId);
 
     // Create reading with test_id reference
-    await this.createReading(
-      { ...readingData, test_id: test.id },
-      centerId,
-      userId,
-    );
+    await this.createReading({ ...readingData, test_id: test.id }, userId);
 
     // Create writing with test_id reference
-    await this.createWriting(
-      { ...writingData, test_id: test.id },
-      centerId,
-      userId,
-    );
+    await this.createWriting({ ...writingData, test_id: test.id }, userId);
 
-    return await this.getTestById(test.id, centerId);
+    return await this.getTestById(test.id, userId);
   }
 }

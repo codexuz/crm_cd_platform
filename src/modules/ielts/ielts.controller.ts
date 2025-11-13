@@ -13,7 +13,6 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { SubscriptionGuard } from '../../common/guards/subscription.guard';
 import { ModuleAccessGuard } from '../../common/guards/module-access.guard';
 import { RequiresModules } from '../../common/decorators/subscription.decorator';
-import { GetTenant } from '../../common/decorators/get-tenant.decorator';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 import {
   CreateIeltsTestDto,
@@ -33,40 +32,33 @@ export class IeltsController {
   @Post('tests')
   async createTest(
     @Body() createTestDto: CreateIeltsTestDto,
-    @GetTenant() centerId: string,
     @GetUser('sub') userId: string,
   ) {
-    return await this.ieltsService.createTest(createTestDto, centerId, userId);
+    return await this.ieltsService.createTest(createTestDto, userId);
   }
 
   @Get('tests')
-  async getAllTests(@GetTenant() centerId: string) {
-    return await this.ieltsService.getAllTests(centerId);
+  async getAllTests(@GetUser('sub') userId: string) {
+    return await this.ieltsService.getAllTests(userId);
   }
 
   @Get('tests/:id')
-  async getTestById(@Param('id') id: string, @GetTenant() centerId: string) {
-    return await this.ieltsService.getTestById(id, centerId);
+  async getTestById(@Param('id') id: string, @GetUser('sub') userId: string) {
+    return await this.ieltsService.getTestById(id, userId);
   }
 
   @Put('tests/:id')
   async updateTest(
     @Param('id') id: string,
     @Body() updateTestDto: UpdateIeltsTestDto,
-    @GetTenant() centerId: string,
     @GetUser('sub') userId: string,
   ) {
-    return await this.ieltsService.updateTest(
-      id,
-      updateTestDto,
-      centerId,
-      userId,
-    );
+    return await this.ieltsService.updateTest(id, updateTestDto, userId);
   }
 
   @Delete('tests/:id')
-  async deleteTest(@Param('id') id: string, @GetTenant() centerId: string) {
-    await this.ieltsService.deleteTest(id, centerId);
+  async deleteTest(@Param('id') id: string, @GetUser('sub') userId: string) {
+    await this.ieltsService.deleteTest(id, userId);
     return { message: 'Test deleted successfully' };
   }
 
@@ -74,75 +66,66 @@ export class IeltsController {
   @Post('listening')
   async createListening(
     @Body() createListeningDto: CreateListeningDto,
-    @GetTenant() centerId: string,
     @GetUser('sub') userId: string,
   ) {
-    return await this.ieltsService.createListening(
-      createListeningDto,
-      centerId,
-      userId,
-    );
+    return await this.ieltsService.createListening(createListeningDto, userId);
   }
 
   @Get('listening')
-  async getAllListenings(@GetTenant() centerId: string) {
-    return await this.ieltsService.getAllListenings(centerId);
+  async getAllListenings(@GetUser('sub') userId: string) {
+    return await this.ieltsService.getAllListenings(userId);
   }
 
   @Get('listening/:id')
   async getListeningById(
     @Param('id') id: string,
-    @GetTenant() centerId: string,
+    @GetUser('sub') userId: string,
   ) {
-    return await this.ieltsService.getListeningById(id, centerId);
+    return await this.ieltsService.getListeningById(id, userId);
   }
 
   // Reading endpoints
   @Post('reading')
   async createReading(
     @Body() createReadingDto: CreateReadingDto,
-    @GetTenant() centerId: string,
     @GetUser('sub') userId: string,
   ) {
-    return await this.ieltsService.createReading(
-      createReadingDto,
-      centerId,
-      userId,
-    );
+    return await this.ieltsService.createReading(createReadingDto, userId);
   }
 
   @Get('reading')
-  async getAllReadings(@GetTenant() centerId: string) {
-    return await this.ieltsService.getAllReadings(centerId);
+  async getAllReadings(@GetUser('sub') userId: string) {
+    return await this.ieltsService.getAllReadings(userId);
   }
 
   @Get('reading/:id')
-  async getReadingById(@Param('id') id: string, @GetTenant() centerId: string) {
-    return await this.ieltsService.getReadingById(id, centerId);
+  async getReadingById(
+    @Param('id') id: string,
+    @GetUser('sub') userId: string,
+  ) {
+    return await this.ieltsService.getReadingById(id, userId);
   }
 
   // Writing endpoints
   @Post('writing')
   async createWriting(
     @Body() createWritingDto: CreateWritingDto,
-    @GetTenant() centerId: string,
     @GetUser('sub') userId: string,
   ) {
-    return await this.ieltsService.createWriting(
-      createWritingDto,
-      centerId,
-      userId,
-    );
+    return await this.ieltsService.createWriting(createWritingDto, userId);
   }
 
   @Get('writing')
-  async getAllWritings(@GetTenant() centerId: string) {
-    return await this.ieltsService.getAllWritings(centerId);
+  async getAllWritings(@GetUser('sub') userId: string) {
+    return await this.ieltsService.getAllWritings(userId);
   }
 
   @Get('writing/:id')
-  async getWritingById(@Param('id') id: string, @GetTenant() centerId: string) {
-    return await this.ieltsService.getWritingById(id, centerId);
+  async getWritingById(
+    @Param('id') id: string,
+    @GetUser('sub') userId: string,
+  ) {
+    return await this.ieltsService.getWritingById(id, userId);
   }
 
   // Create complete test (with listening, reading, and writing)
@@ -155,7 +138,6 @@ export class IeltsController {
       reading: CreateReadingDto;
       writing: CreateWritingDto;
     },
-    @GetTenant() centerId: string,
     @GetUser('sub') userId: string,
   ) {
     return await this.ieltsService.createCompleteTest(
@@ -163,7 +145,6 @@ export class IeltsController {
       body.listening,
       body.reading,
       body.writing,
-      centerId,
       userId,
     );
   }
