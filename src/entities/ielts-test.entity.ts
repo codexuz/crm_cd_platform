@@ -7,7 +7,6 @@ import {
   ManyToOne,
   JoinColumn,
   OneToOne,
-  OneToMany,
 } from 'typeorm';
 import { Center } from './center.entity';
 import { User } from './user.entity';
@@ -37,12 +36,6 @@ export class IeltsTest {
   @Column({ default: false })
   for_cdi: boolean; // For CDI (Cambridge, etc.)
 
-  @Column({ nullable: true })
-  listening_id: string;
-
-  @Column({ nullable: true })
-  reading_id: string;
-
   @Column({ default: true })
   is_active: boolean;
 
@@ -66,10 +59,8 @@ export class IeltsTest {
   updater: User;
 
   @OneToOne(() => IeltsListening, (listening) => listening.test)
-  @JoinColumn({ name: 'listening_id' })
   listening: IeltsListening;
 
   @OneToOne(() => IeltsReading, (reading) => reading.test)
-  @JoinColumn({ name: 'reading_id' })
   reading: IeltsReading;
 }

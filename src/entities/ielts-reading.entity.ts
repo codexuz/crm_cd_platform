@@ -37,6 +37,9 @@ export class IeltsReading {
   @Column({ default: false })
   for_cdi: boolean;
 
+  @Column({ nullable: true })
+  test_id: string;
+
   @Column({ default: true })
   is_active: boolean;
 
@@ -63,5 +66,6 @@ export class IeltsReading {
   parts: IeltsReadingPart[];
 
   @OneToOne(() => IeltsTest, (test) => test.reading)
+  @JoinColumn({ name: 'test_id' })
   test: IeltsTest;
 }

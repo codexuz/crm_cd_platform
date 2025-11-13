@@ -14,48 +14,34 @@ import { QuestionContentType } from '../../../entities';
 export class CreateIeltsTestDto {
   @ApiProperty({
     description: 'Title of the IELTS test',
-    example: 'IELTS Academic Test - Practice Set 1'
+    example: 'IELTS Academic Test - Practice Set 1',
   })
   @IsString()
   title: string;
 
   @ApiPropertyOptional({
     description: 'Description of the IELTS test',
-    example: 'This is a comprehensive IELTS Academic test designed for intermediate to advanced students preparing for their IELTS examination.'
+    example:
+      'This is a comprehensive IELTS Academic test designed for intermediate to advanced students preparing for their IELTS examination.',
   })
   @IsOptional()
   @IsString()
   description?: string;
 
   @ApiPropertyOptional({
-    description: 'Whether this test is for CDI (Cambridge Development Institute)',
-    example: true
+    description:
+      'Whether this test is for CDI (Cambridge Development Institute)',
+    example: true,
   })
   @IsOptional()
   @IsBoolean()
   for_cdi?: boolean;
-
-  @ApiPropertyOptional({
-    description: 'ID of the associated listening test',
-    example: 'uuid-string-listening'
-  })
-  @IsOptional()
-  @IsString()
-  listening_id?: string;
-
-  @ApiPropertyOptional({
-    description: 'ID of the associated reading test',
-    example: 'uuid-string-reading'
-  })
-  @IsOptional()
-  @IsString()
-  reading_id?: string;
 }
 
 export class UpdateIeltsTestDto {
   @ApiPropertyOptional({
     description: 'Title of the IELTS test',
-    example: 'IELTS Academic Test - Practice Set 1 (Updated)'
+    example: 'IELTS Academic Test - Practice Set 1 (Updated)',
   })
   @IsOptional()
   @IsString()
@@ -63,39 +49,25 @@ export class UpdateIeltsTestDto {
 
   @ApiPropertyOptional({
     description: 'Description of the IELTS test',
-    example: 'Updated comprehensive IELTS Academic test with new questions and improved structure.'
+    example:
+      'Updated comprehensive IELTS Academic test with new questions and improved structure.',
   })
   @IsOptional()
   @IsString()
   description?: string;
 
   @ApiPropertyOptional({
-    description: 'Whether this test is for CDI (Cambridge Development Institute)',
-    example: false
+    description:
+      'Whether this test is for CDI (Cambridge Development Institute)',
+    example: false,
   })
   @IsOptional()
   @IsBoolean()
   for_cdi?: boolean;
 
   @ApiPropertyOptional({
-    description: 'ID of the associated listening test',
-    example: 'uuid-string-listening-update'
-  })
-  @IsOptional()
-  @IsString()
-  listening_id?: string;
-
-  @ApiPropertyOptional({
-    description: 'ID of the associated reading test',
-    example: 'uuid-string-reading-update'
-  })
-  @IsOptional()
-  @IsString()
-  reading_id?: string;
-
-  @ApiPropertyOptional({
     description: 'Whether the test is active/available',
-    example: true
+    example: true,
   })
   @IsOptional()
   @IsBoolean()
@@ -106,7 +78,7 @@ export class UpdateIeltsTestDto {
 export class QuestionContentDto {
   @ApiProperty({
     description: 'Unique identifier for the question content',
-    example: 'qc_001'
+    example: 'qc_001',
   })
   @IsString()
   id: string;
@@ -114,14 +86,14 @@ export class QuestionContentDto {
   @ApiProperty({
     description: 'Type of question content',
     enum: QuestionContentType,
-    example: QuestionContentType.MULTIPLE_CHOICE
+    example: QuestionContentType.MULTIPLE_CHOICE,
   })
   @IsEnum(QuestionContentType)
   type: QuestionContentType;
 
   @ApiPropertyOptional({
     description: 'Title of the question content section',
-    example: 'Multiple Choice Questions'
+    example: 'Multiple Choice Questions',
   })
   @IsOptional()
   @IsString()
@@ -129,7 +101,7 @@ export class QuestionContentDto {
 
   @ApiPropertyOptional({
     description: 'Condition or instruction for this content',
-    example: 'Choose the correct answer from the options below'
+    example: 'Choose the correct answer from the options below',
   })
   @IsOptional()
   @IsString()
@@ -137,7 +109,7 @@ export class QuestionContentDto {
 
   @ApiPropertyOptional({
     description: 'The main content text',
-    example: 'Listen to the conversation and answer the following questions.'
+    example: 'Listen to the conversation and answer the following questions.',
   })
   @IsOptional()
   @IsString()
@@ -146,9 +118,17 @@ export class QuestionContentDto {
   @ApiPropertyOptional({
     description: 'Array of questions',
     example: [
-      { id: 1, text: 'What is the main topic of the conversation?', type: 'multiple_choice' },
-      { id: 2, text: 'Where does the conversation take place?', type: 'fill_blank' }
-    ]
+      {
+        id: 1,
+        text: 'What is the main topic of the conversation?',
+        type: 'multiple_choice',
+      },
+      {
+        id: 2,
+        text: 'Where does the conversation take place?',
+        type: 'fill_blank',
+      },
+    ],
   })
   @IsOptional()
   @IsArray()
@@ -156,7 +136,12 @@ export class QuestionContentDto {
 
   @ApiPropertyOptional({
     description: 'Array of answer options',
-    example: ['A) In a library', 'B) In a restaurant', 'C) In a bookstore', 'D) In a museum']
+    example: [
+      'A) In a library',
+      'B) In a restaurant',
+      'C) In a bookstore',
+      'D) In a museum',
+    ],
   })
   @IsOptional()
   @IsArray()
@@ -164,7 +149,7 @@ export class QuestionContentDto {
 
   @ApiPropertyOptional({
     description: 'Time limit in minutes',
-    example: 30
+    example: 30,
   })
   @IsOptional()
   @IsNumber()
@@ -172,7 +157,7 @@ export class QuestionContentDto {
 
   @ApiPropertyOptional({
     description: 'Whether to show answer options',
-    example: true
+    example: true,
   })
   @IsOptional()
   @IsBoolean()
@@ -180,7 +165,7 @@ export class QuestionContentDto {
 
   @ApiPropertyOptional({
     description: 'Title for the options section',
-    example: 'Choose from the following options:'
+    example: 'Choose from the following options:',
   })
   @IsOptional()
   @IsString()
@@ -198,18 +183,22 @@ export class CreateQuestionDto {
         title: 'Listening Section',
         condition: 'Choose the correct answer',
         questions: [
-          { id: 1, text: 'What is the speaker talking about?', type: 'multiple_choice' }
+          {
+            id: 1,
+            text: 'What is the speaker talking about?',
+            type: 'multiple_choice',
+          },
         ],
-        options: ['A) Work', 'B) School', 'C) Travel', 'D) Food']
-      }
-    ]
+        options: ['A) Work', 'B) School', 'C) Travel', 'D) Food'],
+      },
+    ],
   })
   @IsArray()
   content: QuestionContentDto[];
 
   @ApiProperty({
     description: 'Total number of questions in this section',
-    example: 10
+    example: 10,
   })
   @IsNumber()
   number_of_questions: number;
@@ -218,14 +207,14 @@ export class CreateQuestionDto {
 export class CreateAudioDto {
   @ApiProperty({
     description: 'URL of the audio file',
-    example: 'https://example.com/audio/ielts-listening-part1.mp3'
+    example: 'https://example.com/audio/ielts-listening-part1.mp3',
   })
   @IsString()
   url: string;
 
   @ApiPropertyOptional({
     description: 'Name of the audio file',
-    example: 'ielts-listening-part1.mp3'
+    example: 'ielts-listening-part1.mp3',
   })
   @IsOptional()
   @IsString()
@@ -233,7 +222,7 @@ export class CreateAudioDto {
 
   @ApiPropertyOptional({
     description: 'Duration of the audio in seconds',
-    example: 180
+    example: 180,
   })
   @IsOptional()
   @IsNumber()
@@ -241,7 +230,7 @@ export class CreateAudioDto {
 
   @ApiPropertyOptional({
     description: 'File size in bytes',
-    example: 2048576
+    example: 2048576,
   })
   @IsOptional()
   @IsNumber()
@@ -253,14 +242,14 @@ export class CreateListeningPartDto {
   @ApiProperty({
     description: 'Listening part identifier',
     enum: ['PART_1', 'PART_2', 'PART_3', 'PART_4'],
-    example: 'PART_1'
+    example: 'PART_1',
   })
   @IsEnum(['PART_1', 'PART_2', 'PART_3', 'PART_4'])
   part: string;
 
   @ApiProperty({
     description: 'Question configuration for this listening part',
-    type: CreateQuestionDto
+    type: CreateQuestionDto,
   })
   @ValidateNested()
   @Type(() => CreateQuestionDto)
@@ -268,7 +257,7 @@ export class CreateListeningPartDto {
 
   @ApiProperty({
     description: 'Audio configuration for this listening part',
-    type: CreateAudioDto
+    type: CreateAudioDto,
   })
   @ValidateNested()
   @Type(() => CreateAudioDto)
@@ -277,11 +266,11 @@ export class CreateListeningPartDto {
   @ApiPropertyOptional({
     description: 'Answer key for this listening part',
     example: {
-      "1": "A",
-      "2": "kitchen",
-      "3": "B",
-      "4": "library"
-    }
+      '1': 'A',
+      '2': 'kitchen',
+      '3': 'B',
+      '4': 'library',
+    },
   })
   @IsOptional()
   answers?: Record<string, any>;
@@ -290,26 +279,36 @@ export class CreateListeningPartDto {
 export class CreateListeningDto {
   @ApiProperty({
     description: 'Title of the listening test',
-    example: 'IELTS Listening Test - Academic Module'
+    example: 'IELTS Listening Test - Academic Module',
   })
   @IsString()
   title: string;
 
   @ApiPropertyOptional({
     description: 'Description of the listening test',
-    example: 'A comprehensive listening test with 4 parts covering everyday conversations and academic lectures.'
+    example:
+      'A comprehensive listening test with 4 parts covering everyday conversations and academic lectures.',
   })
   @IsOptional()
   @IsString()
   description?: string;
 
   @ApiPropertyOptional({
-    description: 'Whether this test is for CDI (Cambridge Development Institute)',
-    example: true
+    description:
+      'Whether this test is for CDI (Cambridge Development Institute)',
+    example: true,
   })
   @IsOptional()
   @IsBoolean()
   for_cdi?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'ID of the associated IELTS test',
+    example: 'uuid-string-test',
+  })
+  @IsOptional()
+  @IsString()
+  test_id?: string;
 
   @ApiProperty({
     description: 'Array of listening parts (1-4)',
@@ -323,18 +322,19 @@ export class CreateListeningDto {
               id: 'lp1_001',
               type: 'completion',
               title: 'Form Completion',
-              condition: 'Complete the form below. Write NO MORE THAN TWO WORDS for each answer.'
-            }
+              condition:
+                'Complete the form below. Write NO MORE THAN TWO WORDS for each answer.',
+            },
           ],
-          number_of_questions: 10
+          number_of_questions: 10,
         },
         audio: {
           url: 'https://example.com/audio/part1.mp3',
           file_name: 'listening_part1.mp3',
-          duration: 300
-        }
-      }
-    ]
+          duration: 300,
+        },
+      },
+    ],
   })
   @IsArray()
   @ValidateNested({ each: true })
@@ -346,14 +346,14 @@ export class CreateReadingPartDto {
   @ApiProperty({
     description: 'Reading part identifier',
     enum: ['PART_1', 'PART_2', 'PART_3'],
-    example: 'PART_1'
+    example: 'PART_1',
   })
   @IsEnum(['PART_1', 'PART_2', 'PART_3'])
   part: string;
 
   @ApiProperty({
     description: 'Question configuration for this reading part',
-    type: CreateQuestionDto
+    type: CreateQuestionDto,
   })
   @ValidateNested()
   @Type(() => CreateQuestionDto)
@@ -361,7 +361,8 @@ export class CreateReadingPartDto {
 
   @ApiProperty({
     description: 'Reading passage text',
-    example: 'Climate change is one of the most pressing issues of our time. The scientific consensus is clear: human activities, particularly the burning of fossil fuels, are the primary drivers of recent climate change. The effects are already visible in rising global temperatures, melting ice caps, and more frequent extreme weather events...'
+    example:
+      'Climate change is one of the most pressing issues of our time. The scientific consensus is clear: human activities, particularly the burning of fossil fuels, are the primary drivers of recent climate change. The effects are already visible in rising global temperatures, melting ice caps, and more frequent extreme weather events...',
   })
   @IsString()
   passage: string;
@@ -369,12 +370,12 @@ export class CreateReadingPartDto {
   @ApiPropertyOptional({
     description: 'Answer key for this reading part',
     example: {
-      "1": "TRUE",
-      "2": "FALSE", 
-      "3": "NOT GIVEN",
-      "4": "C",
-      "5": "fossil fuels"
-    }
+      '1': 'TRUE',
+      '2': 'FALSE',
+      '3': 'NOT GIVEN',
+      '4': 'C',
+      '5': 'fossil fuels',
+    },
   })
   @IsOptional()
   answers?: Record<string, any>;
@@ -383,7 +384,7 @@ export class CreateReadingPartDto {
 export class CreateReadingDto {
   @ApiPropertyOptional({
     description: 'Title of the reading test',
-    example: 'IELTS Reading Test - Academic Module'
+    example: 'IELTS Reading Test - Academic Module',
   })
   @IsOptional()
   @IsString()
@@ -391,19 +392,29 @@ export class CreateReadingDto {
 
   @ApiPropertyOptional({
     description: 'Description of the reading test',
-    example: 'A comprehensive reading test featuring three passages with increasing difficulty levels, covering topics from general interest to academic subjects.'
+    example:
+      'A comprehensive reading test featuring three passages with increasing difficulty levels, covering topics from general interest to academic subjects.',
   })
   @IsOptional()
   @IsString()
   description?: string;
 
   @ApiPropertyOptional({
-    description: 'Whether this test is for CDI (Cambridge Development Institute)',
-    example: false
+    description:
+      'Whether this test is for CDI (Cambridge Development Institute)',
+    example: false,
   })
   @IsOptional()
   @IsBoolean()
   for_cdi?: boolean;
+
+  @ApiPropertyOptional({
+    description: 'ID of the associated IELTS test',
+    example: 'uuid-string-test',
+  })
+  @IsOptional()
+  @IsString()
+  test_id?: string;
 
   @ApiProperty({
     description: 'Array of reading parts (1-3)',
@@ -422,22 +433,28 @@ export class CreateReadingDto {
                 {
                   id: 1,
                   text: 'What is the main topic of the passage?',
-                  type: 'multiple_choice'
-                }
+                  type: 'multiple_choice',
+                },
               ],
-              options: ['A) Environmental issues', 'B) Technology advances', 'C) Social problems', 'D) Economic growth']
-            }
+              options: [
+                'A) Environmental issues',
+                'B) Technology advances',
+                'C) Social problems',
+                'D) Economic growth',
+              ],
+            },
           ],
-          number_of_questions: 13
+          number_of_questions: 13,
         },
-        passage: 'Climate change represents one of the most significant challenges facing humanity in the 21st century...',
+        passage:
+          'Climate change represents one of the most significant challenges facing humanity in the 21st century...',
         answers: {
-          "1": "A",
-          "2": "TRUE",
-          "3": "FALSE"
-        }
-      }
-    ]
+          '1': 'A',
+          '2': 'TRUE',
+          '3': 'FALSE',
+        },
+      },
+    ],
   })
   @IsArray()
   @ValidateNested({ each: true })

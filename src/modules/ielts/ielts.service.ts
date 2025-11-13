@@ -136,15 +136,20 @@ export class IeltsService {
       };
       const audio = this.audioRepository.create(audioData);
       const savedAudio = await this.audioRepository.save(audio);
-      
+
       // Ensure we have the ID
-      const audioId = Array.isArray(savedAudio) ? savedAudio[0].id : savedAudio.id;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const audioId = Array.isArray(savedAudio)
+        ? // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+          savedAudio[0].id
+        : savedAudio.id;
 
       // Create part
       const part = this.listeningPartRepository.create({
         listening_id: savedListening.id,
         part: partDto.part as ListeningPart,
         question_id: savedQuestion.id,
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         audio_id: audioId,
         answers: partDto.answers || {},
       });
@@ -265,23 +270,19 @@ export class IeltsService {
     centerId: string,
     userId: string,
   ): Promise<IeltsTest> {
-    // Create listening
-    const listening = await this.createListening(
-      listeningData,
+    // Create test first
+    const test = await this.createTest(testData, centerId, userId);
+
+    // Create listening with test_id reference
+    await this.createListening(
+      { ...listeningData, test_id: test.id },
       centerId,
       userId,
     );
 
-    // Create reading
-    const reading = await this.createReading(readingData, centerId, userId);
-
-    // Create test with references
-    const test = await this.createTest(
-      {
-        ...testData,
-        listening_id: listening.id,
-        reading_id: reading.id,
-      },
+    // Create reading with test_id reference
+    await this.createReading(
+      { ...readingData, test_id: test.id },
       centerId,
       userId,
     );

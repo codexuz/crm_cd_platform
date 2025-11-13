@@ -37,6 +37,9 @@ export class IeltsListening {
   @Column({ default: false })
   for_cdi: boolean;
 
+  @Column({ nullable: true })
+  test_id: string;
+
   @Column({ default: true })
   is_active: boolean;
 
@@ -63,5 +66,6 @@ export class IeltsListening {
   parts: IeltsListeningPart[];
 
   @OneToOne(() => IeltsTest, (test) => test.listening)
+  @JoinColumn({ name: 'test_id' })
   test: IeltsTest;
 }
