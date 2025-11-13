@@ -56,7 +56,7 @@ export class AuthService {
   }
 
   async register(registerDto: RegisterDto) {
-    const { email, phone, password, name, center_id } = registerDto;
+    const { email, phone, password, name, center_id, role } = registerDto;
 
     // Check if user already exists
     const existingUser = await this.userRepository.findOne({
@@ -72,13 +72,16 @@ export class AuthService {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Get default student role
-    const studentRole = await this.roleRepository.findOne({
-      where: { role_name: RoleName.STUDENT },
+    // Determine the role to assign (default to STUDENT if not provided)
+    const roleName = role || RoleName.STUDENT;
+
+    // Get the specified role
+    const userRole = await this.roleRepository.findOne({
+      where: { role_name: roleName },
     });
 
-    if (!studentRole) {
-      throw new Error('Student role not found');
+    if (!userRole) {
+      throw new Error(`${roleName} role not found`);
     }
 
     // Create user
@@ -88,7 +91,7 @@ export class AuthService {
       phone,
       password: hashedPassword,
       center_id,
-      roles: [studentRole],
+      roles: [userRole],
     });
 
     await this.userRepository.save(user);
@@ -232,8 +235,8 @@ export class AuthService {
   verifyToken(token: string): any {
     try {
       return this.jwtService.verify(token);
-    } catch (error) {
-      throw new UnauthorizedException('Invalid token', error);
+    } catch {
+      throw new UnauthorizedException('Invalid token');
     }
   }
 

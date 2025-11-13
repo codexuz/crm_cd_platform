@@ -8,7 +8,9 @@ export enum GroupLevel {
   PRE_INTERMEDIATE = 'pre-intermediate',
   INTERMEDIATE = 'intermediate',
   UPPER_INTERMEDIATE = 'upper-intermediate',
-  ADVANCED = 'advanced'
+  ADVANCED = 'advanced',
+  PRE_IELTS = 'pre-ielts',
+  IELTS = 'ielts',
 }
 
 @Entity('groups')
@@ -21,7 +23,7 @@ export class Group {
 
   @Column({
     type: 'enum',
-    enum: GroupLevel
+    enum: GroupLevel,
   })
   level: GroupLevel;
 
@@ -62,7 +64,7 @@ export class Group {
   @JoinTable({
     name: 'group_students',
     joinColumn: { name: 'group_id', referencedColumnName: 'id' },
-    inverseJoinColumn: { name: 'student_id', referencedColumnName: 'id' }
+    inverseJoinColumn: { name: 'student_id', referencedColumnName: 'id' },
   })
   students: User[];
 }
