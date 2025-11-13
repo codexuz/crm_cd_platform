@@ -94,28 +94,10 @@ export class AuthController {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const { access_token, user } = req.user;
 
-    // Redirect to dashboard with token stored in localStorage
-    const dashboardUrl = '/dashboard.html';
-    const script = `
-      <script>
-        localStorage.setItem('authToken', '${access_token}');
-        localStorage.setItem('user', '${JSON.stringify(user).replace(/'/g, "\\'")}');
-        window.location.href = '${dashboardUrl}';
-      </script>
-    `;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const redirectUrl = `${frontendUrl}/auth/callback?token=${access_token}&user=${encodeURIComponent(JSON.stringify(user))}`;
 
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Login Successful</title>
-        </head>
-        <body>
-          <h2>Login successful! Redirecting to dashboard...</h2>
-          ${script}
-        </body>
-      </html>
-    `);
+    res.redirect(redirectUrl);
   }
 
   @Get('google/student/callback')
@@ -129,32 +111,13 @@ export class AuthController {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const { access_token, user } = req.user;
 
-    // Ensure the user has student role
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const userWithRole = { ...user, roleType: 'student' };
 
-    const dashboardUrl = '/dashboard.html';
-    const script = `
-      <script>
-        localStorage.setItem('authToken', '${access_token}');
-        localStorage.setItem('user', '${JSON.stringify(userWithRole).replace(/'/g, "\\'")}');
-        localStorage.setItem('userType', 'student');
-        window.location.href = '${dashboardUrl}';
-      </script>
-    `;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const redirectUrl = `${frontendUrl}/auth/callback?token=${access_token}&user=${encodeURIComponent(JSON.stringify(userWithRole))}&type=student`;
 
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Student Login Successful</title>
-        </head>
-        <body>
-          <h2>Student login successful! Redirecting to dashboard...</h2>
-          ${script}
-        </body>
-      </html>
-    `);
+    res.redirect(redirectUrl);
   }
 
   @Get('google/teacher/callback')
@@ -168,32 +131,13 @@ export class AuthController {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const { access_token, user } = req.user;
 
-    // Ensure the user has teacher role
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const userWithRole = { ...user, roleType: 'teacher' };
 
-    const dashboardUrl = '/dashboard.html';
-    const script = `
-      <script>
-        localStorage.setItem('authToken', '${access_token}');
-        localStorage.setItem('user', '${JSON.stringify(userWithRole).replace(/'/g, "\\'")}');
-        localStorage.setItem('userType', 'teacher');
-        window.location.href = '${dashboardUrl}';
-      </script>
-    `;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const redirectUrl = `${frontendUrl}/auth/callback?token=${access_token}&user=${encodeURIComponent(JSON.stringify(userWithRole))}&type=teacher`;
 
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Teacher Login Successful</title>
-        </head>
-        <body>
-          <h2>Teacher login successful! Redirecting to dashboard...</h2>
-          ${script}
-        </body>
-      </html>
-    `);
+    res.redirect(redirectUrl);
   }
 
   @Get('google/owner/callback')
@@ -207,32 +151,13 @@ export class AuthController {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const { access_token, user } = req.user;
 
-    // Ensure the user has owner role
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const userWithRole = { ...user, roleType: 'owner' };
 
-    const dashboardUrl = '/dashboard.html';
-    const script = `
-      <script>
-        localStorage.setItem('authToken', '${access_token}');
-        localStorage.setItem('user', '${JSON.stringify(userWithRole).replace(/'/g, "\\'")}');
-        localStorage.setItem('userType', 'owner');
-        window.location.href = '${dashboardUrl}';
-      </script>
-    `;
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const redirectUrl = `${frontendUrl}/auth/callback?token=${access_token}&user=${encodeURIComponent(JSON.stringify(userWithRole))}&type=owner`;
 
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Owner Login Successful</title>
-        </head>
-        <body>
-          <h2>Owner login successful! Redirecting to dashboard...</h2>
-          ${script}
-        </body>
-      </html>
-    `);
+    res.redirect(redirectUrl);
   }
 
   @Get('callback')
