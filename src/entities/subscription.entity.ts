@@ -66,7 +66,7 @@ export class Subscription {
   @Column({ default: false })
   auto_renew: boolean;
 
-  @Column('jsonb', { nullable: true })
+  @Column('json', { nullable: true })
   features: {
     max_users?: number;
     max_students?: number;

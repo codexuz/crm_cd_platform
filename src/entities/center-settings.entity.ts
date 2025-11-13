@@ -37,7 +37,7 @@ export class CenterSettings {
   @Column({ default: true })
   is_enabled: boolean;
 
-  @Column('jsonb', { nullable: true })
+  @Column('json', { nullable: true })
   module_config: Record<string, any>;
 
   @CreateDateColumn()
