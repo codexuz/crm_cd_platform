@@ -26,13 +26,28 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     const { email, password } = loginDto;
 
-    // Find user with roles
-    const user = await this.userRepository.findOne({
-      where: { email, is_active: true },
-      relations: ['roles'],
-    });
+    // Find user with roles and explicitly select password
+    const user = await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.roles', 'roles')
+      .where('user.email = :email', { email })
+      .andWhere('user.is_active = :is_active', { is_active: true })
+      .addSelect('user.password')
+      .getOne();
 
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    // Check if user has a password (local auth) and compare
+    if (!user.password) {
+      throw new UnauthorizedException(
+        'This account uses Google login. Please sign in with Google.',
+      );
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
