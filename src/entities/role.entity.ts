@@ -3,6 +3,7 @@ import { User } from './user.entity';
 
 export enum RoleName {
   ADMIN = 'admin',
+  OWNER = 'owner',
   MANAGER = 'manager',
   TEACHER = 'teacher',
   STUDENT = 'student',

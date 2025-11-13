@@ -1,5 +1,19 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { CentersService } from './centers.service';
 import { CreateCenterDto, UpdateCenterDto } from './dto/center.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -16,12 +30,19 @@ export class CentersController {
   constructor(private readonly centersService: CentersService) {}
 
   @Post()
-  @Roles(RoleName.ADMIN)
+  @Roles(RoleName.ADMIN, RoleName.OWNER)
   @ApiOperation({ summary: 'Create a new center' })
   @ApiResponse({ status: 201, description: 'Center created successfully' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Admin role required' })
-  create(@Body() createCenterDto: CreateCenterDto) {
-    return this.centersService.create(createCenterDto);
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin or Owner role required',
+  })
+  create(
+    @Body() createCenterDto: CreateCenterDto,
+    @GetUser('userId') userId: string,
+  ) {
+    // For owners, set them as the owner_id
+    return this.centersService.create(createCenterDto, userId);
   }
 
   @Get()
@@ -51,16 +72,22 @@ export class CentersController {
   @Get(':id/stats')
   @Roles(RoleName.ADMIN, RoleName.MANAGER)
   @ApiOperation({ summary: 'Get center statistics' })
-  @ApiResponse({ status: 200, description: 'Statistics retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Statistics retrieved successfully',
+  })
   getStats(@Param('id') id: string) {
     return this.centersService.getCenterStats(id);
   }
 
   @Patch(':id')
-  @Roles(RoleName.ADMIN, RoleName.MANAGER)
+  @Roles(RoleName.ADMIN, RoleName.MANAGER, RoleName.OWNER)
   @ApiOperation({ summary: 'Update center' })
   @ApiResponse({ status: 200, description: 'Center updated successfully' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Only owner can update' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Only owner can update',
+  })
   @ApiResponse({ status: 404, description: 'Center not found' })
   update(
     @Param('id') id: string,
@@ -71,15 +98,15 @@ export class CentersController {
   }
 
   @Delete(':id')
-  @Roles(RoleName.ADMIN)
+  @Roles(RoleName.ADMIN, RoleName.OWNER)
   @ApiOperation({ summary: 'Delete center' })
   @ApiResponse({ status: 200, description: 'Center deleted successfully' })
-  @ApiResponse({ status: 403, description: 'Forbidden - Only owner can delete' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Only owner can delete',
+  })
   @ApiResponse({ status: 404, description: 'Center not found' })
-  remove(
-    @Param('id') id: string,
-    @GetUser('userId') userId: string,
-  ) {
+  remove(@Param('id') id: string, @GetUser('userId') userId: string) {
     return this.centersService.remove(id, userId);
   }
 }

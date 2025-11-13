@@ -2,7 +2,10 @@ import { IsEmail, IsNotEmpty, MinLength, IsOptional } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class LoginDto {
-  @ApiProperty({ example: 'user@example.com', description: 'User email address' })
+  @ApiProperty({
+    example: 'user@example.com',
+    description: 'User email address',
+  })
   @IsEmail()
   @IsNotEmpty()
   email: string;
@@ -18,7 +21,10 @@ export class RegisterDto {
   @IsNotEmpty()
   name: string;
 
-  @ApiProperty({ example: 'user@example.com', description: 'User email address' })
+  @ApiProperty({
+    example: 'user@example.com',
+    description: 'User email address',
+  })
   @IsEmail()
   @IsNotEmpty()
   email: string;
@@ -32,13 +38,19 @@ export class RegisterDto {
   @MinLength(6)
   password: string;
 
-  @ApiPropertyOptional({ example: 'uuid-string', description: 'Center ID (optional for initial user creation)' })
+  @ApiPropertyOptional({
+    example: 'uuid-string',
+    description: 'Center ID (optional for initial user creation)',
+  })
   @IsOptional()
   center_id?: string;
 }
 
 export class GoogleAuthResponseDto {
-  @ApiProperty({ example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...', description: 'JWT access token' })
+  @ApiProperty({
+    example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
+    description: 'JWT access token',
+  })
   access_token: string;
 
   @ApiProperty({ description: 'User information' })
@@ -58,7 +70,52 @@ export class CompleteProfileDto {
   @IsNotEmpty()
   phone: string;
 
-  @ApiPropertyOptional({ example: 'uuid-string', description: 'Center ID to assign user to' })
+  @ApiPropertyOptional({
+    example: 'uuid-string',
+    description: 'Center ID to assign user to',
+  })
   @IsOptional()
   center_id?: string;
+}
+
+export class RegisterCenterDto {
+  @ApiProperty({ example: 'My Learning Center', description: 'Center name' })
+  @IsNotEmpty()
+  name: string;
+
+  @ApiPropertyOptional({
+    example: 'my-center',
+    description: 'Subdomain for the center',
+  })
+  @IsOptional()
+  subdomain?: string;
+
+  @ApiPropertyOptional({
+    example: '123 Main St, City',
+    description: 'Center address',
+  })
+  @IsOptional()
+  address?: string;
+
+  @ApiPropertyOptional({
+    example: '+1234567890',
+    description: 'Center phone number',
+  })
+  @IsOptional()
+  phone?: string;
+
+  @ApiPropertyOptional({
+    example: 'contact@center.com',
+    description: 'Center email',
+  })
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
+  @ApiPropertyOptional({
+    example: 'A premier learning center',
+    description: 'Center description',
+  })
+  @IsOptional()
+  description?: string;
 }

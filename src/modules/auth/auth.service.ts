@@ -7,7 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
-import { User, Role, RoleName } from '../../entities';
+import { User, Role, RoleName, Center } from '../../entities';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
 import { JwtPayload } from './jwt.strategy';
 
@@ -18,6 +18,8 @@ export class AuthService {
     private userRepository: Repository<User>,
     @InjectRepository(Role)
     private roleRepository: Repository<Role>,
+    @InjectRepository(Center)
+    private centerRepository: Repository<Center>,
     private jwtService: JwtService,
   ) {}
 
@@ -124,10 +126,7 @@ export class AuthService {
   }): Promise<any> {
     // Check if user already exists by google_id or email
     let user = await this.userRepository.findOne({
-      where: [
-        { google_id: googleUser.google_id },
-        { email: googleUser.email },
-      ],
+      where: [{ google_id: googleUser.google_id }, { email: googleUser.email }],
       relations: ['roles'],
     });
 
@@ -142,11 +141,13 @@ export class AuthService {
     } else {
       // Create new user from Google profile
       let targetRole = RoleName.STUDENT; // default
-      
+
       if (googleUser.preferredRole === 'teacher') {
         targetRole = RoleName.TEACHER;
       } else if (googleUser.preferredRole === 'student') {
         targetRole = RoleName.STUDENT;
+      } else if (googleUser.preferredRole === 'owner') {
+        targetRole = RoleName.OWNER;
       }
 
       const role = await this.roleRepository.findOne({
@@ -192,7 +193,10 @@ export class AuthService {
     };
   }
 
-  async completeProfile(userId: string, profileData: { phone: string; center_id?: string }) {
+  async completeProfile(
+    userId: string,
+    profileData: { phone: string; center_id?: string },
+  ) {
     const user = await this.userRepository.findOne({
       where: { id: userId },
       relations: ['roles'],
@@ -229,7 +233,98 @@ export class AuthService {
     try {
       return this.jwtService.verify(token);
     } catch (error) {
-      throw new UnauthorizedException('Invalid token');
+      throw new UnauthorizedException('Invalid token', error);
     }
+  }
+
+  async registerCenter(
+    userId: string,
+    centerData: {
+      name: string;
+      subdomain?: string;
+      address?: string;
+      phone?: string;
+      email?: string;
+      description?: string;
+    },
+  ) {
+    // Verify user is an owner
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['roles'],
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('User not found');
+    }
+
+    const isOwner = user.roles.some(
+      (role) => role.role_name === RoleName.OWNER,
+    );
+    if (!isOwner) {
+      throw new UnauthorizedException('Only owners can register centers');
+    }
+
+    // Generate subdomain from name if not provided
+    let subdomain = centerData.subdomain;
+    if (!subdomain && centerData.name) {
+      const slug = this.generateSubdomainFromName(centerData.name);
+      subdomain = await this.getUniqueSubdomain(slug);
+    }
+
+    // Create center
+    const center = this.centerRepository.create({
+      ...centerData,
+      subdomain,
+      owner_id: userId,
+      is_active: true,
+    });
+
+    const savedCenter = await this.centerRepository.save(center);
+
+    // Update user's center_id
+    user.center_id = savedCenter.id;
+    await this.userRepository.save(user);
+
+    return {
+      message: 'Center registered successfully',
+      center: {
+        id: savedCenter.id,
+        name: savedCenter.name,
+        subdomain: savedCenter.subdomain,
+        address: savedCenter.address,
+        phone: savedCenter.phone,
+        email: savedCenter.email,
+        description: savedCenter.description,
+      },
+    };
+  }
+
+  private generateSubdomainFromName(name: string): string {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, '') // Remove special characters
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Replace multiple hyphens with single
+      .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+  }
+
+  private async getUniqueSubdomain(baseSubdomain: string): Promise<string> {
+    let subdomain = baseSubdomain;
+    let counter = 1;
+
+    while (await this.isSubdomainTaken(subdomain)) {
+      subdomain = `${baseSubdomain}${counter}`;
+      counter++;
+    }
+
+    return subdomain;
+  }
+
+  private async isSubdomainTaken(subdomain: string): Promise<boolean> {
+    const existing = await this.centerRepository.findOne({
+      where: { subdomain },
+    });
+    return !!existing;
   }
 }

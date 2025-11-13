@@ -5,6 +5,8 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { User } from './user.entity';
 import { Lead } from './lead.entity';
@@ -51,6 +53,10 @@ export class Center {
   updated_at: Date;
 
   // Relations
+  @ManyToOne(() => User, (user) => user.owned_centers, { nullable: false })
+  @JoinColumn({ name: 'owner_id' })
+  owner: User;
+
   @OneToMany(() => User, (user) => user.center)
   users: User[];
 

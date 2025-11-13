@@ -71,6 +71,9 @@ export class User {
   })
   roles: Role[];
 
+  @OneToMany(() => Center, (center) => center.owner)
+  owned_centers: Center[];
+
   @OneToMany(() => Lead, (lead) => lead.assigned_to_user)
   assigned_leads: Lead[];
 
