@@ -34,3 +34,5 @@ export type {
   Option,
 } from './ielts-question.entity';
 export { IeltsAudio } from './ielts-audio.entity';
+export { Session } from './session.entity';
+export { TokenBlacklist } from './token-blacklist.entity';

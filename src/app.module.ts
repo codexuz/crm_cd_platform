@@ -17,6 +17,7 @@ import { SubscriptionsModule } from './modules/subscriptions/subscriptions.modul
 import { HealthModule } from './health/health.module';
 import { IeltsModule } from './modules/ielts/ielts.module';
 import { EmailModule } from './modules/email/email.module';
+import { SessionModule } from './modules/session/session.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { EmailModule } from './modules/email/email.module';
     HealthModule,
     IeltsModule,
     EmailModule,
+    SessionModule,
   ],
   controllers: [AppController],
   providers: [AppService],

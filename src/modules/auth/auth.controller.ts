@@ -6,8 +6,14 @@ import {
   HttpStatus,
   UseGuards,
   Patch,
+  Req,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import {
   LoginDto,
@@ -30,8 +36,16 @@ export class AuthController {
   @ApiOperation({ summary: 'Login user' })
   @ApiResponse({ status: 200, description: 'Login successful' })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
-  async login(@Body() loginDto: LoginDto) {
-    return this.authService.login(loginDto);
+  async login(@Body() loginDto: LoginDto, @Req() req: any) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    const ipAddress = req.ip || req.connection?.remoteAddress;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    const userAgent = req.headers?.['user-agent'];
+    return this.authService.login(
+      loginDto,
+      ipAddress as string,
+      userAgent as string,
+    );
   }
 
   @Post('register')
@@ -56,7 +70,10 @@ export class AuthController {
   @ApiOperation({ summary: 'Verify email with OTP code' })
   @ApiResponse({ status: 200, description: 'Email verified successfully' })
   @ApiResponse({ status: 400, description: 'Invalid or expired OTP' })
-  async verifyOtp(@Body() verifyOtpDto: VerifyOtpDto): Promise<{
+  async verifyOtp(
+    @Body() verifyOtpDto: VerifyOtpDto,
+    @Req() req: any,
+  ): Promise<{
     message: string;
     access_token: string;
     user: {
@@ -67,9 +84,15 @@ export class AuthController {
       roles: string[];
     };
   }> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    const ipAddress = req.ip || req.connection?.remoteAddress;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    const userAgent = req.headers?.['user-agent'];
     return this.authService.verifyEmailOtp(
       verifyOtpDto.email,
       verifyOtpDto.otp,
+      ipAddress as string,
+      userAgent as string,
     );
   }
 
@@ -80,6 +103,18 @@ export class AuthController {
   @ApiResponse({ status: 404, description: 'User not found' })
   async resendOtp(@Body() resendOtpDto: ResendOtpDto) {
     return this.authService.resendVerificationOtp(resendOtpDto.email);
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Logout user and blacklist token' })
+  @ApiResponse({ status: 200, description: 'Logged out successfully' })
+  async logout(@GetUser('userId') userId: string, @Req() req: any) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+    const token = req.headers?.authorization?.replace('Bearer ', '') || '';
+    return this.authService.logout(token as string, userId);
   }
 
   @Patch('complete-profile')

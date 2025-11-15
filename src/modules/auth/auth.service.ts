@@ -14,6 +14,7 @@ import { LoginDto, RegisterDto } from './dto/auth.dto';
 import { ForgotPasswordDto, ResetPasswordDto } from './dto/password-reset.dto';
 import { JwtPayload } from './jwt.strategy';
 import { EmailService } from '../email/email.service';
+import { SessionService } from '../session/session.service';
 
 @Injectable()
 export class AuthService {
@@ -26,9 +27,10 @@ export class AuthService {
     private centerRepository: Repository<Center>,
     private jwtService: JwtService,
     private emailService: EmailService,
+    private sessionService: SessionService,
   ) {}
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto, ipAddress?: string, userAgent?: string) {
     const { email, password } = loginDto;
 
     // Find user with roles and explicitly select password
@@ -68,8 +70,18 @@ export class AuthService {
       roles: user.roles.map((role) => role.role_name),
     };
 
+    const access_token = this.jwtService.sign(payload);
+
+    // Create session
+    await this.sessionService.createSession(
+      user.id,
+      access_token,
+      ipAddress,
+      userAgent,
+    );
+
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token,
       user: {
         id: user.id,
         name: user.name,
@@ -195,6 +207,8 @@ export class AuthService {
   async verifyEmailOtp(
     email: string,
     otp: string,
+    ipAddress?: string,
+    userAgent?: string,
   ): Promise<{
     message: string;
     access_token: string;
@@ -261,9 +275,19 @@ export class AuthService {
       roles: user.roles.map((role) => role.role_name),
     };
 
+    const access_token = this.jwtService.sign(payload);
+
+    // Create session
+    await this.sessionService.createSession(
+      user.id,
+      access_token,
+      ipAddress,
+      userAgent,
+    );
+
     return {
       message: 'Email verified successfully',
-      access_token: this.jwtService.sign(payload),
+      access_token,
       user: {
         id: user.id,
         name: user.name,
@@ -276,6 +300,21 @@ export class AuthService {
 
   async resendVerificationOtp(email: string): Promise<{ message: string }> {
     return this.sendVerificationOtp(email);
+  }
+
+  async logout(token: string, userId: string): Promise<{ message: string }> {
+    // Blacklist the token
+    await this.sessionService.blacklistToken(token, userId, 'logout');
+
+    // Mark session as inactive
+    const sessions = await this.sessionService.getUserSessions(userId);
+    const currentSession = sessions.find((s) => s.token === token);
+
+    if (currentSession) {
+      await this.sessionService.revokeSession(currentSession.id, userId);
+    }
+
+    return { message: 'Logged out successfully' };
   }
 
   async completeProfile(
