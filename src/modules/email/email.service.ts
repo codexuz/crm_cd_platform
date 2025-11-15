@@ -37,6 +37,12 @@ export class EmailService {
         user: smtpUsername,
         pass: smtpPassword,
       },
+      connectionTimeout: 10000, // 10 seconds
+      greetingTimeout: 10000,
+      socketTimeout: 10000,
+      pool: true,
+      maxConnections: 5,
+      maxMessages: 100,
     });
 
     // Verify connection configuration
