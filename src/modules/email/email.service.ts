@@ -29,6 +29,10 @@ export class EmailService {
     const smtpPassword = this.configService.get<string>('SMTP_PASSWORD');
     const smtpEncryption = this.configService.get<string>('SMTP_ENCRYPTION');
 
+    this.logger.log(
+      `Initializing SMTP with host: ${smtpHost}:${smtpPort}, secure: ${smtpEncryption === 'ssl'}`,
+    );
+
     this.transporter = nodemailer.createTransport({
       host: smtpHost,
       port: smtpPort,
@@ -43,6 +47,9 @@ export class EmailService {
       pool: true,
       maxConnections: 5,
       maxMessages: 100,
+      tls: {
+        rejectUnauthorized: false, // Allow self-signed certificates
+      },
     });
 
     // Verify connection configuration
@@ -58,9 +65,20 @@ export class EmailService {
   async sendEmail(sendEmailDto: SendEmailDto): Promise<void> {
     const { to, subject, text, html, from } = sendEmailDto;
 
+    const smtpFromEmail = this.configService.get<string>('SMTP_FROM_EMAIL');
+    const smtpFromName =
+      this.configService.get<string>('SMTP_FROM_NAME') || 'Mockmee';
+    const defaultFrom = `"${smtpFromName}" <${smtpFromEmail}>`;
+    const fromAddress = from || defaultFrom;
+    const toAddress = Array.isArray(to) ? to.join(', ') : to;
+
     const mailOptions = {
-      from: from || this.configService.get<string>('SMTP_USERNAME'),
-      to: Array.isArray(to) ? to.join(', ') : to,
+      from: fromAddress,
+      to: toAddress,
+      envelope: {
+        from: smtpFromEmail || '', // MAIL FROM: use authenticated email
+        to: Array.isArray(to) ? to : [to], // RCPT TO: actual recipients
+      },
       subject,
       text,
       html,
@@ -71,10 +89,10 @@ export class EmailService {
       const info = await this.transporter.sendMail(mailOptions);
       this.logger.log(
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-        `Email sent successfully to ${mailOptions.to}: ${info.messageId}`,
+        `Email sent successfully to ${toAddress}: ${info.messageId}`,
       );
     } catch (error) {
-      this.logger.error(`Failed to send email to ${mailOptions.to}:`, error);
+      this.logger.error(`Failed to send email to ${toAddress}:`, error);
       throw error;
     }
   }
