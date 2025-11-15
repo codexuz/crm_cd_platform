@@ -13,7 +13,7 @@ export {
   SubscriptionPlan,
   SubscriptionStatus,
 } from './subscription.entity';
-export { IeltsTest } from './ielts-test.entity';
+export { IeltsTest, TestType } from './ielts-test.entity';
 export { IeltsListening } from './ielts-listening.entity';
 export {
   IeltsListeningPart,

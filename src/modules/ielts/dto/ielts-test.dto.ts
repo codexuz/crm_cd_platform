@@ -10,6 +10,7 @@ import {
 import { Type } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { QuestionContentType } from '../../../entities';
+import { TestType } from '../../../entities/ielts-test.entity';
 
 export class CreateIeltsTestDto {
   @ApiProperty({
@@ -29,13 +30,13 @@ export class CreateIeltsTestDto {
   description?: string;
 
   @ApiPropertyOptional({
-    description:
-      'Whether this test is for CDI (Cambridge Development Institute)',
-    example: true,
+    description: 'Type of test: practice or mock',
+    enum: TestType,
+    example: TestType.PRACTICE,
   })
   @IsOptional()
-  @IsBoolean()
-  for_cdi?: boolean;
+  @IsEnum(TestType)
+  test_type?: TestType;
 }
 
 export class UpdateIeltsTestDto {
@@ -57,13 +58,13 @@ export class UpdateIeltsTestDto {
   description?: string;
 
   @ApiPropertyOptional({
-    description:
-      'Whether this test is for CDI (Cambridge Development Institute)',
-    example: false,
+    description: 'Type of test: practice or mock',
+    enum: TestType,
+    example: TestType.MOCK,
   })
   @IsOptional()
-  @IsBoolean()
-  for_cdi?: boolean;
+  @IsEnum(TestType)
+  test_type?: TestType;
 
   @ApiPropertyOptional({
     description: 'Whether the test is active/available',

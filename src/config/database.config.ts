@@ -21,6 +21,8 @@ import {
   IeltsWritingTask,
   IeltsQuestion,
   IeltsAudio,
+  Session,
+  TokenBlacklist,
 } from '../entities';
 
 export const getDatabaseConfig = (
@@ -53,6 +55,8 @@ export const getDatabaseConfig = (
     IeltsWritingTask,
     IeltsQuestion,
     IeltsAudio,
+    Session,
+    TokenBlacklist,
   ],
   synchronize: configService.get<string>('NODE_ENV') === 'development',
   logging: configService.get<string>('NODE_ENV') === 'development',

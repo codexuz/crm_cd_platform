@@ -14,6 +14,11 @@ import { IeltsListening } from './ielts-listening.entity';
 import { IeltsReading } from './ielts-reading.entity';
 import { IeltsWriting } from './ielts-writing.entity';
 
+export enum TestType {
+  PRACTICE = 'practice',
+  MOCK = 'mock',
+}
+
 @Entity('ielts_tests')
 export class IeltsTest {
   @PrimaryGeneratedColumn('uuid')
@@ -34,8 +39,12 @@ export class IeltsTest {
   @Column({ nullable: true })
   updated_by: string;
 
-  @Column({ default: false })
-  for_cdi: boolean; // For CDI (Cambridge, etc.)
+  @Column({
+    type: 'enum',
+    enum: TestType,
+    default: TestType.PRACTICE,
+  })
+  test_type: TestType;
 
   @Column({ default: true })
   is_active: boolean;
