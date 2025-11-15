@@ -37,6 +37,15 @@ export class User {
   @Column({ nullable: true })
   password: string;
 
+  @Column({ type: 'varchar', length: 6, nullable: true })
+  email_verification_otp: string | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  email_verification_otp_expires: Date | null;
+
+  @Column({ default: false })
+  email_verified: boolean;
+
   @Column({ length: 255, nullable: true, unique: true })
   google_id: string;
 

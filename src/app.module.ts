@@ -16,6 +16,7 @@ import { SettingsModule } from './modules/settings/settings.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { HealthModule } from './health/health.module';
 import { IeltsModule } from './modules/ielts/ielts.module';
+import { EmailModule } from './modules/email/email.module';
 
 @Module({
   imports: [
@@ -40,6 +41,7 @@ import { IeltsModule } from './modules/ielts/ielts.module';
     SubscriptionsModule,
     HealthModule,
     IeltsModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

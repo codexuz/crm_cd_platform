@@ -7,15 +7,13 @@ import { User, Role, Center } from '../../entities';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
-import { GoogleStrategy } from './google.strategy';
-import { GoogleStudentStrategy } from './google-student.strategy';
-import { GoogleTeacherStrategy } from './google-teacher.strategy';
-import { GoogleOwnerStrategy } from './google-owner.strategy';
+import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User, Role, Center]),
     PassportModule,
+    EmailModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
@@ -28,14 +26,7 @@ import { GoogleOwnerStrategy } from './google-owner.strategy';
     }),
   ],
   controllers: [AuthController],
-  providers: [
-    AuthService,
-    JwtStrategy,
-    GoogleStrategy,
-    GoogleStudentStrategy,
-    GoogleTeacherStrategy,
-    GoogleOwnerStrategy,
-  ],
+  providers: [AuthService, JwtStrategy],
   exports: [AuthService],
 })
 export class AuthModule {}

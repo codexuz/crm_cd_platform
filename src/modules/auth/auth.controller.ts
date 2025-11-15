@@ -4,15 +4,10 @@ import {
   Body,
   HttpCode,
   HttpStatus,
-  Get,
   UseGuards,
-  Req,
-  Res,
   Patch,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { AuthGuard } from '@nestjs/passport';
-import type { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 import {
   LoginDto,
@@ -20,6 +15,8 @@ import {
   CompleteProfileDto,
   RegisterCenterDto,
 } from './dto/auth.dto';
+import { ForgotPasswordDto, ResetPasswordDto } from './dto/password-reset.dto';
+import { SendOtpDto, VerifyOtpDto, ResendOtpDto } from './dto/otp.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 
@@ -45,46 +42,49 @@ export class AuthController {
     return this.authService.register(registerDto);
   }
 
-
-
-  @Get('google/owner')
-  @UseGuards(AuthGuard('google-owner'))
-  @ApiOperation({
-    summary: 'Initiate Google OAuth authentication for center owners',
-  })
-  @ApiResponse({ status: 302, description: 'Redirects to Google OAuth' })
-  googleAuthOwner() {
-    // Role will be handled in the callback
+  @Post('send-otp')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Send OTP to email for verification' })
+  @ApiResponse({ status: 200, description: 'OTP sent successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async sendOtp(@Body() sendOtpDto: SendOtpDto) {
+    return this.authService.sendVerificationOtp(sendOtpDto.email);
   }
 
- 
-
-
-  @Get('google/owner/callback')
-  @UseGuards(AuthGuard('google-owner'))
-  @ApiOperation({ summary: 'Google OAuth callback for center owners' })
-  @ApiResponse({
-    status: 302,
-    description: 'Redirects to frontend with auth token',
-  })
-  googleOwnerAuthRedirect(@Req() req: any, @Res() res: Response) {
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-    const { access_token, user } = req.user;
-
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const userWithRole = { ...user, roleType: 'owner' };
-
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    const redirectUrl = `${frontendUrl}/auth/callback?token=${access_token}&user=${encodeURIComponent(JSON.stringify(userWithRole))}&type=owner`;
-
-    res.redirect(redirectUrl);
+  @Post('verify-otp')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify email with OTP code' })
+  @ApiResponse({ status: 200, description: 'Email verified successfully' })
+  @ApiResponse({ status: 400, description: 'Invalid or expired OTP' })
+  async verifyOtp(@Body() verifyOtpDto: VerifyOtpDto): Promise<{
+    message: string;
+    access_token: string;
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      center_id: string | null;
+      roles: string[];
+    };
+  }> {
+    return this.authService.verifyEmailOtp(
+      verifyOtpDto.email,
+      verifyOtpDto.otp,
+    );
   }
 
+  @Post('resend-otp')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Resend OTP for email verification' })
+  @ApiResponse({ status: 200, description: 'OTP resent successfully' })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async resendOtp(@Body() resendOtpDto: ResendOtpDto) {
+    return this.authService.resendVerificationOtp(resendOtpDto.email);
+  }
 
-  
   @Patch('complete-profile')
   @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: 'Complete user profile after Google OAuth' })
+  @ApiOperation({ summary: 'Complete user profile information' })
   @ApiResponse({ status: 200, description: 'Profile completed successfully' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async completeProfile(
@@ -107,5 +107,25 @@ export class AuthController {
     @Body() registerCenterDto: RegisterCenterDto,
   ) {
     return this.authService.registerCenter(userId, registerCenterDto);
+  }
+
+  @Post('forgot-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Request password reset email' })
+  @ApiResponse({
+    status: 200,
+    description: 'Password reset email sent if account exists',
+  })
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(forgotPasswordDto);
+  }
+
+  @Post('reset-password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Reset password with token' })
+  @ApiResponse({ status: 200, description: 'Password reset successful' })
+  @ApiResponse({ status: 400, description: 'Invalid or expired token' })
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    return this.authService.resetPassword(resetPasswordDto);
   }
 }

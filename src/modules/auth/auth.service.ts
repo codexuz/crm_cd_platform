@@ -2,6 +2,8 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -9,7 +11,9 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { User, Role, RoleName, Center } from '../../entities';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
+import { ForgotPasswordDto, ResetPasswordDto } from './dto/password-reset.dto';
 import { JwtPayload } from './jwt.strategy';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class AuthService {
@@ -21,6 +25,7 @@ export class AuthService {
     @InjectRepository(Center)
     private centerRepository: Repository<Center>,
     private jwtService: JwtService,
+    private emailService: EmailService,
   ) {}
 
   async login(loginDto: LoginDto) {
@@ -39,11 +44,16 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Check if user has a password (local auth) and compare
-    if (!user.password) {
+    // Check if email is verified
+    if (!user.email_verified) {
       throw new UnauthorizedException(
-        'This account uses Google login. Please sign in with Google.',
+        'Email not verified. Please verify your email first.',
       );
+    }
+
+    // Check if user has a password and compare
+    if (!user.password) {
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -111,8 +121,19 @@ export class AuthService {
 
     await this.userRepository.save(user);
 
-    // Return login response
-    return this.login({ email, password: registerDto.password });
+    // Generate and send OTP for email verification
+    try {
+      await this.sendVerificationOtp(user.email);
+    } catch (error) {
+      console.error('Failed to send verification OTP:', error);
+    }
+
+    // Return message instead of auto-login
+    return {
+      message:
+        'Registration successful. Please check your email for verification code.',
+      email: user.email,
+    };
   }
 
   async validateUser(payload: JwtPayload): Promise<any> {
@@ -133,63 +154,106 @@ export class AuthService {
     };
   }
 
-  async validateGoogleUser(googleUser: {
-    google_id: string;
-    email: string;
-    name: string;
-    avatar_url: string;
-    provider: string;
-    accessToken: string;
-    preferredRole?: string;
-  }): Promise<any> {
-    // Check if user already exists by google_id or email
-    let user = await this.userRepository.findOne({
-      where: [{ google_id: googleUser.google_id }, { email: googleUser.email }],
+  private generateOtp(): string {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }
+
+  async sendVerificationOtp(email: string): Promise<{ message: string }> {
+    const user = await this.userRepository.findOne({ where: { email } });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.email_verified) {
+      throw new BadRequestException('Email already verified');
+    }
+
+    // Generate OTP
+    const otp = this.generateOtp();
+
+    // Set expiration (10 minutes from now)
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 10);
+
+    // Save OTP to database
+    user.email_verification_otp = otp;
+    user.email_verification_otp_expires = expiresAt;
+    await this.userRepository.save(user);
+
+    // Send OTP email
+    try {
+      await this.emailService.sendOtpEmail(user.email, otp, user.name);
+    } catch (error) {
+      console.error('Failed to send OTP email:', error);
+      throw new BadRequestException('Failed to send verification email');
+    }
+
+    return { message: 'Verification code sent to your email' };
+  }
+
+  async verifyEmailOtp(
+    email: string,
+    otp: string,
+  ): Promise<{
+    message: string;
+    access_token: string;
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      center_id: string | null;
+      roles: string[];
+    };
+  }> {
+    const user = await this.userRepository.findOne({
+      where: { email },
       relations: ['roles'],
     });
 
-    if (user) {
-      // Update existing user with Google information if needed
-      if (!user.google_id) {
-        user.google_id = googleUser.google_id;
-        user.avatar_url = googleUser.avatar_url;
-        user.provider = googleUser.provider;
-        await this.userRepository.save(user);
-      }
-    } else {
-      // Create new user from Google profile
-      let targetRole = RoleName.STUDENT; // default
-
-      if (googleUser.preferredRole === 'teacher') {
-        targetRole = RoleName.TEACHER;
-      } else if (googleUser.preferredRole === 'student') {
-        targetRole = RoleName.STUDENT;
-      } else if (googleUser.preferredRole === 'owner') {
-        targetRole = RoleName.OWNER;
-      }
-
-      const role = await this.roleRepository.findOne({
-        where: { role_name: targetRole },
-      });
-
-      if (!role) {
-        throw new Error(`${targetRole} role not found`);
-      }
-
-      user = this.userRepository.create({
-        name: googleUser.name,
-        email: googleUser.email,
-        google_id: googleUser.google_id,
-        avatar_url: googleUser.avatar_url,
-        provider: googleUser.provider,
-        phone: undefined,
-        roles: [role],
-      });
-
-      await this.userRepository.save(user);
+    if (!user) {
+      throw new NotFoundException('User not found');
     }
 
-    // Generate JWT token
+    if (user.email_verified) {
+      throw new BadRequestException('Email already verified');
+    }
+
+    if (!user.email_verification_otp) {
+      throw new BadRequestException(
+        'No verification code found. Please request a new one.',
+      );
+    }
+
+    // Check if OTP is expired
+    if (
+      !user.email_verification_otp_expires ||
+      new Date() > user.email_verification_otp_expires
+    ) {
+      throw new BadRequestException(
+        'Verification code expired. Please request a new one.',
+      );
+    }
+
+    // Verify OTP
+    if (user.email_verification_otp !== otp) {
+      throw new BadRequestException('Invalid verification code');
+    }
+
+    // Mark email as verified
+    user.email_verified = true;
+    user.email_verification_otp = null;
+    user.email_verification_otp_expires = null;
+    await this.userRepository.save(user);
+
+    // Send welcome email
+    try {
+      await this.emailService.sendWelcomeEmail(user.email, user.name);
+    } catch (error) {
+      console.error('Failed to send welcome email:', error);
+    }
+
+    // Generate JWT token and return login response
     const payload: JwtPayload = {
       sub: user.id,
       email: user.email,
@@ -198,17 +262,20 @@ export class AuthService {
     };
 
     return {
+      message: 'Email verified successfully',
       access_token: this.jwtService.sign(payload),
       user: {
         id: user.id,
         name: user.name,
         email: user.email,
         center_id: user.center_id,
-        avatar_url: user.avatar_url,
-        provider: user.provider,
         roles: user.roles.map((role) => role.role_name),
       },
     };
+  }
+
+  async resendVerificationOtp(email: string): Promise<{ message: string }> {
+    return this.sendVerificationOtp(email);
   }
 
   async completeProfile(
@@ -344,5 +411,88 @@ export class AuthService {
       where: { subdomain },
     });
     return !!existing;
+  }
+
+  async forgotPassword(
+    forgotPasswordDto: ForgotPasswordDto,
+  ): Promise<{ message: string }> {
+    const { email } = forgotPasswordDto;
+
+    const user = await this.userRepository.findOne({
+      where: { email, is_active: true },
+    });
+
+    // Don't reveal if user exists or not for security
+    if (!user) {
+      return {
+        message:
+          'If an account with that email exists, a password reset link has been sent.',
+      };
+    }
+
+    // Check if user has password (not OAuth user)
+    if (!user.password) {
+      return {
+        message: 'This account uses Google login. Please sign in with Google.',
+      };
+    }
+
+    // Generate reset token (valid for 1 hour)
+    const resetToken = this.jwtService.sign(
+      { sub: user.id, type: 'password-reset' },
+      { expiresIn: '1h' },
+    );
+
+    // Send password reset email
+    try {
+      await this.emailService.sendPasswordResetEmail(user.email, resetToken);
+    } catch (error) {
+      console.error('Failed to send password reset email:', error);
+      throw new BadRequestException('Failed to send password reset email');
+    }
+
+    return {
+      message:
+        'If an account with that email exists, a password reset link has been sent.',
+    };
+  }
+
+  async resetPassword(
+    resetPasswordDto: ResetPasswordDto,
+  ): Promise<{ message: string }> {
+    const { token, newPassword } = resetPasswordDto;
+
+    // Verify token
+    let payload: any;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      payload = this.jwtService.verify(token);
+    } catch {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+    if (payload.type !== 'password-reset') {
+      throw new BadRequestException('Invalid reset token');
+    }
+
+    // Find user
+    const user = await this.userRepository.findOne({
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+      where: { id: payload.sub, is_active: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password
+    user.password = hashedPassword;
+    await this.userRepository.save(user);
+
+    return { message: 'Password has been reset successfully' };
   }
 }
