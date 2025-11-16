@@ -43,7 +43,7 @@ export class SubscriptionsController {
   // ==================== Subscription Plans ====================
 
   @Post('plans')
-  @Roles(RoleName.ADMIN)
+  @Roles(RoleName.ADMIN, RoleName.OWNER)
   @ApiOperation({ summary: 'Create a new subscription plan' })
   @ApiResponse({
     status: 201,
@@ -76,7 +76,7 @@ export class SubscriptionsController {
   }
 
   @Patch('plans/:id')
-  @Roles(RoleName.ADMIN)
+  @Roles(RoleName.ADMIN, RoleName.OWNER)
   @ApiOperation({ summary: 'Update subscription plan' })
   @ApiResponse({
     status: 200,
@@ -91,7 +91,7 @@ export class SubscriptionsController {
   }
 
   @Delete('plans/:id')
-  @Roles(RoleName.ADMIN)
+  @Roles(RoleName.ADMIN, RoleName.OWNER)
   @ApiOperation({ summary: 'Delete subscription plan (soft delete)' })
   @ApiResponse({
     status: 200,
@@ -123,7 +123,7 @@ export class SubscriptionsController {
   }
 
   @Get()
-  @Roles(RoleName.ADMIN)
+  @Roles(RoleName.ADMIN, RoleName.OWNER)
   @ApiOperation({ summary: 'Get all subscriptions' })
   @ApiQuery({ name: 'centerId', required: false, type: 'string' })
   @ApiQuery({ name: 'status', required: false, enum: SubscriptionStatus })
@@ -235,7 +235,7 @@ export class SubscriptionsController {
   }
 
   @Post('check-expired')
-  @Roles(RoleName.ADMIN)
+  @Roles(RoleName.ADMIN, RoleName.OWNER)
   @ApiOperation({ summary: 'Check and update expired subscriptions' })
   @ApiResponse({
     status: 200,
@@ -293,7 +293,7 @@ export class SubscriptionsController {
   }
 
   @Patch('invoices/:id')
-  @Roles(RoleName.ADMIN)
+  @Roles(RoleName.ADMIN, RoleName.OWNER)
   @ApiOperation({ summary: 'Update invoice' })
   @ApiResponse({
     status: 200,
