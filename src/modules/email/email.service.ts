@@ -185,4 +185,30 @@ export class EmailService {
       text: `Your verification code is: ${otp}. This code will expire in 10 minutes.`,
     });
   }
+
+  async sendLoginOtpEmail(
+    to: string,
+    otp: string,
+    name?: string,
+  ): Promise<void> {
+    await this.sendEmail({
+      to,
+      subject: 'Login Verification Code',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h1 style="color: #333;">Login Verification</h1>
+          ${name ? `<p>Hello ${name},</p>` : '<p>Hello,</p>'}
+          <p>Your login verification code is:</p>
+          <div style="background-color: #f4f4f4; padding: 20px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 5px; margin: 20px 0;">
+            ${otp}
+          </div>
+          <p>This code will expire in <strong>10 minutes</strong>.</p>
+          <p>If you didn't attempt to log in, please secure your account immediately.</p>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+          <p style="color: #999; font-size: 12px;">This is an automated message, please do not reply.</p>
+        </div>
+      `,
+      text: `Your login verification code is: ${otp}. This code will expire in 10 minutes.`,
+    });
+  }
 }

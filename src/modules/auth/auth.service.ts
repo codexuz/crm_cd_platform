@@ -63,32 +63,29 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload: JwtPayload = {
-      sub: user.id,
-      email: user.email,
-      center_id: user.center_id,
-      roles: user.roles.map((role) => role.role_name),
-    };
+    // Generate OTP for login
+    const otp = this.generateOtp();
 
-    const access_token = this.jwtService.sign(payload);
+    // Set expiration (10 minutes from now)
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 10);
 
-    // Create session
-    await this.sessionService.createSession(
-      user.id,
-      access_token,
-      ipAddress,
-      userAgent,
-    );
+    // Save OTP to database
+    user.login_otp = otp;
+    user.login_otp_expires = expiresAt;
+    await this.userRepository.save(user);
+
+    // Send OTP email
+    try {
+      await this.emailService.sendLoginOtpEmail(user.email, otp, user.name);
+    } catch (error) {
+      console.error('Failed to send login OTP email:', error);
+      throw new BadRequestException('Failed to send login verification code');
+    }
 
     return {
-      access_token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        center_id: user.center_id,
-        roles: user.roles.map((role) => role.role_name),
-      },
+      message: 'Login verification code sent to your email',
+      email: user.email,
     };
   }
 
@@ -300,6 +297,85 @@ export class AuthService {
 
   async resendVerificationOtp(email: string): Promise<{ message: string }> {
     return this.sendVerificationOtp(email);
+  }
+
+  async verifyLoginOtp(
+    email: string,
+    otp: string,
+    ipAddress?: string,
+    userAgent?: string,
+  ): Promise<{
+    message: string;
+    access_token: string;
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      center_id: string | null;
+      roles: string[];
+    };
+  }> {
+    const user = await this.userRepository.findOne({
+      where: { email, is_active: true },
+      relations: ['roles'],
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
+    if (!user.login_otp) {
+      throw new BadRequestException(
+        'No login verification code found. Please log in again.',
+      );
+    }
+
+    // Check if OTP is expired
+    if (!user.login_otp_expires || new Date() > user.login_otp_expires) {
+      throw new BadRequestException(
+        'Login verification code expired. Please log in again.',
+      );
+    }
+
+    // Verify OTP
+    if (user.login_otp !== otp) {
+      throw new BadRequestException('Invalid verification code');
+    }
+
+    // Clear login OTP
+    user.login_otp = null;
+    user.login_otp_expires = null;
+    await this.userRepository.save(user);
+
+    // Generate JWT token
+    const payload: JwtPayload = {
+      sub: user.id,
+      email: user.email,
+      center_id: user.center_id,
+      roles: user.roles.map((role) => role.role_name),
+    };
+
+    const access_token = this.jwtService.sign(payload);
+
+    // Create session
+    await this.sessionService.createSession(
+      user.id,
+      access_token,
+      ipAddress,
+      userAgent,
+    );
+
+    return {
+      message: 'Login successful',
+      access_token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        center_id: user.center_id,
+        roles: user.roles.map((role) => role.role_name),
+      },
+    };
   }
 
   async logout(token: string, userId: string): Promise<{ message: string }> {

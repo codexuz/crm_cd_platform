@@ -22,7 +22,12 @@ import {
   RegisterCenterDto,
 } from './dto/auth.dto';
 import { ForgotPasswordDto, ResetPasswordDto } from './dto/password-reset.dto';
-import { SendOtpDto, VerifyOtpDto, ResendOtpDto } from './dto/otp.dto';
+import {
+  SendOtpDto,
+  VerifyOtpDto,
+  ResendOtpDto,
+  LoginVerifyOtpDto,
+} from './dto/otp.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 
@@ -33,8 +38,11 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Login user' })
-  @ApiResponse({ status: 200, description: 'Login successful' })
+  @ApiOperation({ summary: 'Login user (sends OTP to email)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Login verification code sent to email',
+  })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
   async login(@Body() loginDto: LoginDto, @Req() req: any) {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
@@ -43,6 +51,40 @@ export class AuthController {
     const userAgent = req.headers?.['user-agent'];
     return this.authService.login(
       loginDto,
+      ipAddress as string,
+      userAgent as string,
+    );
+  }
+
+  @Post('verify-login-otp')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify login OTP and complete authentication' })
+  @ApiResponse({
+    status: 200,
+    description: 'Login successful with access token',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid or expired OTP' })
+  async verifyLoginOtp(
+    @Body() loginVerifyOtpDto: LoginVerifyOtpDto,
+    @Req() req: any,
+  ): Promise<{
+    message: string;
+    access_token: string;
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      center_id: string | null;
+      roles: string[];
+    };
+  }> {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    const ipAddress = req.ip || req.connection?.remoteAddress;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    const userAgent = req.headers?.['user-agent'];
+    return this.authService.verifyLoginOtp(
+      loginVerifyOtpDto.email,
+      loginVerifyOtpDto.otp,
       ipAddress as string,
       userAgent as string,
     );

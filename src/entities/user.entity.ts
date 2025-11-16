@@ -46,6 +46,12 @@ export class User {
   @Column({ default: false })
   email_verified: boolean;
 
+  @Column({ type: 'varchar', length: 6, nullable: true })
+  login_otp: string | null;
+
+  @Column({ type: 'timestamp', nullable: true })
+  login_otp_expires: Date | null;
+
   @Column({ length: 255, nullable: true, unique: true })
   google_id: string;
 
