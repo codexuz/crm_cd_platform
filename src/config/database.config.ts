@@ -1,5 +1,7 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
+import { DataSource } from 'typeorm';
+import * as dotenv from 'dotenv';
 import {
   Center,
   User,
@@ -24,6 +26,8 @@ import {
   Session,
   TokenBlacklist,
 } from '../entities';
+
+dotenv.config();
 
 export const getDatabaseConfig = (
   configService: ConfigService,
@@ -60,4 +64,41 @@ export const getDatabaseConfig = (
   ],
   synchronize: configService.get<string>('NODE_ENV') === 'development',
   logging: configService.get<string>('NODE_ENV') === 'development',
+});
+
+// DataSource for TypeORM CLI
+export default new DataSource({
+  type: 'mysql',
+  host: process.env.DB_HOST || 'localhost',
+  port: parseInt(process.env.DB_PORT || '3306'),
+  username: process.env.DB_USER || 'root',
+  password: process.env.DB_PASSWORD || '',
+  database: process.env.DB_NAME || 'crm_platform',
+  entities: [
+    Center,
+    User,
+    Role,
+    Lead,
+    LeadTrailLesson,
+    Group,
+    Payment,
+    TeacherSalary,
+    Attendance,
+    CenterSettings,
+    Subscription,
+    IeltsTest,
+    IeltsListening,
+    IeltsListeningPart,
+    IeltsReading,
+    IeltsReadingPart,
+    IeltsWriting,
+    IeltsWritingTask,
+    IeltsQuestion,
+    IeltsAudio,
+    Session,
+    TokenBlacklist,
+  ],
+  migrations: ['src/migrations/*.ts'],
+  synchronize: false,
+  logging: process.env.NODE_ENV === 'development',
 });
