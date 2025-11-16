@@ -46,7 +46,7 @@ export class SubscriptionGuard implements CanActivate {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const centerId =
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      user.centerId || request.params.centerId || request.body.center_id;
+      user.center_id || request.params?.centerId || request.body?.center_id;
 
     if (!centerId) {
       throw new ForbiddenException('Center ID not found');
