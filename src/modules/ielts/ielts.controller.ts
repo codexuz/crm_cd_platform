@@ -102,6 +102,14 @@ export class IeltsController {
     return await this.ieltsService.getListeningById(id, centerId);
   }
 
+  @Get('centers/:centerId/tests/:testId/listening')
+  async getListeningByTestId(
+    @Param('centerId') centerId: string,
+    @Param('testId') testId: string,
+  ) {
+    return await this.ieltsService.getListeningByTestId(testId, centerId);
+  }
+
   // Reading endpoints
   @Post('centers/:centerId/reading')
   async createReading(
@@ -129,6 +137,14 @@ export class IeltsController {
     return await this.ieltsService.getReadingById(id, centerId);
   }
 
+  @Get('centers/:centerId/tests/:testId/reading')
+  async getReadingByTestId(
+    @Param('centerId') centerId: string,
+    @Param('testId') testId: string,
+  ) {
+    return await this.ieltsService.getReadingByTestId(testId, centerId);
+  }
+
   // Writing endpoints
   @Post('centers/:centerId/writing')
   async createWriting(
@@ -154,6 +170,14 @@ export class IeltsController {
     @Param('id') id: string,
   ) {
     return await this.ieltsService.getWritingById(id, centerId);
+  }
+
+  @Get('centers/:centerId/tests/:testId/writing')
+  async getWritingByTestId(
+    @Param('centerId') centerId: string,
+    @Param('testId') testId: string,
+  ) {
+    return await this.ieltsService.getWritingByTestId(testId, centerId);
   }
 
   // Create complete test (with listening, reading, and writing)

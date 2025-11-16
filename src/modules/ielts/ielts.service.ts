@@ -215,6 +215,18 @@ export class IeltsService {
     });
   }
 
+  async getListeningByTestId(
+    testId: string,
+    centerId: string,
+  ): Promise<IeltsListening | null> {
+    const listening = await this.listeningRepository.findOne({
+      where: { test_id: testId, center_id: centerId, is_active: true },
+      relations: ['parts', 'parts.question', 'parts.audio'],
+    });
+
+    return listening;
+  }
+
   // Reading CRUD
   async createReading(
     createReadingDto: CreateReadingDto,
@@ -285,6 +297,18 @@ export class IeltsService {
     });
   }
 
+  async getReadingByTestId(
+    testId: string,
+    centerId: string,
+  ): Promise<IeltsReading | null> {
+    const reading = await this.readingRepository.findOne({
+      where: { test_id: testId, center_id: centerId, is_active: true },
+      relations: ['parts', 'parts.question'],
+    });
+
+    return reading;
+  }
+
   // Writing CRUD
   async createWriting(
     createWritingDto: CreateWritingDto,
@@ -349,6 +373,18 @@ export class IeltsService {
       relations: ['tasks'],
       order: { created_at: 'DESC' },
     });
+  }
+
+  async getWritingByTestId(
+    testId: string,
+    centerId: string,
+  ): Promise<IeltsWriting | null> {
+    const writing = await this.writingRepository.findOne({
+      where: { test_id: testId, center_id: centerId, is_active: true },
+      relations: ['tasks'],
+    });
+
+    return writing;
   }
 
   // Create complete test with listening, reading, and writing
