@@ -12,7 +12,7 @@ export class TokenBlacklist {
   id: string;
 
   @Index()
-  @Column({ type: 'varchar', length: 164 })
+  @Column({ type: 'varchar', length: 512 })
   token: string;
 
   @Column({ nullable: true })
