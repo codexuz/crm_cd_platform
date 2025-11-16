@@ -10,11 +10,166 @@ import {
   Min,
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { SubscriptionStatus } from '../../../entities/subscription.entity';
 import {
-  SubscriptionPlan,
-  SubscriptionStatus,
-} from '../../../entities/subscription.entity';
+  InvoiceStatus,
+  PaymentProvider,
+} from '../../../entities/invoice.entity';
 
+// Subscription Plan DTOs
+export class CreateSubscriptionPlanDto {
+  @ApiProperty({ example: 'Pro Plan', description: 'Plan name' })
+  @IsNotEmpty()
+  @IsString()
+  name: string;
+
+  @ApiProperty({
+    example: 49.99,
+    description: 'Monthly price',
+  })
+  @IsNotEmpty()
+  @IsNumber()
+  @Min(0)
+  price_month: number;
+
+  @ApiProperty({
+    example: 499.99,
+    description: 'Yearly price',
+  })
+  @IsNotEmpty()
+  @IsNumber()
+  @Min(0)
+  price_year: number;
+
+  @ApiPropertyOptional({
+    example: 'USD',
+    description: 'Currency (UZS/USD)',
+    default: 'USD',
+  })
+  @IsOptional()
+  @IsString()
+  currency?: string;
+
+  @ApiPropertyOptional({
+    example: 'Professional plan with all features',
+    description: 'Plan description',
+  })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiProperty({
+    example: {
+      leads: true,
+      groups: true,
+      payments: true,
+      salary: true,
+      attendance: true,
+      ielts: false,
+      max_users: 10,
+      max_students: 100,
+    },
+    description: 'Plan features configuration',
+  })
+  @IsNotEmpty()
+  @IsObject()
+  features: {
+    leads?: boolean;
+    groups?: boolean;
+    payments?: boolean;
+    salary?: boolean;
+    attendance?: boolean;
+    ielts?: boolean;
+    max_users?: number;
+    max_students?: number;
+    max_groups?: number;
+    max_storage_gb?: number;
+    custom_branding?: boolean;
+    priority_support?: boolean;
+    api_access?: boolean;
+    advanced_reporting?: boolean;
+    [key: string]: any;
+  };
+}
+
+export class UpdateSubscriptionPlanDto {
+  @ApiPropertyOptional({ example: 'Pro Plan', description: 'Plan name' })
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @ApiPropertyOptional({
+    example: 49.99,
+    description: 'Monthly price',
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  price_month?: number;
+
+  @ApiPropertyOptional({
+    example: 499.99,
+    description: 'Yearly price',
+  })
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  price_year?: number;
+
+  @ApiPropertyOptional({
+    example: 'USD',
+    description: 'Currency (UZS/USD)',
+  })
+  @IsOptional()
+  @IsString()
+  currency?: string;
+
+  @ApiPropertyOptional({
+    example: 'Professional plan with all features',
+    description: 'Plan description',
+  })
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @ApiPropertyOptional({
+    example: {
+      leads: true,
+      groups: true,
+      payments: true,
+    },
+    description: 'Plan features configuration',
+  })
+  @IsOptional()
+  @IsObject()
+  features?: {
+    leads?: boolean;
+    groups?: boolean;
+    payments?: boolean;
+    salary?: boolean;
+    attendance?: boolean;
+    ielts?: boolean;
+    max_users?: number;
+    max_students?: number;
+    max_groups?: number;
+    max_storage_gb?: number;
+    custom_branding?: boolean;
+    priority_support?: boolean;
+    api_access?: boolean;
+    advanced_reporting?: boolean;
+    [key: string]: any;
+  };
+
+  @ApiPropertyOptional({
+    example: true,
+    description: 'Whether plan is active',
+  })
+  @IsOptional()
+  @IsBoolean()
+  is_active?: boolean;
+}
+
+// Subscription DTOs
 export class CreateSubscriptionDto {
   @ApiProperty({ example: 'uuid-string', description: 'Center ID' })
   @IsNotEmpty()
@@ -22,12 +177,12 @@ export class CreateSubscriptionDto {
   center_id: string;
 
   @ApiProperty({
-    example: SubscriptionPlan.PRO,
-    description: 'Subscription plan type',
-    enum: SubscriptionPlan,
+    example: 'uuid-string',
+    description: 'Subscription plan ID',
   })
-  @IsEnum(SubscriptionPlan)
-  plan_type: SubscriptionPlan;
+  @IsNotEmpty()
+  @IsString()
+  plan_id: string;
 
   @ApiPropertyOptional({
     example: SubscriptionStatus.ACTIVE,
@@ -61,77 +216,34 @@ export class CreateSubscriptionDto {
   })
   @IsOptional()
   @IsDateString()
-  trial_end_date?: string;
+  trial_ends_at?: string;
 
   @ApiPropertyOptional({
-    example: 99.99,
-    description: 'Subscription price',
-    default: 0,
+    example: '2025-12-13',
+    description: 'Subscription renewal date (YYYY-MM-DD)',
   })
   @IsOptional()
-  @IsNumber()
-  @Min(0)
-  price?: number;
+  @IsDateString()
+  renews_at?: string;
 
   @ApiPropertyOptional({
-    example: 'USD',
-    description: 'Currency code',
-    default: 'USD',
-  })
-  @IsOptional()
-  @IsString()
-  currency?: string;
-
-  @ApiPropertyOptional({
-    example: 'monthly',
-    description: 'Billing cycle: monthly, yearly, lifetime',
-    default: 'monthly',
-  })
-  @IsOptional()
-  @IsString()
-  billing_cycle?: string;
-
-  @ApiPropertyOptional({
-    example: true,
-    description: 'Auto-renew subscription',
+    example: false,
+    description: 'Cancel subscription at period end',
     default: false,
   })
   @IsOptional()
   @IsBoolean()
-  auto_renew?: boolean;
-
-  @ApiPropertyOptional({
-    example: {
-      max_users: 50,
-      max_students: 500,
-      max_groups: 20,
-      enabled_modules: ['leads', 'payments', 'salary'],
-      priority_support: true,
-    },
-    description: 'Plan features',
-  })
-  @IsOptional()
-  @IsObject()
-  features?: Record<string, any>;
-
-  @ApiPropertyOptional({
-    example: 'Promotional discount applied',
-    description: 'Additional notes',
-  })
-  @IsOptional()
-  @IsString()
-  notes?: string;
+  cancel_at_period_end?: boolean;
 }
 
 export class UpdateSubscriptionDto {
   @ApiPropertyOptional({
-    example: SubscriptionPlan.ENTERPRISE,
-    description: 'Subscription plan type',
-    enum: SubscriptionPlan,
+    example: 'uuid-string',
+    description: 'Subscription plan ID',
   })
   @IsOptional()
-  @IsEnum(SubscriptionPlan)
-  plan_type?: SubscriptionPlan;
+  @IsString()
+  plan_id?: string;
 
   @ApiPropertyOptional({
     example: SubscriptionStatus.ACTIVE,
@@ -151,85 +263,106 @@ export class UpdateSubscriptionDto {
   end_date?: string;
 
   @ApiPropertyOptional({
-    example: 199.99,
-    description: 'Subscription price',
+    example: '2025-11-27',
+    description: 'Trial end date (YYYY-MM-DD)',
   })
   @IsOptional()
+  @IsDateString()
+  trial_ends_at?: string;
+
+  @ApiPropertyOptional({
+    example: '2025-12-13',
+    description: 'Subscription renewal date (YYYY-MM-DD)',
+  })
+  @IsOptional()
+  @IsDateString()
+  renews_at?: string;
+
+  @ApiPropertyOptional({
+    example: false,
+    description: 'Cancel subscription at period end',
+  })
+  @IsOptional()
+  @IsBoolean()
+  cancel_at_period_end?: boolean;
+}
+
+// Invoice DTOs
+export class CreateInvoiceDto {
+  @ApiProperty({ example: 'uuid-string', description: 'Center ID' })
+  @IsNotEmpty()
+  @IsString()
+  center_id: string;
+
+  @ApiProperty({
+    example: 'uuid-string',
+    description: 'Subscription ID',
+  })
+  @IsNotEmpty()
+  @IsString()
+  subscription_id: string;
+
+  @ApiProperty({
+    example: 49.99,
+    description: 'Invoice amount',
+  })
+  @IsNotEmpty()
   @IsNumber()
   @Min(0)
-  price?: number;
+  amount: number;
 
   @ApiPropertyOptional({
-    example: 'yearly',
-    description: 'Billing cycle: monthly, yearly, lifetime',
+    example: InvoiceStatus.PENDING,
+    description: 'Invoice status',
+    enum: InvoiceStatus,
+    default: InvoiceStatus.PENDING,
+  })
+  @IsOptional()
+  @IsEnum(InvoiceStatus)
+  status?: InvoiceStatus;
+
+  @ApiPropertyOptional({
+    example: PaymentProvider.CLICK,
+    description: 'Payment provider',
+    enum: PaymentProvider,
+    default: PaymentProvider.CLICK,
+  })
+  @IsOptional()
+  @IsEnum(PaymentProvider)
+  provider?: PaymentProvider;
+
+  @ApiPropertyOptional({
+    example: 'TXN123456789',
+    description: 'Transaction ID from payment provider',
   })
   @IsOptional()
   @IsString()
-  billing_cycle?: string;
-
-  @ApiPropertyOptional({
-    example: true,
-    description: 'Auto-renew subscription',
-  })
-  @IsOptional()
-  @IsBoolean()
-  auto_renew?: boolean;
-
-  @ApiPropertyOptional({
-    example: {
-      max_users: 100,
-      max_students: 1000,
-      priority_support: true,
-      api_access: true,
-    },
-    description: 'Plan features',
-  })
-  @IsOptional()
-  @IsObject()
-  features?: Record<string, any>;
-
-  @ApiPropertyOptional({
-    example: 'Upgraded to enterprise plan',
-    description: 'Additional notes',
-  })
-  @IsOptional()
-  @IsString()
-  notes?: string;
+  transaction_id?: string;
 }
 
-export class UpgradeSubscriptionDto {
-  @ApiProperty({
-    example: SubscriptionPlan.ENTERPRISE,
-    description: 'New subscription plan',
-    enum: SubscriptionPlan,
+export class UpdateInvoiceDto {
+  @ApiPropertyOptional({
+    example: InvoiceStatus.PAID,
+    description: 'Invoice status',
+    enum: InvoiceStatus,
   })
-  @IsEnum(SubscriptionPlan)
-  new_plan: SubscriptionPlan;
+  @IsOptional()
+  @IsEnum(InvoiceStatus)
+  status?: InvoiceStatus;
 
   @ApiPropertyOptional({
-    example: 'yearly',
-    description: 'New billing cycle',
+    example: 'TXN123456789',
+    description: 'Transaction ID from payment provider',
   })
   @IsOptional()
   @IsString()
-  billing_cycle?: string;
-}
-
-export class CancelSubscriptionDto {
-  @ApiPropertyOptional({
-    example: 'Switching to another platform',
-    description: 'Cancellation reason',
-  })
-  @IsOptional()
-  @IsString()
-  reason?: string;
+  transaction_id?: string;
 
   @ApiPropertyOptional({
-    example: true,
-    description: 'Cancel immediately or at end of billing period',
-    default: false,
+    example: '2025-11-13T10:30:00Z',
+    description: 'Payment timestamp',
   })
   @IsOptional()
-  @IsBoolean()
-  immediate?: boolean;
+  @IsDateString()
+  paid_at?: string;
 }

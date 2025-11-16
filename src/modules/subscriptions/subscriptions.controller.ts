@@ -19,19 +19,19 @@ import {
 } from '@nestjs/swagger';
 import { SubscriptionsService } from './subscriptions.service';
 import {
+  CreateSubscriptionPlanDto,
+  UpdateSubscriptionPlanDto,
   CreateSubscriptionDto,
   UpdateSubscriptionDto,
-  UpgradeSubscriptionDto,
-  CancelSubscriptionDto,
+  CreateInvoiceDto,
+  UpdateInvoiceDto,
 } from './dto/subscription.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { RoleName } from '../../entities';
-import {
-  SubscriptionPlan,
-  SubscriptionStatus,
-} from '../../entities/subscription.entity';
+import { SubscriptionStatus } from '../../entities/subscription.entity';
+import { InvoiceStatus } from '../../entities/invoice.entity';
 
 @ApiTags('Subscriptions')
 @ApiBearerAuth()
@@ -39,6 +39,73 @@ import {
 @Controller('subscriptions')
 export class SubscriptionsController {
   constructor(private readonly subscriptionsService: SubscriptionsService) {}
+
+  // ==================== Subscription Plans ====================
+
+  @Post('plans')
+  @Roles(RoleName.ADMIN)
+  @ApiOperation({ summary: 'Create a new subscription plan' })
+  @ApiResponse({
+    status: 201,
+    description: 'Subscription plan created successfully',
+  })
+  createPlan(@Body() createPlanDto: CreateSubscriptionPlanDto) {
+    return this.subscriptionsService.createPlan(createPlanDto);
+  }
+
+  @Get('plans')
+  @ApiOperation({ summary: 'Get all subscription plans' })
+  @ApiQuery({ name: 'activeOnly', required: false, type: 'boolean' })
+  @ApiResponse({
+    status: 200,
+    description: 'Subscription plans retrieved successfully',
+  })
+  getAllPlans(@Query('activeOnly') activeOnly?: boolean) {
+    return this.subscriptionsService.getAllPlans(activeOnly !== false);
+  }
+
+  @Get('plans/:id')
+  @ApiOperation({ summary: 'Get subscription plan by ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Subscription plan retrieved successfully',
+  })
+  @ApiResponse({ status: 404, description: 'Subscription plan not found' })
+  getPlanById(@Param('id') id: string) {
+    return this.subscriptionsService.getPlanById(id);
+  }
+
+  @Patch('plans/:id')
+  @Roles(RoleName.ADMIN)
+  @ApiOperation({ summary: 'Update subscription plan' })
+  @ApiResponse({
+    status: 200,
+    description: 'Subscription plan updated successfully',
+  })
+  @ApiResponse({ status: 404, description: 'Subscription plan not found' })
+  updatePlan(
+    @Param('id') id: string,
+    @Body() updatePlanDto: UpdateSubscriptionPlanDto,
+  ) {
+    return this.subscriptionsService.updatePlan(id, updatePlanDto);
+  }
+
+  @Delete('plans/:id')
+  @Roles(RoleName.ADMIN)
+  @ApiOperation({ summary: 'Delete subscription plan (soft delete)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Subscription plan deleted successfully',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Cannot delete plan with active subscriptions',
+  })
+  deletePlan(@Param('id') id: string) {
+    return this.subscriptionsService.deletePlan(id);
+  }
+
+  // ==================== Subscriptions ====================
 
   @Post()
   @Roles(RoleName.ADMIN, RoleName.OWNER)
@@ -51,8 +118,8 @@ export class SubscriptionsController {
     status: 409,
     description: 'Center already has an active subscription',
   })
-  create(@Body() createSubscriptionDto: CreateSubscriptionDto) {
-    return this.subscriptionsService.create(createSubscriptionDto);
+  createSubscription(@Body() createSubscriptionDto: CreateSubscriptionDto) {
+    return this.subscriptionsService.createSubscription(createSubscriptionDto);
   }
 
   @Get()
@@ -60,40 +127,15 @@ export class SubscriptionsController {
   @ApiOperation({ summary: 'Get all subscriptions' })
   @ApiQuery({ name: 'centerId', required: false, type: 'string' })
   @ApiQuery({ name: 'status', required: false, enum: SubscriptionStatus })
-  @ApiQuery({ name: 'plan', required: false, enum: SubscriptionPlan })
   @ApiResponse({
     status: 200,
     description: 'Subscriptions retrieved successfully',
   })
-  findAll(
+  getAllSubscriptions(
     @Query('centerId') centerId?: string,
     @Query('status') status?: SubscriptionStatus,
-    @Query('plan') plan?: SubscriptionPlan,
   ) {
-    return this.subscriptionsService.findAll(centerId, status, plan);
-  }
-
-  @Get('stats')
-  @Roles(RoleName.ADMIN)
-  @ApiOperation({ summary: 'Get subscription statistics' })
-  @ApiResponse({
-    status: 200,
-    description: 'Statistics retrieved successfully',
-  })
-  getStats() {
-    return this.subscriptionsService.getSubscriptionStats();
-  }
-
-  @Get('plans/:plan/features')
-  @Roles(RoleName.ADMIN, RoleName.OWNER)
-  @ApiOperation({ summary: 'Get features for a specific plan' })
-  @ApiParam({ name: 'plan', enum: SubscriptionPlan })
-  @ApiResponse({
-    status: 200,
-    description: 'Plan features retrieved successfully',
-  })
-  getPlanFeatures(@Param('plan') plan: SubscriptionPlan) {
-    return this.subscriptionsService.getPlanFeatures(plan);
+    return this.subscriptionsService.getAllSubscriptions(centerId, status);
   }
 
   @Get('center/:centerId/active')
@@ -105,8 +147,28 @@ export class SubscriptionsController {
     description: 'Active subscription retrieved successfully',
   })
   @ApiResponse({ status: 404, description: 'No active subscription found' })
-  findActiveByCenter(@Param('centerId') centerId: string) {
-    return this.subscriptionsService.findActiveByCenter(centerId);
+  getActiveByCenterId(@Param('centerId') centerId: string) {
+    return this.subscriptionsService.getActiveByCenterId(centerId);
+  }
+
+  @Get('center/:centerId/module-access/:moduleName')
+  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER)
+  @ApiOperation({ summary: 'Check if center has access to a module' })
+  @ApiParam({ name: 'centerId', type: 'string' })
+  @ApiParam({ name: 'moduleName', type: 'string' })
+  @ApiResponse({
+    status: 200,
+    description: 'Module access checked successfully',
+  })
+  async hasModuleAccess(
+    @Param('centerId') centerId: string,
+    @Param('moduleName') moduleName: string,
+  ) {
+    const hasAccess = await this.subscriptionsService.hasModuleAccess(
+      centerId,
+      moduleName,
+    );
+    return { hasAccess, moduleName };
   }
 
   @Get(':id')
@@ -117,8 +179,8 @@ export class SubscriptionsController {
     description: 'Subscription retrieved successfully',
   })
   @ApiResponse({ status: 404, description: 'Subscription not found' })
-  findOne(@Param('id') id: string) {
-    return this.subscriptionsService.findOne(id);
+  getSubscriptionById(@Param('id') id: string) {
+    return this.subscriptionsService.getSubscriptionById(id);
   }
 
   @Patch(':id')
@@ -129,118 +191,135 @@ export class SubscriptionsController {
     description: 'Subscription updated successfully',
   })
   @ApiResponse({ status: 404, description: 'Subscription not found' })
-  update(
+  updateSubscription(
     @Param('id') id: string,
     @Body() updateSubscriptionDto: UpdateSubscriptionDto,
   ) {
-    return this.subscriptionsService.update(id, updateSubscriptionDto);
+    return this.subscriptionsService.updateSubscription(
+      id,
+      updateSubscriptionDto,
+    );
   }
 
-  @Patch('center/:centerId/upgrade')
-  @Roles(RoleName.ADMIN, RoleName.OWNER)
-  @ApiOperation({ summary: 'Upgrade subscription plan' })
-  @ApiParam({ name: 'centerId', type: 'string' })
-  @ApiResponse({
-    status: 200,
-    description: 'Subscription upgraded successfully',
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Can only upgrade to a higher plan',
-  })
-  @ApiResponse({ status: 404, description: 'No active subscription found' })
-  upgrade(
-    @Param('centerId') centerId: string,
-    @Body() upgradeDto: UpgradeSubscriptionDto,
-  ) {
-    return this.subscriptionsService.upgrade(centerId, upgradeDto);
-  }
-
-  @Patch('center/:centerId/downgrade/:newPlan')
-  @Roles(RoleName.ADMIN, RoleName.OWNER)
-  @ApiOperation({ summary: 'Downgrade subscription plan' })
-  @ApiParam({ name: 'centerId', type: 'string' })
-  @ApiParam({ name: 'newPlan', enum: SubscriptionPlan })
-  @ApiResponse({
-    status: 200,
-    description: 'Subscription downgraded successfully',
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Can only downgrade to a lower plan',
-  })
-  @ApiResponse({ status: 404, description: 'No active subscription found' })
-  downgrade(
-    @Param('centerId') centerId: string,
-    @Param('newPlan') newPlan: SubscriptionPlan,
-  ) {
-    return this.subscriptionsService.downgrade(centerId, newPlan);
-  }
-
-  @Patch('center/:centerId/cancel')
+  @Patch(':id/cancel')
   @Roles(RoleName.ADMIN, RoleName.OWNER)
   @ApiOperation({ summary: 'Cancel subscription' })
-  @ApiParam({ name: 'centerId', type: 'string' })
+  @ApiQuery({
+    name: 'immediate',
+    required: false,
+    type: 'boolean',
+    description: 'Cancel immediately or at period end',
+  })
   @ApiResponse({
     status: 200,
     description: 'Subscription cancelled successfully',
   })
-  @ApiResponse({ status: 404, description: 'No active subscription found' })
-  cancel(
-    @Param('centerId') centerId: string,
-    @Body() cancelDto: CancelSubscriptionDto,
+  @ApiResponse({ status: 404, description: 'Subscription not found' })
+  cancelSubscription(
+    @Param('id') id: string,
+    @Query('immediate') immediate?: boolean,
   ) {
-    return this.subscriptionsService.cancel(centerId, cancelDto);
+    return this.subscriptionsService.cancelSubscription(id, immediate);
   }
 
   @Patch(':id/renew')
   @Roles(RoleName.ADMIN, RoleName.OWNER)
-  @ApiOperation({ summary: 'Renew expired subscription' })
-  @ApiQuery({
-    name: 'days',
-    required: false,
-    type: 'number',
-    description: 'Renewal period in days (default: 30)',
-  })
+  @ApiOperation({ summary: 'Renew subscription' })
   @ApiResponse({
     status: 200,
     description: 'Subscription renewed successfully',
   })
-  @ApiResponse({
-    status: 400,
-    description: 'Only expired subscriptions can be renewed',
-  })
   @ApiResponse({ status: 404, description: 'Subscription not found' })
-  renew(@Param('id') id: string, @Query('days') days?: number) {
-    return this.subscriptionsService.renew(id, days);
+  renewSubscription(@Param('id') id: string) {
+    return this.subscriptionsService.renewSubscription(id);
   }
 
   @Post('check-expired')
   @Roles(RoleName.ADMIN)
-  @ApiOperation({
-    summary: 'Check and update expired subscriptions (admin task)',
-  })
+  @ApiOperation({ summary: 'Check and update expired subscriptions' })
   @ApiResponse({
     status: 200,
-    description: 'Expired subscriptions updated successfully',
+    description: 'Expired subscriptions checked and updated',
   })
-  async checkExpired() {
-    const count = await this.subscriptionsService.checkAndUpdateExpired();
-    return {
-      message: 'Expired subscriptions updated',
-      updated: count,
-    };
+  checkExpiredSubscriptions() {
+    return this.subscriptionsService.checkExpiredSubscriptions();
   }
 
-  @Delete(':id')
-  @Roles(RoleName.ADMIN)
-  @ApiOperation({ summary: 'Delete subscription' })
+  // ==================== Invoices ====================
+
+  @Post('invoices')
+  @Roles(RoleName.ADMIN, RoleName.OWNER)
+  @ApiOperation({ summary: 'Create a new invoice' })
+  @ApiResponse({
+    status: 201,
+    description: 'Invoice created successfully',
+  })
+  createInvoice(@Body() createInvoiceDto: CreateInvoiceDto) {
+    return this.subscriptionsService.createInvoice(createInvoiceDto);
+  }
+
+  @Get('invoices')
+  @Roles(RoleName.ADMIN, RoleName.OWNER)
+  @ApiOperation({ summary: 'Get all invoices' })
+  @ApiQuery({ name: 'centerId', required: false, type: 'string' })
+  @ApiQuery({ name: 'subscriptionId', required: false, type: 'string' })
+  @ApiQuery({ name: 'status', required: false, enum: InvoiceStatus })
   @ApiResponse({
     status: 200,
-    description: 'Subscription deleted successfully',
+    description: 'Invoices retrieved successfully',
   })
-  @ApiResponse({ status: 404, description: 'Subscription not found' })
-  remove(@Param('id') id: string) {
-    return this.subscriptionsService.remove(id);
+  getAllInvoices(
+    @Query('centerId') centerId?: string,
+    @Query('subscriptionId') subscriptionId?: string,
+    @Query('status') status?: InvoiceStatus,
+  ) {
+    return this.subscriptionsService.getAllInvoices(
+      centerId,
+      subscriptionId,
+      status,
+    );
+  }
+
+  @Get('invoices/:id')
+  @Roles(RoleName.ADMIN, RoleName.OWNER)
+  @ApiOperation({ summary: 'Get invoice by ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'Invoice retrieved successfully',
+  })
+  @ApiResponse({ status: 404, description: 'Invoice not found' })
+  getInvoiceById(@Param('id') id: string) {
+    return this.subscriptionsService.getInvoiceById(id);
+  }
+
+  @Patch('invoices/:id')
+  @Roles(RoleName.ADMIN)
+  @ApiOperation({ summary: 'Update invoice' })
+  @ApiResponse({
+    status: 200,
+    description: 'Invoice updated successfully',
+  })
+  @ApiResponse({ status: 404, description: 'Invoice not found' })
+  updateInvoice(
+    @Param('id') id: string,
+    @Body() updateInvoiceDto: UpdateInvoiceDto,
+  ) {
+    return this.subscriptionsService.updateInvoice(id, updateInvoiceDto);
+  }
+
+  @Patch('invoices/:id/mark-paid')
+  @Roles(RoleName.ADMIN, RoleName.OWNER)
+  @ApiOperation({ summary: 'Mark invoice as paid' })
+  @ApiQuery({ name: 'transactionId', required: true, type: 'string' })
+  @ApiResponse({
+    status: 200,
+    description: 'Invoice marked as paid successfully',
+  })
+  @ApiResponse({ status: 404, description: 'Invoice not found' })
+  markInvoiceAsPaid(
+    @Param('id') id: string,
+    @Query('transactionId') transactionId: string,
+  ) {
+    return this.subscriptionsService.markInvoiceAsPaid(id, transactionId);
   }
 }

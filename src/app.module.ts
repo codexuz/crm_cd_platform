@@ -12,7 +12,6 @@ import { GroupsModule } from './modules/groups/groups.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { SalaryModule } from './modules/salary/salary.module';
 import { AttendanceModule } from './modules/attendance/attendance.module';
-import { SettingsModule } from './modules/settings/settings.module';
 import { SubscriptionsModule } from './modules/subscriptions/subscriptions.module';
 import { HealthModule } from './health/health.module';
 import { IeltsModule } from './modules/ielts/ielts.module';
@@ -38,7 +37,6 @@ import { SessionModule } from './modules/session/session.module';
     PaymentsModule,
     SalaryModule,
     AttendanceModule,
-    SettingsModule,
     SubscriptionsModule,
     HealthModule,
     IeltsModule,

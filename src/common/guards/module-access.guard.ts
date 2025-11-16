@@ -33,14 +33,16 @@ export class ModuleAccessGuard implements CanActivate {
       );
     }
 
-    // Check if subscription has the required modules
+    // Get plan features from subscription.plan.features
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const enabledModules: string[] =
+    const planFeatures: Record<string, any> =
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      subscription.features?.enabled_modules || [];
+      subscription.plan?.features || {};
 
+    // Check if subscription plan has the required modules enabled
     const missingModules = requiredModules.filter(
-      (module) => !enabledModules.includes(module),
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      (module) => !planFeatures[module],
     );
 
     if (missingModules.length > 0) {

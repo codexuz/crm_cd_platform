@@ -7,12 +7,9 @@ export { Group, GroupLevel } from './group.entity';
 export { Payment, PaymentMethod, PaymentStatus } from './payment.entity';
 export { TeacherSalary, SalaryStatus } from './teacher-salary.entity';
 export { Attendance, AttendanceStatus } from './attendance.entity';
-export { CenterSettings, ModuleName } from './center-settings.entity';
-export {
-  Subscription,
-  SubscriptionPlan,
-  SubscriptionStatus,
-} from './subscription.entity';
+export { SubscriptionPlan } from './subscription-plan.entity';
+export { Subscription, SubscriptionStatus } from './subscription.entity';
+export { Invoice, InvoiceStatus, PaymentProvider } from './invoice.entity';
 export { IeltsTest, TestType } from './ielts-test.entity';
 export { IeltsListening } from './ielts-listening.entity';
 export {

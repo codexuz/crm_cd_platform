@@ -5,74 +5,95 @@ import {
   ConflictException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThan } from 'typeorm';
-import {
-  Subscription,
-  SubscriptionPlan,
-  SubscriptionStatus,
-} from '../../entities/subscription.entity';
+import { Repository } from 'typeorm';
+import { Subscription, SubscriptionStatus } from '../../entities/subscription.entity';
+import { SubscriptionPlan } from '../../entities/subscription-plan.entity';
+import { Invoice, InvoiceStatus } from '../../entities/invoice.entity';
 import { Center } from '../../entities';
 import {
+  CreateSubscriptionPlanDto,
+  UpdateSubscriptionPlanDto,
   CreateSubscriptionDto,
   UpdateSubscriptionDto,
-  UpgradeSubscriptionDto,
-  CancelSubscriptionDto,
+  CreateInvoiceDto,
+  UpdateInvoiceDto,
 } from './dto/subscription.dto';
 
 @Injectable()
 export class SubscriptionsService {
-  // Default features for each plan
-  private readonly planFeatures = {
-    [SubscriptionPlan.BASIC]: {
-      max_users: 10,
-      max_students: 100,
-      max_groups: 5,
-      max_storage_gb: 5,
-      enabled_modules: ['groups', 'attendance'],
-      custom_branding: false,
-      priority_support: false,
-      api_access: false,
-      advanced_reporting: false,
-    },
-    [SubscriptionPlan.PRO]: {
-      max_users: 50,
-      max_students: 500,
-      max_groups: 25,
-      max_storage_gb: 50,
-      enabled_modules: ['leads', 'groups', 'attendance', 'payments', 'salary'],
-      custom_branding: true,
-      priority_support: true,
-      api_access: false,
-      advanced_reporting: true,
-    },
-    [SubscriptionPlan.ENTERPRISE]: {
-      max_users: -1, // unlimited
-      max_students: -1, // unlimited
-      max_groups: -1, // unlimited
-      max_storage_gb: 500,
-      enabled_modules: [
-        'leads',
-        'groups',
-        'attendance',
-        'payments',
-        'salary',
-        'ielts',
-      ],
-      custom_branding: true,
-      priority_support: true,
-      api_access: true,
-      advanced_reporting: true,
-    },
-  };
-
   constructor(
+    @InjectRepository(SubscriptionPlan)
+    private subscriptionPlanRepository: Repository<SubscriptionPlan>,
     @InjectRepository(Subscription)
     private subscriptionRepository: Repository<Subscription>,
+    @InjectRepository(Invoice)
+    private invoiceRepository: Repository<Invoice>,
     @InjectRepository(Center)
     private centerRepository: Repository<Center>,
   ) {}
 
-  async create(
+  // ==================== Subscription Plans ====================
+
+  async createPlan(
+    createPlanDto: CreateSubscriptionPlanDto,
+  ): Promise<SubscriptionPlan> {
+    const plan = this.subscriptionPlanRepository.create(createPlanDto);
+    return this.subscriptionPlanRepository.save(plan);
+  }
+
+  async getAllPlans(activeOnly = true): Promise<SubscriptionPlan[]> {
+    const where = activeOnly ? { is_active: true } : {};
+    return this.subscriptionPlanRepository.find({
+      where,
+      order: { price_month: 'ASC' },
+    });
+  }
+
+  async getPlanById(id: string): Promise<SubscriptionPlan> {
+    const plan = await this.subscriptionPlanRepository.findOne({
+      where: { id },
+    });
+
+    if (!plan) {
+      throw new NotFoundException(`Subscription plan with ID ${id} not found`);
+    }
+
+    return plan;
+  }
+
+  async updatePlan(
+    id: string,
+    updatePlanDto: UpdateSubscriptionPlanDto,
+  ): Promise<SubscriptionPlan> {
+    const plan = await this.getPlanById(id);
+    Object.assign(plan, updatePlanDto);
+    return this.subscriptionPlanRepository.save(plan);
+  }
+
+  async deletePlan(id: string): Promise<void> {
+    const plan = await this.getPlanById(id);
+    
+    // Check if plan has active subscriptions
+    const activeSubscriptions = await this.subscriptionRepository.count({
+      where: {
+        plan_id: id,
+        status: SubscriptionStatus.ACTIVE,
+      },
+    });
+
+    if (activeSubscriptions > 0) {
+      throw new BadRequestException(
+        'Cannot delete plan with active subscriptions',
+      );
+    }
+
+    plan.is_active = false;
+    await this.subscriptionPlanRepository.save(plan);
+  }
+
+  // ==================== Subscriptions ====================
+
+  async createSubscription(
     createSubscriptionDto: CreateSubscriptionDto,
   ): Promise<Subscription> {
     // Verify center exists
@@ -84,6 +105,13 @@ export class SubscriptionsService {
       throw new NotFoundException(
         `Center with ID ${createSubscriptionDto.center_id} not found`,
       );
+    }
+
+    // Verify plan exists
+    const plan = await this.getPlanById(createSubscriptionDto.plan_id);
+
+    if (!plan.is_active) {
+      throw new BadRequestException('Selected plan is not available');
     }
 
     // Check if center already has an active subscription
@@ -100,27 +128,18 @@ export class SubscriptionsService {
       );
     }
 
-    // Set default features based on plan if not provided
-    const features =
-      createSubscriptionDto.features ||
-      this.planFeatures[createSubscriptionDto.plan_type];
-
-    const subscription = this.subscriptionRepository.create({
-      ...createSubscriptionDto,
-      features,
-    });
-
+    const subscription = this.subscriptionRepository.create(createSubscriptionDto);
     return this.subscriptionRepository.save(subscription);
   }
 
-  async findAll(
+  async getAllSubscriptions(
     centerId?: string,
     status?: SubscriptionStatus,
-    plan?: SubscriptionPlan,
   ): Promise<Subscription[]> {
     const queryBuilder = this.subscriptionRepository
       .createQueryBuilder('subscription')
       .leftJoinAndSelect('subscription.center', 'center')
+      .leftJoinAndSelect('subscription.plan', 'plan')
       .orderBy('subscription.created_at', 'DESC');
 
     if (centerId) {
@@ -131,17 +150,13 @@ export class SubscriptionsService {
       queryBuilder.andWhere('subscription.status = :status', { status });
     }
 
-    if (plan) {
-      queryBuilder.andWhere('subscription.plan_type = :plan', { plan });
-    }
-
     return queryBuilder.getMany();
   }
 
-  async findOne(id: string): Promise<Subscription> {
+  async getSubscriptionById(id: string): Promise<Subscription> {
     const subscription = await this.subscriptionRepository.findOne({
       where: { id },
-      relations: ['center'],
+      relations: ['center', 'plan', 'invoices'],
     });
 
     if (!subscription) {
@@ -151,241 +166,183 @@ export class SubscriptionsService {
     return subscription;
   }
 
-  async findActiveByCenter(centerId: string): Promise<Subscription | null> {
-    const subscription = await this.subscriptionRepository.findOne({
+  async getActiveByCenterId(centerId: string): Promise<Subscription | null> {
+    return this.subscriptionRepository.findOne({
       where: {
         center_id: centerId,
         status: SubscriptionStatus.ACTIVE,
       },
-      relations: ['center'],
+      relations: ['plan'],
     });
-
-    return subscription;
   }
 
-  async update(
+  async updateSubscription(
     id: string,
     updateSubscriptionDto: UpdateSubscriptionDto,
   ): Promise<Subscription> {
-    await this.findOne(id);
+    const subscription = await this.getSubscriptionById(id);
 
-    await this.subscriptionRepository.update(id, updateSubscriptionDto);
-    return this.findOne(id);
+    // If changing plan, verify new plan exists
+    if (updateSubscriptionDto.plan_id) {
+      const newPlan = await this.getPlanById(updateSubscriptionDto.plan_id);
+      if (!newPlan.is_active) {
+        throw new BadRequestException('Selected plan is not available');
+      }
+    }
+
+    Object.assign(subscription, updateSubscriptionDto);
+    return this.subscriptionRepository.save(subscription);
   }
 
-  async upgrade(
-    centerId: string,
-    upgradeDto: UpgradeSubscriptionDto,
-  ): Promise<Subscription> {
-    const activeSubscription = await this.findActiveByCenter(centerId);
+  async cancelSubscription(id: string, immediate = false): Promise<Subscription> {
+    const subscription = await this.getSubscriptionById(id);
 
-    if (!activeSubscription) {
-      throw new NotFoundException(
-        'No active subscription found for this center',
-      );
+    if (subscription.status !== SubscriptionStatus.ACTIVE) {
+      throw new BadRequestException('Only active subscriptions can be canceled');
     }
 
-    // Validate upgrade path
-    const planOrder = [
-      SubscriptionPlan.BASIC,
-      SubscriptionPlan.PRO,
-      SubscriptionPlan.ENTERPRISE,
-    ];
-    const currentPlanIndex = planOrder.indexOf(activeSubscription.plan_type);
-    const newPlanIndex = planOrder.indexOf(upgradeDto.new_plan);
-
-    if (newPlanIndex <= currentPlanIndex) {
-      throw new BadRequestException(
-        'Can only upgrade to a higher plan. Use downgrade for lower plans.',
-      );
+    if (immediate) {
+      subscription.status = SubscriptionStatus.CANCELED;
+      subscription.end_date = new Date();
+    } else {
+      subscription.cancel_at_period_end = true;
     }
 
-    // Update subscription
-    const newFeatures = this.planFeatures[upgradeDto.new_plan];
-    await this.subscriptionRepository.update(activeSubscription.id, {
-      plan_type: upgradeDto.new_plan,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      features: newFeatures as any,
-      billing_cycle:
-        upgradeDto.billing_cycle || activeSubscription.billing_cycle,
-      notes: `Upgraded from ${activeSubscription.plan_type} to ${upgradeDto.new_plan}`,
+    return this.subscriptionRepository.save(subscription);
+  }
+
+  async renewSubscription(id: string): Promise<Subscription> {
+    const subscription = await this.getSubscriptionById(id);
+
+    subscription.status = SubscriptionStatus.ACTIVE;
+    subscription.cancel_at_period_end = false;
+
+    // Set new renewal date (30 days from now as example)
+    const renewalDate = new Date();
+    renewalDate.setDate(renewalDate.getDate() + 30);
+    subscription.renews_at = renewalDate;
+
+    return this.subscriptionRepository.save(subscription);
+  }
+
+  // Check and update expired subscriptions
+  async checkExpiredSubscriptions(): Promise<void> {
+    const now = new Date();
+    
+    const expiredSubscriptions = await this.subscriptionRepository.find({
+      where: [
+        {
+          status: SubscriptionStatus.ACTIVE,
+        },
+      ],
     });
 
-    return this.findOne(activeSubscription.id);
+    for (const subscription of expiredSubscriptions) {
+      if (subscription.end_date && new Date(subscription.end_date) < now) {
+        subscription.status = SubscriptionStatus.EXPIRED;
+        await this.subscriptionRepository.save(subscription);
+      }
+    }
   }
 
-  async downgrade(
-    centerId: string,
-    newPlan: SubscriptionPlan,
-  ): Promise<Subscription> {
-    const activeSubscription = await this.findActiveByCenter(centerId);
+  // Check module access based on subscription plan features
+  async hasModuleAccess(centerId: string, moduleName: string): Promise<boolean> {
+    const subscription = await this.getActiveByCenterId(centerId);
 
-    if (!activeSubscription) {
-      throw new NotFoundException(
-        'No active subscription found for this center',
-      );
+    if (!subscription || !subscription.plan) {
+      return false;
     }
 
-    // Validate downgrade path
-    const planOrder = [
-      SubscriptionPlan.BASIC,
-      SubscriptionPlan.PRO,
-      SubscriptionPlan.ENTERPRISE,
-    ];
-    const currentPlanIndex = planOrder.indexOf(activeSubscription.plan_type);
-    const newPlanIndex = planOrder.indexOf(newPlan);
-
-    if (newPlanIndex >= currentPlanIndex) {
-      throw new BadRequestException(
-        'Can only downgrade to a lower plan. Use upgrade for higher plans.',
-      );
-    }
-
-    // Update subscription
-    const newFeatures = this.planFeatures[newPlan];
-    await this.subscriptionRepository.update(activeSubscription.id, {
-      plan_type: newPlan,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      features: newFeatures as any,
-      notes: `Downgraded from ${activeSubscription.plan_type} to ${newPlan}`,
-    });
-
-    return this.findOne(activeSubscription.id);
+    const features = subscription.plan.features;
+    return features[moduleName] === true;
   }
 
-  async cancel(
-    centerId: string,
-    cancelDto: CancelSubscriptionDto,
-  ): Promise<Subscription> {
-    const activeSubscription = await this.findActiveByCenter(centerId);
+  // ==================== Invoices ====================
 
-    if (!activeSubscription) {
-      throw new NotFoundException(
-        'No active subscription found for this center',
-      );
-    }
-
-    const updateData: Partial<Subscription> = {
-      status: SubscriptionStatus.CANCELLED,
-      auto_renew: false,
-      notes: cancelDto.reason
-        ? `Cancelled: ${cancelDto.reason}`
-        : 'Subscription cancelled',
-    };
-
-    if (cancelDto.immediate) {
-      updateData.end_date = new Date();
-    }
-
-    await this.subscriptionRepository.update(activeSubscription.id, updateData);
-    return this.findOne(activeSubscription.id);
-  }
-
-  async renew(
-    id: string,
-    renewalPeriodDays: number = 30,
-  ): Promise<Subscription> {
-    const subscription = await this.findOne(id);
-
-    if (subscription.status !== SubscriptionStatus.EXPIRED) {
-      throw new BadRequestException(
-        'Only expired subscriptions can be renewed',
-      );
-    }
-
-    const newStartDate = new Date();
-    const newEndDate = new Date();
-    newEndDate.setDate(newEndDate.getDate() + renewalPeriodDays);
-
-    await this.subscriptionRepository.update(id, {
-      status: SubscriptionStatus.ACTIVE,
-      start_date: newStartDate,
-      end_date: newEndDate,
-      notes: 'Subscription renewed',
-    });
-
-    return this.findOne(id);
-  }
-
-  async checkAndUpdateExpired(): Promise<number> {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const result = await this.subscriptionRepository.update(
-      {
-        status: SubscriptionStatus.ACTIVE,
-        end_date: LessThan(today),
-      },
-      {
-        status: SubscriptionStatus.EXPIRED,
-      },
+  async createInvoice(createInvoiceDto: CreateInvoiceDto): Promise<Invoice> {
+    // Verify subscription exists
+    const subscription = await this.getSubscriptionById(
+      createInvoiceDto.subscription_id,
     );
 
-    return result.affected || 0;
+    // Verify center matches
+    if (subscription.center_id !== createInvoiceDto.center_id) {
+      throw new BadRequestException('Center ID does not match subscription');
+    }
+
+    const invoice = this.invoiceRepository.create(createInvoiceDto);
+    return this.invoiceRepository.save(invoice);
   }
 
-  async remove(id: string): Promise<void> {
-    const subscription = await this.findOne(id);
-    await this.subscriptionRepository.remove(subscription);
+  async getAllInvoices(
+    centerId?: string,
+    subscriptionId?: string,
+    status?: InvoiceStatus,
+  ): Promise<Invoice[]> {
+    const queryBuilder = this.invoiceRepository
+      .createQueryBuilder('invoice')
+      .leftJoinAndSelect('invoice.center', 'center')
+      .leftJoinAndSelect('invoice.subscription', 'subscription')
+      .orderBy('invoice.created_at', 'DESC');
+
+    if (centerId) {
+      queryBuilder.andWhere('invoice.center_id = :centerId', { centerId });
+    }
+
+    if (subscriptionId) {
+      queryBuilder.andWhere('invoice.subscription_id = :subscriptionId', {
+        subscriptionId,
+      });
+    }
+
+    if (status) {
+      queryBuilder.andWhere('invoice.status = :status', { status });
+    }
+
+    return queryBuilder.getMany();
   }
 
-  async getSubscriptionStats() {
-    const totalSubscriptions = await this.subscriptionRepository.count();
-
-    const byPlan = await this.subscriptionRepository
-      .createQueryBuilder('subscription')
-      .select('subscription.plan_type', 'plan')
-      .addSelect('COUNT(*)', 'count')
-      .groupBy('subscription.plan_type')
-      .getRawMany();
-
-    const byStatus = await this.subscriptionRepository
-      .createQueryBuilder('subscription')
-      .select('subscription.status', 'status')
-      .addSelect('COUNT(*)', 'count')
-      .groupBy('subscription.status')
-      .getRawMany();
-
-    const activeCount = await this.subscriptionRepository.count({
-      where: { status: SubscriptionStatus.ACTIVE },
+  async getInvoiceById(id: string): Promise<Invoice> {
+    const invoice = await this.invoiceRepository.findOne({
+      where: { id },
+      relations: ['center', 'subscription', 'subscription.plan'],
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const revenue = await this.subscriptionRepository
-      .createQueryBuilder('subscription')
-      .select('SUM(subscription.price)', 'total')
-      .where('subscription.status = :status', {
-        status: SubscriptionStatus.ACTIVE,
-      })
-      .getRawOne();
+    if (!invoice) {
+      throw new NotFoundException(`Invoice with ID ${id} not found`);
+    }
 
-    return {
-      total: totalSubscriptions,
-      active: activeCount,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      byPlan: byPlan.reduce(
-        (acc: Record<string, number>, curr: any) => {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
-          acc[curr.plan] = parseInt(curr.count);
-          return acc;
-        },
-        {} as Record<string, number>,
-      ),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      byStatus: byStatus.reduce(
-        (acc: Record<string, number>, curr: any) => {
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
-          acc[curr.status] = parseInt(curr.count);
-          return acc;
-        },
-        {} as Record<string, number>,
-      ),
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
-      monthlyRevenue: parseFloat(revenue?.total || '0'),
-    };
+    return invoice;
   }
 
-  getPlanFeatures(plan: SubscriptionPlan) {
-    return this.planFeatures[plan];
+  async updateInvoice(
+    id: string,
+    updateInvoiceDto: UpdateInvoiceDto,
+  ): Promise<Invoice> {
+    const invoice = await this.getInvoiceById(id);
+
+    // If marking as paid, set paid_at if not provided
+    if (
+      updateInvoiceDto.status === InvoiceStatus.PAID &&
+      !updateInvoiceDto.paid_at
+    ) {
+      updateInvoiceDto.paid_at = new Date().toISOString();
+    }
+
+    Object.assign(invoice, updateInvoiceDto);
+    return this.invoiceRepository.save(invoice);
+  }
+
+  async markInvoiceAsPaid(
+    id: string,
+    transactionId: string,
+  ): Promise<Invoice> {
+    const invoice = await this.getInvoiceById(id);
+
+    invoice.status = InvoiceStatus.PAID;
+    invoice.transaction_id = transactionId;
+    invoice.paid_at = new Date();
+
+    return this.invoiceRepository.save(invoice);
   }
 }

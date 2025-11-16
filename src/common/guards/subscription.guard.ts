@@ -59,6 +59,7 @@ export class SubscriptionGuard implements CanActivate {
         center_id: centerId,
         status: SubscriptionStatus.ACTIVE,
       },
+      relations: ['plan'],
     });
 
     if (!subscription) {
