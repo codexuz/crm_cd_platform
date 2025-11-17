@@ -155,8 +155,12 @@ export class IeltsService {
       );
 
       if (existingListening) {
-        // Update existing listening
-        Object.assign(existingListening, listeningData);
+        // Update existing listening - only update allowed fields
+        if (listeningData.title) existingListening.title = listeningData.title;
+        if (listeningData.description)
+          existingListening.description = listeningData.description;
+        if (listeningData.for_cdi !== undefined)
+          existingListening.for_cdi = listeningData.for_cdi;
         existingListening.updated_by = userId;
         await this.listeningRepository.save(existingListening);
 
@@ -321,8 +325,12 @@ export class IeltsService {
       const existingReading = await this.getReadingByTestId(test_id, centerId);
 
       if (existingReading) {
-        // Update existing reading
-        Object.assign(existingReading, readingData);
+        // Update existing reading - only update allowed fields
+        if (readingData.title) existingReading.title = readingData.title;
+        if (readingData.description)
+          existingReading.description = readingData.description;
+        if (readingData.for_cdi !== undefined)
+          existingReading.for_cdi = readingData.for_cdi;
         existingReading.updated_by = userId;
         await this.readingRepository.save(existingReading);
 
@@ -444,8 +452,12 @@ export class IeltsService {
       const existingWriting = await this.getWritingByTestId(test_id, centerId);
 
       if (existingWriting) {
-        // Update existing writing
-        Object.assign(existingWriting, writingData);
+        // Update existing writing - only update allowed fields
+        if (writingData.title) existingWriting.title = writingData.title;
+        if (writingData.description)
+          existingWriting.description = writingData.description;
+        if (writingData.for_cdi !== undefined)
+          existingWriting.for_cdi = writingData.for_cdi;
         existingWriting.updated_by = userId;
         await this.writingRepository.save(existingWriting);
 
