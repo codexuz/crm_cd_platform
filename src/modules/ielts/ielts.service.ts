@@ -67,6 +67,23 @@ export class IeltsService {
     userId: string,
     centerId: string,
   ): Promise<IeltsTest> {
+    // Check if test already exists for this center
+    const existingTest = await this.ieltsTestRepository.findOne({
+      where: {
+        title: createTestDto.title,
+        center_id: centerId,
+        is_active: true,
+      },
+    });
+
+    if (existingTest) {
+      // Update existing test
+      Object.assign(existingTest, createTestDto);
+      existingTest.updated_by = userId;
+      return await this.ieltsTestRepository.save(existingTest);
+    }
+
+    // Create new test
     const test = this.ieltsTestRepository.create({
       ...createTestDto,
       center_id: centerId,
@@ -128,11 +145,75 @@ export class IeltsService {
     userId: string,
     centerId: string,
   ): Promise<IeltsListening> {
-    const { parts, ...listeningData } = createListeningDto;
+    const { parts, test_id, ...listeningData } = createListeningDto;
 
-    // Create listening
+    // Check if listening already exists for this test
+    if (test_id) {
+      const existingListening = await this.getListeningByTestId(
+        test_id,
+        centerId,
+      );
+
+      if (existingListening) {
+        // Update existing listening
+        Object.assign(existingListening, listeningData);
+        existingListening.updated_by = userId;
+        await this.listeningRepository.save(existingListening);
+
+        // Delete old parts
+        await this.listeningPartRepository.delete({
+          listening_id: existingListening.id,
+        });
+
+        // Create new parts
+        for (const partDto of parts) {
+          // Create question
+          const question = this.questionRepository.create({
+            content: partDto.question.content,
+            number_of_questions: partDto.question.number_of_questions,
+            center_id: centerId,
+          });
+          const savedQuestion = await this.questionRepository.save(question);
+
+          // Create audio
+          const audioData = {
+            url: partDto.audio.url,
+            file_name: partDto.audio.file_name,
+            duration: partDto.audio.duration,
+            file_size: partDto.audio.file_size,
+            center_id: centerId,
+            uploaded_by: userId,
+          };
+          const audio = this.audioRepository.create(audioData);
+          const savedAudio = await this.audioRepository.save(audio);
+
+          // Ensure we have the ID
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          const audioId = Array.isArray(savedAudio)
+            ? // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+              savedAudio[0].id
+            : savedAudio.id;
+
+          // Create part
+          const part = this.listeningPartRepository.create({
+            listening_id: existingListening.id,
+            part: partDto.part as ListeningPart,
+            question_id: savedQuestion.id,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            audio_id: audioId,
+            answers: partDto.answers || {},
+          });
+          await this.listeningPartRepository.save(part);
+        }
+
+        return await this.getListeningById(existingListening.id, centerId);
+      }
+    }
+
+    // Create new listening
     const listening = this.listeningRepository.create({
       ...listeningData,
+      test_id,
       center_id: centerId,
       created_by: userId,
     });
@@ -233,11 +314,52 @@ export class IeltsService {
     userId: string,
     centerId: string,
   ): Promise<IeltsReading> {
-    const { parts, ...readingData } = createReadingDto;
+    const { parts, test_id, ...readingData } = createReadingDto;
 
-    // Create reading
+    // Check if reading already exists for this test
+    if (test_id) {
+      const existingReading = await this.getReadingByTestId(test_id, centerId);
+
+      if (existingReading) {
+        // Update existing reading
+        Object.assign(existingReading, readingData);
+        existingReading.updated_by = userId;
+        await this.readingRepository.save(existingReading);
+
+        // Delete old parts
+        await this.readingPartRepository.delete({
+          reading_id: existingReading.id,
+        });
+
+        // Create new parts
+        for (const partDto of parts) {
+          // Create question
+          const question = this.questionRepository.create({
+            content: partDto.question.content,
+            number_of_questions: partDto.question.number_of_questions,
+            center_id: centerId,
+          });
+          const savedQuestion = await this.questionRepository.save(question);
+
+          // Create part
+          const part = this.readingPartRepository.create({
+            reading_id: existingReading.id,
+            part: partDto.part as ReadingPart,
+            question_id: savedQuestion.id,
+            passage: partDto.passage,
+            answers: partDto.answers || {},
+          });
+          await this.readingPartRepository.save(part);
+        }
+
+        return await this.getReadingById(existingReading.id, centerId);
+      }
+    }
+
+    // Create new reading
     const reading = this.readingRepository.create({
       ...readingData,
+      test_id,
       center_id: centerId,
       created_by: userId,
     });
@@ -315,11 +437,49 @@ export class IeltsService {
     userId: string,
     centerId: string,
   ): Promise<IeltsWriting> {
-    const { tasks, ...writingData } = createWritingDto;
+    const { tasks, test_id, ...writingData } = createWritingDto;
 
-    // Create writing
+    // Check if writing already exists for this test
+    if (test_id) {
+      const existingWriting = await this.getWritingByTestId(test_id, centerId);
+
+      if (existingWriting) {
+        // Update existing writing
+        Object.assign(existingWriting, writingData);
+        existingWriting.updated_by = userId;
+        await this.writingRepository.save(existingWriting);
+
+        // Delete old tasks
+        await this.writingTaskRepository.delete({
+          writing_id: existingWriting.id,
+        });
+
+        // Create new tasks
+        for (const taskDto of tasks) {
+          const task = this.writingTaskRepository.create({
+            writing_id: existingWriting.id,
+            task: taskDto.task as WritingTask,
+            task_type: taskDto.task_type as WritingTaskType,
+            prompt: taskDto.prompt,
+            visual_url: taskDto.visual_url,
+            min_words:
+              taskDto.min_words || (taskDto.task === 'TASK_1' ? 150 : 250),
+            time_minutes:
+              taskDto.time_minutes || (taskDto.task === 'TASK_1' ? 20 : 40),
+            sample_answer: taskDto.sample_answer || {},
+            assessment_criteria: taskDto.assessment_criteria || {},
+          });
+          await this.writingTaskRepository.save(task);
+        }
+
+        return await this.getWritingById(existingWriting.id, centerId);
+      }
+    }
+
+    // Create new writing
     const writing = this.writingRepository.create({
       ...writingData,
+      test_id,
       center_id: centerId,
       created_by: userId,
     });
