@@ -27,6 +27,7 @@ import {
   Session,
   TokenBlacklist,
   StudentAssignedTest,
+  Media,
 } from '../entities';
 
 dotenv.config();
@@ -65,6 +66,7 @@ export const getDatabaseConfig = (
     Session,
     TokenBlacklist,
     StudentAssignedTest,
+    Media,
   ],
   synchronize: configService.get<string>('NODE_ENV') === 'development',
   logging: configService.get<string>('NODE_ENV') === 'development',
@@ -103,6 +105,7 @@ export default new DataSource({
     Session,
     TokenBlacklist,
     StudentAssignedTest,
+    Media,
   ],
   migrations: ['src/migrations/*.ts'],
   synchronize: false,

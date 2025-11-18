@@ -18,6 +18,7 @@ import { IeltsModule } from './modules/ielts/ielts.module';
 import { EmailModule } from './modules/email/email.module';
 import { SessionModule } from './modules/session/session.module';
 import { StudentTestsModule } from './modules/student-tests/student-tests.module';
+import { MediaModule } from './modules/media/media.module';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { StudentTestsModule } from './modules/student-tests/student-tests.module
     EmailModule,
     SessionModule,
     StudentTestsModule,
+    MediaModule,
   ],
   controllers: [AppController],
   providers: [AppService],
