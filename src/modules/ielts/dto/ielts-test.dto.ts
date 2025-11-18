@@ -30,9 +30,10 @@ export class CreateIeltsTestDto {
   description?: string;
 
   @ApiPropertyOptional({
-    description: 'Type of test: practice or mock',
+    description:
+      'Type of test: ielts_practice, ielts_mock, cefr_practice, cefr_mock',
     enum: TestType,
-    example: TestType.PRACTICE,
+    example: TestType.IELTS_PRACTICE,
   })
   @IsOptional()
   @IsEnum(TestType)
@@ -58,9 +59,10 @@ export class UpdateIeltsTestDto {
   description?: string;
 
   @ApiPropertyOptional({
-    description: 'Type of test: practice or mock',
+    description:
+      'Type of test: ielts_practice, ielts_mock, cefr_practice, cefr_mock',
     enum: TestType,
-    example: TestType.MOCK,
+    example: TestType.IELTS_MOCK,
   })
   @IsOptional()
   @IsEnum(TestType)

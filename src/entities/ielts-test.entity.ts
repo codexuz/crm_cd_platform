@@ -15,8 +15,10 @@ import { IeltsReading } from './ielts-reading.entity';
 import { IeltsWriting } from './ielts-writing.entity';
 
 export enum TestType {
-  PRACTICE = 'practice',
-  MOCK = 'mock',
+  IELTS_PRACTICE = 'ielts_practice',
+  IELTS_MOCK = 'ielts_mock',
+  CEFR_PRACTICE = 'cefr_practice',
+  CEFR_MOCK = 'cefr_mock',
 }
 
 @Entity('ielts_tests')
@@ -42,7 +44,7 @@ export class IeltsTest {
   @Column({
     type: 'enum',
     enum: TestType,
-    default: TestType.PRACTICE,
+    default: TestType.IELTS_PRACTICE,
   })
   test_type: TestType;
 
