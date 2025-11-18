@@ -63,6 +63,42 @@ export class UsersController {
     return this.usersService.findByRole(role, centerId);
   }
 
+  @Get('admins')
+  @Roles(RoleName.ADMIN, RoleName.OWNER)
+  @ApiOperation({ summary: 'Get all admins' })
+  @ApiQuery({ name: 'centerId', required: false, type: 'string' })
+  @ApiResponse({ status: 200, description: 'Admins retrieved successfully' })
+  findAdmins(@Query('centerId') centerId?: string) {
+    return this.usersService.findByRole(RoleName.ADMIN, centerId);
+  }
+
+  @Get('owners')
+  @Roles(RoleName.ADMIN, RoleName.OWNER)
+  @ApiOperation({ summary: 'Get all owners' })
+  @ApiQuery({ name: 'centerId', required: false, type: 'string' })
+  @ApiResponse({ status: 200, description: 'Owners retrieved successfully' })
+  findOwners(@Query('centerId') centerId?: string) {
+    return this.usersService.findByRole(RoleName.OWNER, centerId);
+  }
+
+  @Get('students')
+  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER, RoleName.TEACHER)
+  @ApiOperation({ summary: 'Get all students' })
+  @ApiQuery({ name: 'centerId', required: false, type: 'string' })
+  @ApiResponse({ status: 200, description: 'Students retrieved successfully' })
+  findStudents(@Query('centerId') centerId?: string) {
+    return this.usersService.findByRole(RoleName.STUDENT, centerId);
+  }
+
+  @Get('teachers')
+  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER)
+  @ApiOperation({ summary: 'Get all teachers' })
+  @ApiQuery({ name: 'centerId', required: false, type: 'string' })
+  @ApiResponse({ status: 200, description: 'Teachers retrieved successfully' })
+  findTeachers(@Query('centerId') centerId?: string) {
+    return this.usersService.findByRole(RoleName.TEACHER, centerId);
+  }
+
   @Get('profile')
   @ApiOperation({ summary: 'Get current user profile' })
   getProfile(@GetUser('userId') userId: string) {
