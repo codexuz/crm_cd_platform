@@ -4,11 +4,10 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like } from 'typeorm';
+import { Repository } from 'typeorm';
 import { Media, MediaType } from '../../entities/media.entity';
 import { UpdateMediaDto, MediaFilterDto } from './dto/media.dto';
 import * as fs from 'fs';
-import * as path from 'path';
 import { promisify } from 'util';
 
 const unlinkAsync = promisify(fs.unlink);
@@ -147,7 +146,14 @@ export class MediaService {
   }
 
   async findByType(mediaType: MediaType, centerId?: string): Promise<Media[]> {
-    const where: any = { media_type: mediaType, is_active: true };
+    const where: {
+      media_type: MediaType;
+      is_active: boolean;
+      center_id?: string;
+    } = {
+      media_type: mediaType,
+      is_active: true,
+    };
     if (centerId) {
       where.center_id = centerId;
     }
@@ -205,7 +211,9 @@ export class MediaService {
     totalSize: number;
     byType: Record<MediaType, { count: number; size: number }>;
   }> {
-    const where: any = { is_active: true };
+    const where: { is_active: boolean; center_id?: string } = {
+      is_active: true,
+    };
     if (centerId) {
       where.center_id = centerId;
     }
