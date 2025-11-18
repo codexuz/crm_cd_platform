@@ -25,7 +25,7 @@ async function bootstrap() {
     ? process.env.ALLOWED_ORIGINS.split(',')
     : [
         'http://localhost:3000',
-        'http://localhost:5173',
+        'http://localhost:3001',
         'http://localhost:4200',
         'https://mockmee.uz',
         'https://backend.mockmee.uz',
