@@ -17,6 +17,7 @@ import { HealthModule } from './health/health.module';
 import { IeltsModule } from './modules/ielts/ielts.module';
 import { EmailModule } from './modules/email/email.module';
 import { SessionModule } from './modules/session/session.module';
+import { StudentTestsModule } from './modules/student-tests/student-tests.module';
 
 @Module({
   imports: [
@@ -42,6 +43,7 @@ import { SessionModule } from './modules/session/session.module';
     IeltsModule,
     EmailModule,
     SessionModule,
+    StudentTestsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

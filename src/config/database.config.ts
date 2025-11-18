@@ -26,6 +26,7 @@ import {
   IeltsAudio,
   Session,
   TokenBlacklist,
+  StudentAssignedTest,
 } from '../entities';
 
 dotenv.config();
@@ -63,6 +64,7 @@ export const getDatabaseConfig = (
     IeltsAudio,
     Session,
     TokenBlacklist,
+    StudentAssignedTest,
   ],
   synchronize: configService.get<string>('NODE_ENV') === 'development',
   logging: configService.get<string>('NODE_ENV') === 'development',
@@ -100,6 +102,7 @@ export default new DataSource({
     IeltsAudio,
     Session,
     TokenBlacklist,
+    StudentAssignedTest,
   ],
   migrations: ['src/migrations/*.ts'],
   synchronize: false,

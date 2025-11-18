@@ -9,12 +9,19 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
-import { User, Role, RoleName, Center } from '../../entities';
+import {
+  User,
+  Role,
+  RoleName,
+  Center,
+  StudentAssignedTest,
+} from '../../entities';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
 import { ForgotPasswordDto, ResetPasswordDto } from './dto/password-reset.dto';
 import { JwtPayload } from './jwt.strategy';
 import { EmailService } from '../email/email.service';
 import { SessionService } from '../session/session.service';
+import { StudentLoginDto } from '../student-tests/dto/student-test.dto';
 
 @Injectable()
 export class AuthService {
@@ -25,6 +32,8 @@ export class AuthService {
     private roleRepository: Repository<Role>,
     @InjectRepository(Center)
     private centerRepository: Repository<Center>,
+    @InjectRepository(StudentAssignedTest)
+    private studentTestRepository: Repository<StudentAssignedTest>,
     private jwtService: JwtService,
     private emailService: EmailService,
     private sessionService: SessionService,
@@ -609,5 +618,97 @@ export class AuthService {
     await this.userRepository.save(user);
 
     return { message: 'Password has been reset successfully' };
+  }
+
+  // Student login with candidate ID (no OTP required)
+  async studentLogin(
+    studentLoginDto: StudentLoginDto,
+    ipAddress?: string,
+    userAgent?: string,
+  ): Promise<{
+    message: string;
+    access_token: string;
+    assignment: {
+      candidate_id: string;
+      student_id: string;
+      test_id: string;
+      center_id: string;
+      status: string;
+      test_start_time: Date | null;
+      test_end_time: Date | null;
+      student: {
+        id: string;
+        name: string;
+        email: string;
+      };
+    };
+  }> {
+    const { candidate_id } = studentLoginDto;
+
+    // Find assignment
+    const assignment = await this.studentTestRepository.findOne({
+      where: {
+        candidate_id,
+        is_active: true,
+      },
+      relations: ['test', 'center', 'student'],
+    });
+
+    if (!assignment) {
+      throw new UnauthorizedException(
+        'Invalid candidate ID. Please check your credentials.',
+      );
+    }
+
+    // Check if test is expired
+    if (assignment.test_end_time && new Date() > assignment.test_end_time) {
+      if (
+        assignment.status !== 'completed' &&
+        assignment.status !== 'expired'
+      ) {
+        assignment.status = 'expired';
+        await this.studentTestRepository.save(assignment);
+      }
+      throw new UnauthorizedException('This test has expired.');
+    }
+
+    // Generate JWT token for student (special payload)
+    const payload = {
+      sub: assignment.id, // Use assignment ID as subject
+      candidate_id: assignment.candidate_id,
+      student_id: assignment.student_id,
+      center_id: assignment.center_id,
+      test_id: assignment.test_id,
+      type: 'student',
+    };
+
+    const access_token = this.jwtService.sign(payload);
+
+    // Create session for student
+    await this.sessionService.createSession(
+      assignment.id,
+      access_token,
+      ipAddress,
+      userAgent,
+    );
+
+    return {
+      message: 'Student login successful',
+      access_token,
+      assignment: {
+        candidate_id: assignment.candidate_id,
+        student_id: assignment.student_id,
+        test_id: assignment.test_id,
+        center_id: assignment.center_id,
+        status: assignment.status,
+        test_start_time: assignment.test_start_time ?? null,
+        test_end_time: assignment.test_end_time ?? null,
+        student: {
+          id: assignment.student.id,
+          name: assignment.student.name,
+          email: assignment.student.email,
+        },
+      },
+    };
   }
 }

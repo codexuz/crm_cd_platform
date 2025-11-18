@@ -33,3 +33,4 @@ export type {
 export { IeltsAudio } from './ielts-audio.entity';
 export { Session } from './session.entity';
 export { TokenBlacklist } from './token-blacklist.entity';
+export { StudentAssignedTest } from './student-assigned-test.entity';

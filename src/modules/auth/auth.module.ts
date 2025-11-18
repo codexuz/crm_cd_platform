@@ -3,7 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { User, Role, Center } from '../../entities';
+import { User, Role, Center, StudentAssignedTest } from '../../entities';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
@@ -11,7 +11,7 @@ import { EmailModule } from '../email/email.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, Role, Center]),
+    TypeOrmModule.forFeature([User, Role, Center, StudentAssignedTest]),
     PassportModule,
     EmailModule,
     JwtModule.registerAsync({

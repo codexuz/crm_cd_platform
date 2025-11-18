@@ -28,6 +28,7 @@ import {
   ResendOtpDto,
   LoginVerifyOtpDto,
 } from './dto/otp.dto';
+import { StudentLoginDto } from '../student-tests/dto/student-test.dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 
@@ -204,5 +205,30 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Invalid or expired token' })
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return this.authService.resetPassword(resetPasswordDto);
+  }
+
+  @Post('student-login')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Student login with candidate ID only (no OTP required)',
+  })
+  @ApiResponse({ status: 200, description: 'Student login successful' })
+  @ApiResponse({
+    status: 401,
+    description: 'Invalid credentials or test expired',
+  })
+  async studentLogin(
+    @Body() studentLoginDto: StudentLoginDto,
+    @Req() req: any,
+  ) {
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    const ipAddress = req.ip || req.connection?.remoteAddress;
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
+    const userAgent = req.headers?.['user-agent'];
+    return this.authService.studentLogin(
+      studentLoginDto,
+      ipAddress as string,
+      userAgent as string,
+    );
   }
 }
