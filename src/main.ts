@@ -13,7 +13,7 @@ async function bootstrap() {
 
   // Serve uploads folder for media files
   app.useStaticAssets(join(__dirname, '..', 'uploads'), {
-    prefix: '/uploads/',
+    prefix: '/uploads',
   });
 
   // Global validation pipe

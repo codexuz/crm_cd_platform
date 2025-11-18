@@ -69,12 +69,12 @@ export class Media {
   @JoinColumn({ name: 'center_id' })
   center?: Center;
 
-  @Column({ type: 'uuid', nullable: true })
-  uploaded_by?: string;
+  @Column({ type: 'uuid' })
+  uploaded_by: string;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'uploaded_by' })
-  uploader?: User;
+  uploader: User;
 
   @Column({ type: 'boolean', default: true })
   is_active: boolean;
