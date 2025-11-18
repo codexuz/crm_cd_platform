@@ -135,3 +135,33 @@ export class RegisterCenterDto {
   @IsOptional()
   description?: string;
 }
+
+export class RegisterStudentDto {
+  @ApiProperty({ example: 'John Doe', description: 'Student full name' })
+  @IsNotEmpty()
+  name: string;
+
+  @ApiProperty({
+    example: 'student@example.com',
+    description: 'Student email address',
+  })
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
+
+  @ApiProperty({ example: '+1234567890', description: 'Student phone number' })
+  @IsNotEmpty()
+  phone: string;
+
+  @ApiProperty({ example: 'password123', description: 'Student password' })
+  @IsNotEmpty()
+  @MinLength(6)
+  password: string;
+
+  @ApiProperty({
+    example: 'uuid-string',
+    description: 'Center ID to assign student to',
+  })
+  @IsNotEmpty()
+  center_id: string;
+}

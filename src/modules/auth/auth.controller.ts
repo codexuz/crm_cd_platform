@@ -20,6 +20,7 @@ import {
   RegisterDto,
   CompleteProfileDto,
   RegisterCenterDto,
+  RegisterStudentDto,
 } from './dto/auth.dto';
 import { ForgotPasswordDto, ResetPasswordDto } from './dto/password-reset.dto';
 import {
@@ -97,6 +98,19 @@ export class AuthController {
   @ApiResponse({ status: 409, description: 'User already exists' })
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
+  }
+
+  @Post('register-student')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Register student by admin/owner (no OTP verification)',
+  })
+  @ApiResponse({ status: 201, description: 'Student registered successfully' })
+  @ApiResponse({ status: 409, description: 'Student already exists' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async registerStudent(@Body() registerStudentDto: RegisterStudentDto) {
+    return this.authService.registerStudent(registerStudentDto);
   }
 
   @Post('send-otp')

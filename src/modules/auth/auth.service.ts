@@ -22,6 +22,7 @@ import { JwtPayload } from './jwt.strategy';
 import { EmailService } from '../email/email.service';
 import { SessionService } from '../session/session.service';
 import { StudentLoginDto } from '../student-tests/dto/student-test.dto';
+import { RegisterStudentDto } from './dto/auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -151,6 +152,66 @@ export class AuthService {
       message:
         'Registration successful. Please check your email for verification code.',
       email: user.email,
+    };
+  }
+
+  // Register student by admin/owner (no OTP verification required)
+  async registerStudent(registerStudentDto: RegisterStudentDto) {
+    const { email, phone, password, name, center_id } = registerStudentDto;
+
+    // Check if user already exists
+    const existingUser = await this.userRepository.findOne({
+      where: [{ email }, { phone }],
+    });
+
+    if (existingUser) {
+      throw new ConflictException(
+        'User with this email or phone already exists',
+      );
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    // Get STUDENT role
+    const studentRole = await this.roleRepository.findOne({
+      where: { role_name: RoleName.STUDENT },
+    });
+
+    if (!studentRole) {
+      throw new Error('STUDENT role not found');
+    }
+
+    // Create user with email already verified
+    const user = this.userRepository.create({
+      name,
+      email,
+      phone,
+      password: hashedPassword,
+      center_id,
+      roles: [studentRole],
+      email_verified: true, // Auto-verify for admin-registered students
+    });
+
+    await this.userRepository.save(user);
+
+    // Send welcome email (optional)
+    try {
+      await this.emailService.sendWelcomeEmail(user.email, user.name);
+    } catch (error) {
+      console.error('Failed to send welcome email:', error);
+    }
+
+    return {
+      message: 'Student registered successfully',
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        center_id: user.center_id,
+        email_verified: user.email_verified,
+      },
     };
   }
 
