@@ -100,7 +100,7 @@ export class EmailService {
   async sendWelcomeEmail(to: string, name: string): Promise<void> {
     await this.sendEmail({
       to,
-      subject: 'Welcome to CRM CD Platform',
+      subject: 'Welcome to Mockmee Platform',
       html: `
         <h1>Welcome, ${name}!</h1>
         <p>Thank you for joining our platform. We're excited to have you on board.</p>
