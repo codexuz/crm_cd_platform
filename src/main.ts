@@ -27,6 +27,10 @@ async function bootstrap() {
         'http://localhost:3000',
         'http://localhost:5173',
         'http://localhost:4200',
+        'https://mockmee.uz',
+        'https://backend.mockmee.uz',
+        'https://teacher.mockmee.uz',
+        'https://student.mockmee.uz',
       ];
 
   app.enableCors({
