@@ -48,7 +48,7 @@ export class MediaService {
     }
 
     const mediaType = this.getMediaTypeFromMime(file.mimetype);
-    const baseUrl = process.env.BASE_URL || 'https://backend.mockmee';
+    const baseUrl = process.env.BASE_URL || 'https://backend.mockmee.uz';
     const fileUrl = `${baseUrl}/uploads/${file.filename}`;
 
     const media = this.mediaRepository.create({
