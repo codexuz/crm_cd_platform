@@ -63,6 +63,24 @@ export class SubscriptionGuard implements CanActivate {
     });
 
     if (!subscription) {
+      // Log for debugging
+      console.log('Subscription lookup failed for center:', centerId);
+      
+      // Try to find any subscription for this center to debug
+      const anySubscription = await this.subscriptionRepository.findOne({
+        where: {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+          center_id: centerId,
+        },
+        relations: ['plan'],
+      });
+      
+      console.log('Any subscription found:', anySubscription ? {
+        id: anySubscription.id,
+        status: anySubscription.status,
+        center_id: anySubscription.center_id
+      } : 'None');
+      
       throw new ForbiddenException(
         'No active subscription found. Please subscribe to access this feature.',
       );
