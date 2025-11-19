@@ -747,7 +747,7 @@ export class AuthService {
 
     // Create session for student
     await this.sessionService.createSession(
-      assignment.id,
+      assignment.student_id, // Use student user ID instead of assignment ID
       access_token,
       ipAddress,
       userAgent,
