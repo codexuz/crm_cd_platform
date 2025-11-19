@@ -116,6 +116,23 @@ export class UsersService {
     return query.getMany();
   }
 
+  async findStaff(centerId?: string): Promise<User[]> {
+    const query = this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.roles', 'role')
+      .leftJoinAndSelect('user.center', 'center')
+      .where('role.role_name IN (:...roleNames)', {
+        roleNames: [RoleName.ADMIN, RoleName.MANAGER, RoleName.TEACHER],
+      })
+      .andWhere('user.is_active = :isActive', { isActive: true });
+
+    if (centerId) {
+      query.andWhere('user.center_id = :centerId', { centerId });
+    }
+
+    return query.getMany();
+  }
+
   async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     const user = await this.findOne(id);
     const { roles: roleNames, ...updateData } = updateUserDto;

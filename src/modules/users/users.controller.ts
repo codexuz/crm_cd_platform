@@ -99,6 +99,18 @@ export class UsersController {
     return this.usersService.findByRole(RoleName.TEACHER, centerId);
   }
 
+  @Get('staff')
+  @Roles(RoleName.ADMIN, RoleName.OWNER)
+  @ApiOperation({ summary: 'Get all staff (admins, managers, teachers)' })
+  @ApiQuery({ name: 'centerId', required: false, type: 'string' })
+  @ApiResponse({
+    status: 200,
+    description: 'Staff members retrieved successfully',
+  })
+  findStaff(@Query('centerId') centerId?: string) {
+    return this.usersService.findStaff(centerId);
+  }
+
   @Get('profile')
   @ApiOperation({ summary: 'Get current user profile' })
   getProfile(@GetUser('userId') userId: string) {
