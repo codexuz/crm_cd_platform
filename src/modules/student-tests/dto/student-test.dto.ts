@@ -103,27 +103,23 @@ export class SubmitTestResultDto {
     description: 'Complete test results for all sections',
     example: {
       listening: {
-        answers: { listening_1_1: 'A', listening_1_2: 'B' },
-        time_spent: 40,
-        scores: { section1: 8, section2: 7, total: 32 },
+        answers: ['A', 'B', 'C', 'A', 'B'],
+        score: 6.5,
+        correct: 27,
+        incorrect: 13,
       },
       reading: {
-        answers: { reading_1_1: 14, reading_1_2: 'TRUE' },
-        time_spent: 60,
-        scores: { section1: 7, section2: 8, total: 21 },
+        answers: [14, 'TRUE', 'NOT GIVEN', 'FALSE', 27],
+        score: 6.5,
+        correct: 27,
+        incorrect: 13,
       },
       writing: {
-        task1: {
-          answer: 'The graph shows...',
-          word_count: 180,
-          time_spent: 35,
-        },
-        task2: {
-          answer: 'In conclusion...',
-          word_count: 320,
-          time_spent: 45,
-        },
-        time_spent: 80,
+        answers: [
+          { task_1_answer: 'The graph shows...', word_count: 290, score: 6.5 },
+          { task_2_answer: 'In conclusion...', word_count: 290, score: 6.0 },
+        ],
+        feedback: 'Good structure but needs more vocabulary variety',
       },
       submitted_at: '2025-11-20T10:30:00.000Z',
       total_time_spent: 180,
@@ -141,62 +137,28 @@ export interface TestResults {
   total_time_spent?: number; // in minutes
 }
 
-export interface WritingResults {
-  task1?: {
-    answer: string;
-    word_count?: number;
-    time_spent?: number; // in minutes
-  };
-  task2?: {
-    answer: string;
-    word_count?: number;
-    time_spent?: number; // in minutes
-  };
+export interface ListeningResults {
+  answers: (string | number)[]; // Array of answers in order
+  score: number; // Band score (0-9)
+  correct: number; // Number of correct answers
+  incorrect: number; // Number of incorrect answers
 }
 
-// Base interface for section results
-export interface BaseSectionResults {
-  answers?: Record<string, string | number>;
-  time_spent?: number;
-  current_question?: string;
-}
-
-export interface ListeningResults extends BaseSectionResults {
-  answers: Record<string, string | number>; // question_id -> answer
-  scores?: {
-    section1?: number;
-    section2?: number;
-    section3?: number;
-    section4?: number;
-    total?: number;
-  };
-  time_spent?: number; // in minutes
-}
-
-export interface ReadingResults extends BaseSectionResults {
-  answers: Record<string, string | number>; // question_id -> answer
-  scores?: {
-    section1?: number;
-    section2?: number;
-    section3?: number;
-    total?: number;
-  };
-  time_spent?: number; // in minutes
+export interface ReadingResults {
+  answers: (string | number)[]; // Array of answers in order
+  score: number; // Band score (0-9)
+  correct: number; // Number of correct answers
+  incorrect: number; // Number of incorrect answers
 }
 
 export interface WritingResults {
-  task1?: {
-    answer: string;
-    word_count?: number;
-    time_spent?: number; // in minutes
-  };
-  task2?: {
-    answer: string;
-    word_count?: number;
-    time_spent?: number; // in minutes
-  };
-  time_spent?: number; // total writing time
-  current_question?: string; // current task being worked on
+  answers: {
+    task_1_answer?: string;
+    task_2_answer?: string;
+    word_count: number;
+    score: number; // Band score for the task
+  }[];
+  feedback: string; // Teacher feedback
 }
 
 // Individual save DTOs for incremental saving
@@ -258,12 +220,12 @@ export class SaveWritingTaskDto {
   word_count?: number;
 
   @ApiPropertyOptional({
-    description: 'Time spent on this task in minutes',
-    example: 25,
+    description: 'Band score for this writing task',
+    example: 6.5,
   })
   @IsOptional()
   @IsNumber()
-  time_spent?: number;
+  score?: number;
 }
 
 export class SaveSectionProgressDto {
@@ -276,11 +238,19 @@ export class SaveSectionProgressDto {
   section: 'listening' | 'reading' | 'writing';
 
   @ApiPropertyOptional({
-    description: 'Map of question IDs to answers for batch saving',
-    example: { listening_1_1: 'B', listening_1_2: 'C', listening_1_3: 'A' },
+    description:
+      'Array of answers for batch saving (for listening/reading) or task answers (for writing)',
+    example: ['A', 'B', 'C', 'A', 'B'],
   })
   @IsOptional()
-  answers?: Record<string, string | number>;
+  answers?:
+    | (string | number)[]
+    | {
+        task_1_answer?: string;
+        task_2_answer?: string;
+        word_count: number;
+        score: number;
+      }[];
 
   @ApiPropertyOptional({
     description: 'Time spent on this section so far in minutes',

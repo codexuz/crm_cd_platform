@@ -416,11 +416,25 @@ export class StudentTestsService {
 
     // Initialize listening section if not exists
     if (!testResults.listening) {
-      testResults.listening = { answers: {} };
+      testResults.listening = {
+        answers: [],
+        score: 0,
+        correct: 0,
+        incorrect: 0,
+      };
     }
 
-    // Save the answer
-    testResults.listening.answers[saveDto.question_id] = saveDto.answer;
+    // Parse question_id to get index (e.g., "listening_1_1" -> index 0)
+    const parts = saveDto.question_id.split('_');
+    const questionIndex = parseInt(parts[parts.length - 1]) - 1;
+
+    // Ensure answers array is large enough
+    while (testResults.listening.answers.length <= questionIndex) {
+      testResults.listening.answers.push('');
+    }
+
+    // Save the answer at the correct index
+    testResults.listening.answers[questionIndex] = saveDto.answer;
 
     assignment.test_results = testResults;
     await this.studentTestRepository.save(assignment);
@@ -444,11 +458,20 @@ export class StudentTestsService {
 
     // Initialize reading section if not exists
     if (!testResults.reading) {
-      testResults.reading = { answers: {} };
+      testResults.reading = { answers: [], score: 0, correct: 0, incorrect: 0 };
     }
 
-    // Save the answer
-    testResults.reading.answers[saveDto.question_id] = saveDto.answer;
+    // Parse question_id to get index (e.g., "reading_2_3" -> index 2)
+    const parts = saveDto.question_id.split('_');
+    const questionIndex = parseInt(parts[parts.length - 1]) - 1;
+
+    // Ensure answers array is large enough
+    while (testResults.reading.answers.length <= questionIndex) {
+      testResults.reading.answers.push('');
+    }
+
+    // Save the answer at the correct index
+    testResults.reading.answers[questionIndex] = saveDto.answer;
 
     assignment.test_results = testResults;
     await this.studentTestRepository.save(assignment);
@@ -472,15 +495,30 @@ export class StudentTestsService {
 
     // Initialize writing section if not exists
     if (!testResults.writing) {
-      testResults.writing = {};
+      testResults.writing = { answers: [], feedback: '' };
     }
 
-    // Save the writing task
-    testResults.writing[saveDto.task] = {
-      answer: saveDto.answer,
-      word_count: saveDto.word_count,
-      time_spent: saveDto.time_spent,
-    };
+    // Ensure answers array has 2 elements (for task1 and task2)
+    while (testResults.writing.answers.length < 2) {
+      testResults.writing.answers.push({
+        task_1_answer: '',
+        task_2_answer: '',
+        word_count: 0,
+        score: 0,
+      });
+    }
+
+    // Determine which task to update
+    const taskIndex = saveDto.task === 'task1' ? 0 : 1;
+
+    // Update the task answer
+    if (saveDto.task === 'task1') {
+      testResults.writing.answers[taskIndex].task_1_answer = saveDto.answer;
+    } else {
+      testResults.writing.answers[taskIndex].task_2_answer = saveDto.answer;
+    }
+    testResults.writing.answers[taskIndex].word_count = saveDto.word_count || 0;
+    testResults.writing.answers[taskIndex].score = saveDto.score || 0;
 
     assignment.test_results = testResults;
     await this.studentTestRepository.save(assignment);
@@ -504,42 +542,35 @@ export class StudentTestsService {
 
     // Handle different section types
     if (saveDto.section === 'writing') {
-      // For writing, we don't save answers, only time_spent and current_question
+      // For writing, save task answers
       if (!testResults.writing) {
-        testResults.writing = {};
+        testResults.writing = { answers: [], feedback: '' };
       }
 
-      if (saveDto.time_spent !== undefined) {
-        testResults.writing.time_spent = saveDto.time_spent;
-      }
-
-      if (saveDto.current_question) {
-        testResults.writing.current_question = saveDto.current_question;
+      if (saveDto.answers && Array.isArray(saveDto.answers)) {
+        testResults.writing.answers = saveDto.answers as {
+          task_1_answer?: string;
+          task_2_answer?: string;
+          word_count: number;
+          score: number;
+        }[];
       }
     } else {
       // For listening and reading sections
       if (!testResults[saveDto.section]) {
-        testResults[saveDto.section] = { answers: {} };
+        testResults[saveDto.section] = {
+          answers: [],
+          score: 0,
+          correct: 0,
+          incorrect: 0,
+        };
       }
 
       const sectionData = testResults[saveDto.section]!;
 
       // Save answers if provided
-      if (saveDto.answers) {
-        sectionData.answers = {
-          ...sectionData.answers,
-          ...saveDto.answers,
-        };
-      }
-
-      // Save time spent if provided
-      if (saveDto.time_spent !== undefined) {
-        sectionData.time_spent = saveDto.time_spent;
-      }
-
-      // Save current question progress if provided
-      if (saveDto.current_question) {
-        sectionData.current_question = saveDto.current_question;
+      if (saveDto.answers && Array.isArray(saveDto.answers)) {
+        sectionData.answers = saveDto.answers as (string | number)[];
       }
     }
 
