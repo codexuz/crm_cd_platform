@@ -37,18 +37,22 @@ export class User {
   @Column({ nullable: true })
   password: string;
 
+  @Exclude()
   @Column({ type: 'varchar', length: 6, nullable: true })
   email_verification_otp: string | null;
 
+  @Exclude()
   @Column({ type: 'timestamp', nullable: true })
   email_verification_otp_expires: Date | null;
 
   @Column({ default: false })
   email_verified: boolean;
 
+  @Exclude()
   @Column({ type: 'varchar', length: 6, nullable: true })
   login_otp: string | null;
 
+  @Exclude()
   @Column({ type: 'timestamp', nullable: true })
   login_otp_expires: Date | null;
 

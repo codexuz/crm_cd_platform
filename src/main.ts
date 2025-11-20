@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, ClassSerializerInterceptor } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
@@ -23,6 +23,11 @@ async function bootstrap() {
       whitelist: true,
       forbidNonWhitelisted: false, // Allow but strip extra properties
     }),
+  );
+
+  // Global class serializer interceptor to handle @Exclude() decorators
+  app.useGlobalInterceptors(
+    new ClassSerializerInterceptor(app.get('Reflector')),
   );
 
   // CORS configuration for production frontend

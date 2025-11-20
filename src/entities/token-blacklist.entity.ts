@@ -5,12 +5,14 @@ import {
   CreateDateColumn,
   Index,
 } from 'typeorm';
+import { Exclude } from 'class-transformer';
 
 @Entity('token_blacklist')
 export class TokenBlacklist {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
+  @Exclude()
   @Index()
   @Column({ type: 'varchar', length: 512 })
   token: string;
