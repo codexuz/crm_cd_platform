@@ -10,6 +10,12 @@ import { IeltsTest } from '../../entities/ielts-test.entity';
 import {
   AssignTestToStudentDto,
   UpdateAssignedTestDto,
+  TestResults,
+  SaveListeningAnswerDto,
+  SaveReadingAnswerDto,
+  SaveWritingTaskDto,
+  SaveSectionProgressDto,
+  TestContentResponse,
 } from './dto/student-test.dto';
 
 @Injectable()
@@ -173,19 +179,7 @@ export class StudentTestsService {
       throw new BadRequestException('Test has expired');
     }
 
-    // Check if test can be started
-    const now = new Date();
-    console.log('Current time:', now.toISOString());
-    console.log('Test start time:', assignment.test_start_time?.toISOString());
-    console.log(
-      'Is current time before start time?',
-      assignment.test_start_time && now < assignment.test_start_time,
-    );
-
-    if (assignment.test_start_time && now < assignment.test_start_time) {
-      throw new BadRequestException('Test has not started yet');
-    }
-
+    // Check if test has expired (but allow early start)
     if (assignment.test_end_time && new Date() > assignment.test_end_time) {
       assignment.status = 'expired';
       await this.studentTestRepository.save(assignment);
@@ -198,7 +192,7 @@ export class StudentTestsService {
 
   async submitTestResults(
     candidateId: string,
-    results: Record<string, any>,
+    results: TestResults,
   ): Promise<StudentAssignedTest> {
     const assignment = await this.getStudentAssignment(candidateId);
 
@@ -217,7 +211,7 @@ export class StudentTestsService {
     return await this.studentTestRepository.save(assignment);
   }
 
-  async getTestContent(candidateId: string): Promise<any> {
+  async getTestContent(candidateId: string): Promise<TestContentResponse> {
     const assignment = await this.studentTestRepository.findOne({
       where: {
         candidate_id: candidateId,
@@ -242,9 +236,158 @@ export class StudentTestsService {
       test: assignment.test,
       candidate_id: assignment.candidate_id,
       student: assignment.student,
-      test_start_time: assignment.test_start_time,
-      test_end_time: assignment.test_end_time,
+      test_start_time: assignment.test_start_time?.toISOString() || null,
+      test_end_time: assignment.test_end_time?.toISOString() || null,
       status: assignment.status,
     };
+  }
+
+  // Save individual listening answer
+  async saveListeningAnswer(
+    candidateId: string,
+    saveDto: SaveListeningAnswerDto,
+  ): Promise<{ message: string }> {
+    const assignment = await this.getStudentAssignment(candidateId);
+
+    if (assignment.status === 'completed' || assignment.status === 'expired') {
+      throw new BadRequestException('Test is no longer active');
+    }
+
+    // Initialize test_results if not exists
+    const testResults = (assignment.test_results as TestResults) || {};
+
+    // Initialize listening section if not exists
+    if (!testResults.listening) {
+      testResults.listening = { answers: {} };
+    }
+
+    // Save the answer
+    testResults.listening.answers[saveDto.question_id] = saveDto.answer;
+
+    assignment.test_results = testResults;
+    await this.studentTestRepository.save(assignment);
+
+    return { message: 'Listening answer saved successfully' };
+  }
+
+  // Save individual reading answer
+  async saveReadingAnswer(
+    candidateId: string,
+    saveDto: SaveReadingAnswerDto,
+  ): Promise<{ message: string }> {
+    const assignment = await this.getStudentAssignment(candidateId);
+
+    if (assignment.status === 'completed' || assignment.status === 'expired') {
+      throw new BadRequestException('Test is no longer active');
+    }
+
+    // Initialize test_results if not exists
+    const testResults = (assignment.test_results as TestResults) || {};
+
+    // Initialize reading section if not exists
+    if (!testResults.reading) {
+      testResults.reading = { answers: {} };
+    }
+
+    // Save the answer
+    testResults.reading.answers[saveDto.question_id] = saveDto.answer;
+
+    assignment.test_results = testResults;
+    await this.studentTestRepository.save(assignment);
+
+    return { message: 'Reading answer saved successfully' };
+  }
+
+  // Save writing task
+  async saveWritingTask(
+    candidateId: string,
+    saveDto: SaveWritingTaskDto,
+  ): Promise<{ message: string }> {
+    const assignment = await this.getStudentAssignment(candidateId);
+
+    if (assignment.status === 'completed' || assignment.status === 'expired') {
+      throw new BadRequestException('Test is no longer active');
+    }
+
+    // Initialize test_results if not exists
+    const testResults = (assignment.test_results as TestResults) || {};
+
+    // Initialize writing section if not exists
+    if (!testResults.writing) {
+      testResults.writing = {};
+    }
+
+    // Save the writing task
+    testResults.writing[saveDto.task] = {
+      answer: saveDto.answer,
+      word_count: saveDto.word_count,
+      time_spent: saveDto.time_spent,
+    };
+
+    assignment.test_results = testResults;
+    await this.studentTestRepository.save(assignment);
+
+    return { message: `${saveDto.task} saved successfully` };
+  }
+
+  // Save section progress (multiple answers at once)
+  async saveSectionProgress(
+    candidateId: string,
+    saveDto: SaveSectionProgressDto,
+  ): Promise<{ message: string }> {
+    const assignment = await this.getStudentAssignment(candidateId);
+
+    if (assignment.status === 'completed' || assignment.status === 'expired') {
+      throw new BadRequestException('Test is no longer active');
+    }
+
+    // Initialize test_results if not exists
+    const testResults = (assignment.test_results as TestResults) || {};
+
+    // Handle different section types
+    if (saveDto.section === 'writing') {
+      // For writing, we don't save answers, only time_spent and current_question
+      if (!testResults.writing) {
+        testResults.writing = {};
+      }
+
+      if (saveDto.time_spent !== undefined) {
+        testResults.writing.time_spent = saveDto.time_spent;
+      }
+
+      if (saveDto.current_question) {
+        testResults.writing.current_question = saveDto.current_question;
+      }
+    } else {
+      // For listening and reading sections
+      if (!testResults[saveDto.section]) {
+        testResults[saveDto.section] = { answers: {} };
+      }
+
+      const sectionData = testResults[saveDto.section]!;
+
+      // Save answers if provided
+      if (saveDto.answers) {
+        sectionData.answers = {
+          ...sectionData.answers,
+          ...saveDto.answers,
+        };
+      }
+
+      // Save time spent if provided
+      if (saveDto.time_spent !== undefined) {
+        sectionData.time_spent = saveDto.time_spent;
+      }
+
+      // Save current question progress if provided
+      if (saveDto.current_question) {
+        sectionData.current_question = saveDto.current_question;
+      }
+    }
+
+    assignment.test_results = testResults;
+    await this.studentTestRepository.save(assignment);
+
+    return { message: `${saveDto.section} progress saved successfully` };
   }
 }
