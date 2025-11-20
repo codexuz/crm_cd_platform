@@ -36,7 +36,7 @@ async function bootstrap() {
     : [
         'http://localhost:3000',
         'http://localhost:3001',
-        'http://localhost:4200',
+        'http://localhost:5173',
         'https://mockmee.uz',
         'https://backend.mockmee.uz',
         'https://teacher.mockmee.uz',
