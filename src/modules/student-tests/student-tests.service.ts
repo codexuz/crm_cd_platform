@@ -174,7 +174,15 @@ export class StudentTestsService {
     }
 
     // Check if test can be started
-    if (assignment.test_start_time && new Date() < assignment.test_start_time) {
+    const now = new Date();
+    console.log('Current time:', now.toISOString());
+    console.log('Test start time:', assignment.test_start_time?.toISOString());
+    console.log(
+      'Is current time before start time?',
+      assignment.test_start_time && now < assignment.test_start_time,
+    );
+
+    if (assignment.test_start_time && now < assignment.test_start_time) {
       throw new BadRequestException('Test has not started yet');
     }
 
@@ -190,7 +198,7 @@ export class StudentTestsService {
 
   async submitTestResults(
     candidateId: string,
-    results: any,
+    results: Record<string, any>,
   ): Promise<StudentAssignedTest> {
     const assignment = await this.getStudentAssignment(candidateId);
 
