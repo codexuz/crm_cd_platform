@@ -126,7 +126,7 @@ export class UsersController {
   }
 
   @Patch(':id')
-  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER)
+  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER, RoleName.TEACHER)
   @ApiOperation({ summary: 'Update user' })
   @ApiResponse({ status: 200, description: 'User updated successfully' })
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
@@ -144,7 +144,7 @@ export class UsersController {
   }
 
   @Delete(':id')
-  @Roles(RoleName.ADMIN, RoleName.OWNER)
+  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER, RoleName.TEACHER)
   @ApiOperation({ summary: 'Delete user' })
   @ApiResponse({ status: 200, description: 'User deleted successfully' })
   remove(@Param('id') id: string) {
