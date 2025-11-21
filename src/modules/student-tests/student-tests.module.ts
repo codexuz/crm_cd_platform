@@ -9,11 +9,19 @@ import { StudentAssignedTest } from '../../entities/student-assigned-test.entity
 import { IeltsTest } from '../../entities/ielts-test.entity';
 import { Subscription } from '../../entities/subscription.entity';
 import { IeltsModule } from '../ielts/ielts.module';
+import { EmailModule } from '../email/email.module';
+import { User } from '../../entities/user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([StudentAssignedTest, IeltsTest, Subscription]),
+    TypeOrmModule.forFeature([
+      StudentAssignedTest,
+      IeltsTest,
+      Subscription,
+      User,
+    ]),
     IeltsModule,
+    EmailModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ({
