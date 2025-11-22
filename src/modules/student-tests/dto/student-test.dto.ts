@@ -25,6 +25,13 @@ export class AssignTestToStudentDto {
   @IsUUID()
   test_id: string;
 
+  @ApiProperty({
+    description: 'UUID of the teacher assigning the test',
+    example: 'b2c3d4e5-f6a7-8901-bcde-f12345678901',
+  })
+  @IsUUID()
+  assigned_by: string;
+
   @ApiPropertyOptional({
     description: 'Scheduled start time for the test (ISO 8601 format)',
     example: '2025-11-20T13:00:00.000Z',

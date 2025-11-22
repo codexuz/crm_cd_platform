@@ -56,6 +56,7 @@ export class UsersService {
       phone,
       password: hashedPassword,
       roles,
+      email_verified: true,
     });
 
     return this.userRepository.save(user);

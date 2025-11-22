@@ -13,7 +13,7 @@ import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { SubscriptionGuard } from '../../common/guards/subscription.guard';
 import { ModuleAccessGuard } from '../../common/guards/module-access.guard';
 import { RequiresModules } from '../../common/decorators/subscription.decorator';
-import { GetUser } from '../../common/decorators/get-user.decorator';
+
 import {
   AssignTestToStudentDto,
   UpdateAssignedTestDto,
@@ -30,11 +30,10 @@ export class StudentTestsController {
   async assignTest(
     @Param('centerId') centerId: string,
     @Body() assignDto: AssignTestToStudentDto,
-    @GetUser('sub') teacherId: string,
   ) {
     return await this.studentTestsService.assignTestToStudent(
       assignDto,
-      teacherId,
+      assignDto.assigned_by,
       centerId,
     );
   }

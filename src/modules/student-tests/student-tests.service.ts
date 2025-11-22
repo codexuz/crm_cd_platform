@@ -7,6 +7,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { StudentAssignedTest } from '../../entities/student-assigned-test.entity';
 import { IeltsTest } from '../../entities/ielts-test.entity';
+import { User } from '../../entities/user.entity';
+import { EmailService } from '../email/email.service';
 import {
   AssignTestToStudentDto,
   UpdateAssignedTestDto,
@@ -25,6 +27,9 @@ export class StudentTestsService {
     private studentTestRepository: Repository<StudentAssignedTest>,
     @InjectRepository(IeltsTest)
     private ieltsTestRepository: Repository<IeltsTest>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
+    private emailService: EmailService,
   ) {}
 
   private generateCandidateId(): string {
@@ -78,7 +83,92 @@ export class StudentTestsService {
     assignment.notes = assignDto.notes || null;
     assignment.status = 'pending';
 
-    return await this.studentTestRepository.save(assignment);
+    const savedAssignment = await this.studentTestRepository.save(assignment);
+
+    // Send notification email to student
+    try {
+      const student = await this.userRepository.findOne({
+        where: { id: assignDto.student_id },
+      });
+
+      if (student && student.email) {
+        const testStartDate = assignDto.test_start_time
+          ? new Date(assignDto.test_start_time).toLocaleString('en-US', {
+              dateStyle: 'full',
+              timeStyle: 'short',
+            })
+          : 'Not specified';
+        const testEndDate = assignDto.test_end_time
+          ? new Date(assignDto.test_end_time).toLocaleString('en-US', {
+              dateStyle: 'full',
+              timeStyle: 'short',
+            })
+          : 'Not specified';
+
+        await this.emailService.sendEmail({
+          to: student.email,
+          subject: 'IELTS Test Assignment - Your Exam Details',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <h1 style="color: #2563eb;">IELTS Test Assignment</h1>
+              <p>Dear ${student.name},</p>
+              <p>You have been assigned an IELTS Mock test. Please find your exam details below:</p>
+              
+              <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <h2 style="color: #1f2937; margin-top: 0;">Exam Details</h2>
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 8px 0; font-weight: bold; color: #374151;">Candidate ID:</td>
+                    <td style="padding: 8px 0; color: #1f2937;">${candidateId}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; font-weight: bold; color: #374151;">Test Start Time:</td>
+                    <td style="padding: 8px 0; color: #1f2937;">${testStartDate}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; font-weight: bold; color: #374151;">Test End Time:</td>
+                    <td style="padding: 8px 0; color: #1f2937;">${testEndDate}</td>
+                  </tr>
+                </table>
+              </div>
+
+              ${assignDto.notes ? `<p><strong>Notes:</strong> ${assignDto.notes}</p>` : ''}
+              
+              <div style="background-color: #fef3c7; padding: 15px; border-left: 4px solid #f59e0b; margin: 20px 0;">
+                <p style="margin: 0; color: #92400e;">
+                  <strong>Important:</strong> Please save your Candidate ID. You will need it to access your test.
+                </p>
+              </div>
+              
+              <p>Good luck with your exam!</p>
+              <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">If you have any questions, please contact your center administrator.</p>
+            </div>
+          `,
+          text: `
+IELTS Test Assignment
+
+Dear ${student.name},
+
+You have been assigned an IELTS test.
+
+Exam Details:
+- Candidate ID: ${candidateId}
+- Test Start Time: ${testStartDate}
+- Test End Time: ${testEndDate}
+${assignDto.notes ? `\n- Notes: ${assignDto.notes}` : ''}
+
+Important: Please save your Candidate ID. You will need it to access your test.
+
+Good luck with your exam!
+          `,
+        });
+      }
+    } catch (emailError) {
+      // Log error but don't fail the assignment
+      console.error('Failed to send test assignment email:', emailError);
+    }
+
+    return savedAssignment;
   }
 
   async getAssignedTestsByCenter(
