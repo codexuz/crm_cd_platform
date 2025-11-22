@@ -171,39 +171,69 @@ export class IeltsService {
 
         // Create new parts
         for (const partDto of parts) {
-          // Create question
-          const question = this.questionRepository.create({
-            content: partDto.question.content,
-            number_of_questions: partDto.question.number_of_questions,
-            center_id: centerId,
-          });
-          const savedQuestion = await this.questionRepository.save(question);
+          let questionId: string;
 
-          // Create audio
-          const audioData = {
-            url: partDto.audio.url,
-            file_name: partDto.audio.file_name,
-            duration: partDto.audio.duration,
-            file_size: partDto.audio.file_size,
-            center_id: centerId,
-            uploaded_by: userId,
-          };
-          const audio = this.audioRepository.create(audioData);
-          const savedAudio = await this.audioRepository.save(audio);
+          // Check if question_id exists in partDto (from existing data)
+          if (partDto.question_id) {
+            // Reuse existing question
+            questionId = partDto.question_id;
 
-          // Ensure we have the ID
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-          const audioId = Array.isArray(savedAudio)
-            ? // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-              savedAudio[0].id
-            : savedAudio.id;
+            // Update question content if provided
+            await this.questionRepository.update(questionId, {
+              content: partDto.question.content,
+              number_of_questions: partDto.question.number_of_questions,
+            });
+          } else {
+            // Create new question
+            const question = this.questionRepository.create({
+              content: partDto.question.content,
+              number_of_questions: partDto.question.number_of_questions,
+              center_id: centerId,
+            });
+            const savedQuestion = await this.questionRepository.save(question);
+            questionId = savedQuestion.id;
+          }
+
+          let audioId: string;
+
+          // Check if audio_id exists in partDto (from existing data)
+          if (partDto.audio_id) {
+            // Reuse existing audio
+            audioId = partDto.audio_id;
+
+            // Update audio data if provided
+            await this.audioRepository.update(audioId, {
+              url: partDto.audio.url,
+              file_name: partDto.audio.file_name,
+              duration: partDto.audio.duration,
+              file_size: partDto.audio.file_size,
+            });
+          } else {
+            // Create new audio
+            const audioData = {
+              url: partDto.audio.url,
+              file_name: partDto.audio.file_name,
+              duration: partDto.audio.duration,
+              file_size: partDto.audio.file_size,
+              center_id: centerId,
+              uploaded_by: userId,
+            };
+            const audio = this.audioRepository.create(audioData);
+            const savedAudio = await this.audioRepository.save(audio);
+
+            // Ensure we have the ID
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            audioId = Array.isArray(savedAudio)
+              ? // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                savedAudio[0].id
+              : savedAudio.id;
+          }
 
           // Create part
           const part = this.listeningPartRepository.create({
             listening_id: existingListening.id,
             part: partDto.part as ListeningPart,
-            question_id: savedQuestion.id,
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+            question_id: questionId,
             audio_id: audioId,
             answers: partDto.answers || {},
           });
@@ -341,19 +371,34 @@ export class IeltsService {
 
         // Create new parts
         for (const partDto of parts) {
-          // Create question
-          const question = this.questionRepository.create({
-            content: partDto.question.content,
-            number_of_questions: partDto.question.number_of_questions,
-            center_id: centerId,
-          });
-          const savedQuestion = await this.questionRepository.save(question);
+          let questionId: string;
+
+          // Check if question_id exists in partDto (from existing data)
+          if (partDto.question_id) {
+            // Reuse existing question
+            questionId = partDto.question_id;
+
+            // Update question content if provided
+            await this.questionRepository.update(questionId, {
+              content: partDto.question.content,
+              number_of_questions: partDto.question.number_of_questions,
+            });
+          } else {
+            // Create new question
+            const question = this.questionRepository.create({
+              content: partDto.question.content,
+              number_of_questions: partDto.question.number_of_questions,
+              center_id: centerId,
+            });
+            const savedQuestion = await this.questionRepository.save(question);
+            questionId = savedQuestion.id;
+          }
 
           // Create part
           const part = this.readingPartRepository.create({
             reading_id: existingReading.id,
             part: partDto.part as ReadingPart,
-            question_id: savedQuestion.id,
+            question_id: questionId,
             passage: partDto.passage,
             answers: partDto.answers || {},
           });

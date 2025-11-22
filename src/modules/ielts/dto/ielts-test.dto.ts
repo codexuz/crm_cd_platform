@@ -250,6 +250,14 @@ export class CreateListeningPartDto {
   @IsEnum(['PART_1', 'PART_2', 'PART_3', 'PART_4'])
   part: string;
 
+  @ApiPropertyOptional({
+    description: 'Question ID (when updating existing part)',
+    example: 'uuid-string-question',
+  })
+  @IsOptional()
+  @IsString()
+  question_id?: string;
+
   @ApiProperty({
     description: 'Question configuration for this listening part',
     type: CreateQuestionDto,
@@ -257,6 +265,14 @@ export class CreateListeningPartDto {
   @ValidateNested()
   @Type(() => CreateQuestionDto)
   question: CreateQuestionDto;
+
+  @ApiPropertyOptional({
+    description: 'Audio ID (when updating existing part)',
+    example: 'uuid-string-audio',
+  })
+  @IsOptional()
+  @IsString()
+  audio_id?: string;
 
   @ApiProperty({
     description: 'Audio configuration for this listening part',
@@ -353,6 +369,14 @@ export class CreateReadingPartDto {
   })
   @IsEnum(['PART_1', 'PART_2', 'PART_3'])
   part: string;
+
+  @ApiPropertyOptional({
+    description: 'Question ID (when updating existing part)',
+    example: 'uuid-string-question',
+  })
+  @IsOptional()
+  @IsString()
+  question_id?: string;
 
   @ApiProperty({
     description: 'Question configuration for this reading part',
