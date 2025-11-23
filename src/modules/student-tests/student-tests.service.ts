@@ -740,12 +740,11 @@ Good luck with your exam!
     // Get answer keys from listening parts
     const listeningParts = assignment.test?.listening?.parts || [];
 
-    // Process each part
-    for (const partId in studentAnswers) {
-      const part = listeningParts.find((p) => p.id === partId);
-      if (!part || !part.answers) continue;
+    // Collect all student answers in order with question numbers
+    const allStudentAnswers: Array<{ questionNum: string; answer: any }> = [];
 
-      const partAnswers = part.answers as any;
+    // Process each part to extract student answers
+    for (const partId in studentAnswers) {
       const studentPartAnswers = studentAnswers[partId];
 
       // Process each question container
@@ -754,22 +753,40 @@ Good luck with your exam!
 
         // Process each question
         for (const questionId in containerAnswers) {
-          totalQuestions++;
-          const studentAnswer = containerAnswers[questionId] as string | number;
+          const studentAnswer = containerAnswers[questionId];
 
-          // Try to find correct answer in multiple possible structures
-          const correctAnswer: any =
-            partAnswers[containerId]?.[questionId] ||
-            partAnswers[questionId] ||
-            partAnswers[`${containerId}.${questionId}`];
-
-          if (correctAnswer !== undefined) {
-            if (this.isAnswerCorrect(studentAnswer, correctAnswer)) {
-              correct++;
-            }
-          }
+          // Extract question number from questionId (e.g., "q_1763793981410" or "17")
+          // If it's just a number string, use it directly
+          // Otherwise, we need to track position or use a mapping
+          allStudentAnswers.push({
+            questionNum: questionId,
+            answer: studentAnswer,
+          });
         }
       }
+    }
+
+    // Build a merged answer key from all parts
+    const mergedAnswerKey: any = {};
+    for (const part of listeningParts) {
+      if (part.answers) {
+        const partAnswers = part.answers as any;
+        Object.assign(mergedAnswerKey, partAnswers);
+      }
+    }
+
+    // Now check each student answer
+    let questionIndex = 1;
+    for (const { answer: studentAnswer } of allStudentAnswers) {
+      totalQuestions++;
+      const correctAnswer = mergedAnswerKey[questionIndex.toString()];
+
+      if (correctAnswer !== undefined) {
+        if (this.isAnswerCorrect(studentAnswer, correctAnswer)) {
+          correct++;
+        }
+      }
+      questionIndex++;
     }
     /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
 
@@ -814,40 +831,39 @@ Good luck with your exam!
     // Get answer keys from reading parts
     const readingParts = assignment.test?.reading?.parts || [];
 
-    // Process each question container
-    for (const containerId in studentAnswers) {
-      const studentContainerAnswers = studentAnswers[containerId];
-      if (!Array.isArray(studentContainerAnswers)) continue;
-
-      // Find correct answers for this container
-      let correctAnswers: any[] = [];
-      for (const part of readingParts) {
+    // Build a merged answer key from all parts
+    const mergedAnswerKey: any = {};
+    for (const part of readingParts) {
+      if (part.answers) {
         const partAnswers = part.answers as any;
-        if (partAnswers && partAnswers[containerId]) {
-          if (Array.isArray(partAnswers[containerId])) {
-            correctAnswers = partAnswers[containerId];
-          } else if (typeof partAnswers[containerId] === 'object') {
-            correctAnswers = Object.values(partAnswers[containerId]);
-          }
-          break;
+        Object.assign(mergedAnswerKey, partAnswers);
+      }
+    }
+
+    // Collect all student answers in sequential order
+    const allStudentAnswers: any[] = [];
+
+    // Process each question container (sorted by key for consistency)
+    const containerIds = Object.keys(studentAnswers).sort();
+    for (const containerId of containerIds) {
+      const studentContainerAnswers = studentAnswers[containerId];
+      if (Array.isArray(studentContainerAnswers)) {
+        allStudentAnswers.push(...studentContainerAnswers);
+      }
+    }
+
+    // Compare each answer against the merged answer key
+    allStudentAnswers.forEach((studentAnswer: any, index: number) => {
+      totalQuestions++;
+      const questionNum = (index + 1).toString();
+      const correctAnswer = mergedAnswerKey[questionNum];
+
+      if (correctAnswer !== undefined) {
+        if (this.isAnswerCorrect(studentAnswer, correctAnswer)) {
+          correct++;
         }
       }
-
-      // Compare each answer
-      studentContainerAnswers.forEach((studentAnswer: any, index: number) => {
-        totalQuestions++;
-        const correctAnswer = correctAnswers[index] as
-          | string
-          | number
-          | string[];
-
-        if (correctAnswer !== undefined) {
-          if (this.isAnswerCorrect(studentAnswer, correctAnswer)) {
-            correct++;
-          }
-        }
-      });
-    }
+    });
     /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
 
     const incorrect = totalQuestions - correct;
