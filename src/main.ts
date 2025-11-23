@@ -40,7 +40,7 @@ async function bootstrap() {
         'https://mockmee.uz',
         'https://backend.mockmee.uz',
         'https://teacher.mockmee.uz',
-        'https://student.mockmee.uz',
+        'https://platform.mockmee.uz',
       ];
 
   app.enableCors({
