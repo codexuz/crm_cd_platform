@@ -894,9 +894,18 @@ Good luck with your exam!
       writingFinal.task2Score = task2Score;
     }
 
-    // Calculate average if both scores available
-    if (task1Score !== undefined && task2Score !== undefined) {
-      writingFinal.averageScore = (task1Score + task2Score) / 2;
+    // Calculate weighted average if both scores available (Task 2 is weighted 2x)
+    if (typeof task1Score === 'number' && typeof task2Score === 'number') {
+      const weighted = (task1Score + 2 * task2Score) / 3;
+      // Round to nearest 0.5 using IELTS rounding rules
+      const decimal = weighted - Math.floor(weighted);
+      if (decimal < 0.25) {
+        writingFinal.averageScore = Math.floor(weighted);
+      } else if (decimal < 0.75) {
+        writingFinal.averageScore = Math.floor(weighted) + 0.5;
+      } else {
+        writingFinal.averageScore = Math.ceil(weighted);
+      }
     }
 
     // Save to writing_final field
