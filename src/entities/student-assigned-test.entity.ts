@@ -64,7 +64,16 @@ export class StudentAssignedTest {
   completed_at?: Date | null;
 
   @Column({ type: 'json', nullable: true })
-  test_results?: any; // Store test results/scores
+  test_results?: any;
+
+  @Column({ type: 'json', nullable: true })
+  listening_final?: any; // Checked listening results: { correct, incorrect, score, totalQuestions }
+
+  @Column({ type: 'json', nullable: true })
+  reading_final?: any; // Checked reading results: { correct, incorrect, score, totalQuestions }
+
+  @Column({ type: 'json', nullable: true })
+  writing_final?: any; // Checked writing results: { task1Score, task2Score, averageScore, feedback }
 
   @Column({ type: 'text', nullable: true })
   notes?: string | null; // Teacher notes

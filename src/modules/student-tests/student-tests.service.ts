@@ -669,4 +669,250 @@ Good luck with your exam!
 
     return { message: `${saveDto.section} progress saved successfully` };
   }
+
+  // Helper: Normalize answer for comparison
+  private normalizeAnswer(answer: string | number): string {
+    return answer.toString().trim().toLowerCase();
+  }
+
+  // Helper: Check if answer is correct (supports multiple acceptable answers)
+  private isAnswerCorrect(
+    studentAnswer: string | number,
+    correctAnswer: string | number | string[],
+  ): boolean {
+    const normalized = this.normalizeAnswer(studentAnswer);
+
+    if (Array.isArray(correctAnswer)) {
+      return correctAnswer.some(
+        (ans) => this.normalizeAnswer(ans) === normalized,
+      );
+    }
+
+    return this.normalizeAnswer(correctAnswer) === normalized;
+  }
+
+  // Helper: Convert correct answers to band score (IELTS standard)
+  private convertToBandScore(correctAnswers: number): number {
+    if (correctAnswers >= 39) return 9.0;
+    if (correctAnswers >= 37) return 8.5;
+    if (correctAnswers >= 35) return 8.0;
+    if (correctAnswers >= 33) return 7.5;
+    if (correctAnswers >= 30) return 7.0;
+    if (correctAnswers >= 27) return 6.5;
+    if (correctAnswers >= 23) return 6.0;
+    if (correctAnswers >= 19) return 5.5;
+    if (correctAnswers >= 15) return 5.0;
+    if (correctAnswers >= 13) return 4.5;
+    if (correctAnswers >= 10) return 4.0;
+    if (correctAnswers >= 8) return 3.5;
+    if (correctAnswers >= 6) return 3.0;
+    if (correctAnswers >= 4) return 2.5;
+    return 2.0;
+  }
+
+  // Check listening answers
+  /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
+  async checkListeningAnswers(candidateId: string) {
+    const assignment = await this.studentTestRepository.findOne({
+      where: { candidate_id: candidateId, is_active: true },
+      relations: ['test', 'test.listening', 'test.listening.parts'],
+    });
+
+    if (!assignment) {
+      throw new NotFoundException('Assignment not found');
+    }
+
+    const testResults = assignment.test_results as TestResults;
+    if (!testResults?.listening?.answers) {
+      throw new BadRequestException('No listening answers found');
+    }
+
+    const studentAnswers = testResults.listening.answers as any;
+    let correct = 0;
+    let totalQuestions = 0;
+
+    // Get answer keys from listening parts
+    const listeningParts = assignment.test?.listening?.parts || [];
+
+    // Process each part
+    for (const partId in studentAnswers) {
+      const part = listeningParts.find((p) => p.id === partId);
+      if (!part || !part.answers) continue;
+
+      const partAnswers = part.answers as any;
+      const studentPartAnswers = studentAnswers[partId];
+
+      // Process each question container
+      for (const containerId in studentPartAnswers) {
+        const containerAnswers = studentPartAnswers[containerId];
+
+        // Process each question
+        for (const questionId in containerAnswers) {
+          totalQuestions++;
+          const studentAnswer = containerAnswers[questionId] as string | number;
+
+          // Try to find correct answer in multiple possible structures
+          const correctAnswer: any =
+            partAnswers[containerId]?.[questionId] ||
+            partAnswers[questionId] ||
+            partAnswers[`${containerId}.${questionId}`];
+
+          if (correctAnswer !== undefined) {
+            if (this.isAnswerCorrect(studentAnswer, correctAnswer)) {
+              correct++;
+            }
+          }
+        }
+      }
+    }
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
+
+    const incorrect = totalQuestions - correct;
+    const score = this.convertToBandScore(correct);
+
+    const listeningFinal = {
+      correct,
+      incorrect,
+      score,
+      totalQuestions,
+    };
+
+    // Save to listening_final field
+    assignment.listening_final = listeningFinal;
+    await this.studentTestRepository.save(assignment);
+
+    return listeningFinal;
+  }
+
+  // Check reading answers
+  /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
+  async checkReadingAnswers(candidateId: string) {
+    const assignment = await this.studentTestRepository.findOne({
+      where: { candidate_id: candidateId, is_active: true },
+      relations: ['test', 'test.reading', 'test.reading.parts'],
+    });
+
+    if (!assignment) {
+      throw new NotFoundException('Assignment not found');
+    }
+
+    const testResults = assignment.test_results as TestResults;
+    if (!testResults?.reading?.answers) {
+      throw new BadRequestException('No reading answers found');
+    }
+
+    const studentAnswers = testResults.reading.answers as any;
+    let correct = 0;
+    let totalQuestions = 0;
+
+    // Get answer keys from reading parts
+    const readingParts = assignment.test?.reading?.parts || [];
+
+    // Process each question container
+    for (const containerId in studentAnswers) {
+      const studentContainerAnswers = studentAnswers[containerId];
+      if (!Array.isArray(studentContainerAnswers)) continue;
+
+      // Find correct answers for this container
+      let correctAnswers: any[] = [];
+      for (const part of readingParts) {
+        const partAnswers = part.answers as any;
+        if (partAnswers && partAnswers[containerId]) {
+          if (Array.isArray(partAnswers[containerId])) {
+            correctAnswers = partAnswers[containerId];
+          } else if (typeof partAnswers[containerId] === 'object') {
+            correctAnswers = Object.values(partAnswers[containerId]);
+          }
+          break;
+        }
+      }
+
+      // Compare each answer
+      studentContainerAnswers.forEach((studentAnswer: any, index: number) => {
+        totalQuestions++;
+        const correctAnswer = correctAnswers[index] as
+          | string
+          | number
+          | string[];
+
+        if (correctAnswer !== undefined) {
+          if (this.isAnswerCorrect(studentAnswer, correctAnswer)) {
+            correct++;
+          }
+        }
+      });
+    }
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
+
+    const incorrect = totalQuestions - correct;
+    const score = this.convertToBandScore(correct);
+
+    const readingFinal = {
+      correct,
+      incorrect,
+      score,
+      totalQuestions,
+    };
+
+    // Save to reading_final field
+    assignment.reading_final = readingFinal;
+    await this.studentTestRepository.save(assignment);
+
+    return readingFinal;
+  }
+
+  // Check/Grade writing section
+  async checkWritingAnswers(
+    candidateId: string,
+    task1Score?: number,
+    task2Score?: number,
+    feedback?: string,
+  ) {
+    const assignment = await this.getStudentAssignment(candidateId);
+
+    const testResults = assignment.test_results as TestResults;
+    if (!testResults?.writing?.answers) {
+      throw new BadRequestException('No writing answers found');
+    }
+
+    const writingFinal: {
+      task1Score?: number;
+      task2Score?: number;
+      averageScore?: number;
+      feedback: string;
+    } = {
+      feedback: feedback || '',
+    };
+
+    if (task1Score !== undefined) {
+      writingFinal.task1Score = task1Score;
+    }
+    if (task2Score !== undefined) {
+      writingFinal.task2Score = task2Score;
+    }
+
+    // Calculate average if both scores available
+    if (task1Score !== undefined && task2Score !== undefined) {
+      writingFinal.averageScore = (task1Score + task2Score) / 2;
+    }
+
+    // Save to writing_final field
+    assignment.writing_final = writingFinal;
+    await this.studentTestRepository.save(assignment);
+
+    return writingFinal;
+  }
+
+  // Auto-grade entire test (listening and reading only)
+  async autoGradeTest(candidateId: string) {
+    const listeningResult = await this.checkListeningAnswers(candidateId);
+    const readingResult = await this.checkReadingAnswers(candidateId);
+
+    return {
+      listening: listeningResult,
+      reading: readingResult,
+      message:
+        'Auto-grading completed for listening and reading. Writing section requires manual grading.',
+    };
+  }
 }

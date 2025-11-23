@@ -283,3 +283,25 @@ export interface TestContentResponse {
   test_end_time: string | null;
   status: string;
 }
+
+// Final checked results interfaces
+export interface ListeningFinalResult {
+  correct: number;
+  incorrect: number;
+  score: number; // Band score (0-9)
+  totalQuestions: number;
+}
+
+export interface ReadingFinalResult {
+  correct: number;
+  incorrect: number;
+  score: number; // Band score (0-9)
+  totalQuestions: number;
+}
+
+export interface WritingFinalResult {
+  task1Score?: number;
+  task2Score?: number;
+  averageScore?: number;
+  feedback?: string;
+}
