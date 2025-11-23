@@ -72,4 +72,48 @@ export class StudentTestsController {
     await this.studentTestsService.deleteAssignedTest(id, centerId);
     return { message: 'Assignment deleted successfully' };
   }
+
+  // Teacher grading endpoints
+  @Post('centers/:centerId/check-listening/:candidateId')
+  async checkListening(
+    @Param('centerId') centerId: string,
+    @Param('candidateId') candidateId: string,
+  ) {
+    return await this.studentTestsService.checkListeningAnswers(candidateId);
+  }
+
+  @Post('centers/:centerId/check-reading/:candidateId')
+  async checkReading(
+    @Param('centerId') centerId: string,
+    @Param('candidateId') candidateId: string,
+  ) {
+    return await this.studentTestsService.checkReadingAnswers(candidateId);
+  }
+
+  @Post('centers/:centerId/check-writing/:candidateId')
+  async checkWriting(
+    @Param('centerId') centerId: string,
+    @Param('candidateId') candidateId: string,
+    @Body()
+    gradeDto: {
+      task1Score?: number;
+      task2Score?: number;
+      feedback?: string;
+    },
+  ) {
+    return await this.studentTestsService.checkWritingAnswers(
+      candidateId,
+      gradeDto.task1Score,
+      gradeDto.task2Score,
+      gradeDto.feedback,
+    );
+  }
+
+  @Post('centers/:centerId/auto-grade/:candidateId')
+  async autoGrade(
+    @Param('centerId') centerId: string,
+    @Param('candidateId') candidateId: string,
+  ) {
+    return await this.studentTestsService.autoGradeTest(candidateId);
+  }
 }
