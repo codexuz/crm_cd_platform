@@ -40,6 +40,9 @@ export class IeltsListening {
   @Column({ nullable: true })
   test_id: string;
 
+  @Column({ nullable: true })
+  full_audio_url: string;
+
   @Column({ default: true })
   is_active: boolean;
 

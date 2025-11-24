@@ -329,6 +329,14 @@ export class CreateListeningDto {
   @IsString()
   test_id?: string;
 
+  @ApiPropertyOptional({
+    description: 'URL to the full audio file for the entire listening test',
+    example: 'https://example.com/audio/ielts-listening-full.mp3',
+  })
+  @IsOptional()
+  @IsString()
+  full_audio_url?: string;
+
   @ApiProperty({
     description: 'Array of listening parts (1-4)',
     type: [CreateListeningPartDto],
