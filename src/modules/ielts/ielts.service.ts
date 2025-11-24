@@ -161,6 +161,8 @@ export class IeltsService {
           existingListening.description = listeningData.description;
         if (listeningData.for_cdi !== undefined)
           existingListening.for_cdi = listeningData.for_cdi;
+        if (listeningData.full_audio_url !== undefined)
+          existingListening.full_audio_url = listeningData.full_audio_url;
         existingListening.updated_by = userId;
         await this.listeningRepository.save(existingListening);
 
