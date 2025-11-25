@@ -116,4 +116,12 @@ export class StudentTestsController {
   ) {
     return await this.studentTestsService.autoGradeTest(candidateId);
   }
+
+  @Post('centers/:centerId/send-results/:candidateId')
+  async sendResults(
+    @Param('centerId') centerId: string,
+    @Param('candidateId') candidateId: string,
+  ) {
+    return await this.studentTestsService.sendTestResultsEmail(candidateId);
+  }
 }

@@ -840,4 +840,202 @@ Good luck with your exam!
         'Auto-grading completed for listening and reading. Writing section requires manual grading.',
     };
   }
+
+  // Send test results email to student
+  async sendTestResultsEmail(
+    candidateId: string,
+  ): Promise<{ message: string }> {
+    const assignment = await this.studentTestRepository.findOne({
+      where: { candidate_id: candidateId, is_active: true },
+      relations: ['student', 'test'],
+    });
+
+    if (!assignment) {
+      throw new NotFoundException('Assignment not found');
+    }
+
+    if (!assignment.student?.email) {
+      throw new BadRequestException('Student email not found');
+    }
+
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
+    const listening = assignment.listening_final;
+    const reading = assignment.reading_final;
+    const writing = assignment.writing_final;
+
+    // Calculate overall band score (average of all sections)
+    const scores: number[] = [];
+    if (listening?.score) scores.push(listening.score);
+    if (reading?.score) scores.push(reading.score);
+    if (writing?.averageScore) scores.push(writing.averageScore);
+    const testName = assignment.test?.title || 'IELTS Mock Test';
+    const studentName = assignment.student.name;
+
+    /* eslint-disable */
+    await this.emailService.sendEmail({
+      to: assignment.student.email,
+      subject: `Your IELTS Test Results - ${testName}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #2563eb; text-align: center;">IELTS Test Results</h1>
+          <p>Dear ${studentName},</p>
+          <p>Your test results for <strong>${testName}</strong> are now available.</p>
+          
+
+          <div style="margin: 20px 0;">
+            <h3 style="color: #374151; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">Section Scores</h3>
+            
+            ${
+              listening
+                ? `
+            <div style="background-color: #ffffff; padding: 15px; margin: 10px 0; border-left: 4px solid #10b981; border-radius: 4px;">
+              <h4 style="margin: 0 0 10px 0; color: #059669;">Listening</h4>
+              <table style="width: 100%;">
+                <tr>
+                  <td style="padding: 5px 0;"><strong>Band Score:</strong></td>
+                  <td style="text-align: right;">${listening.score}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 5px 0;"><strong>Correct Answers:</strong></td>
+                  <td style="text-align: right;">${listening.correct}/${listening.totalQuestions}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 5px 0;"><strong>Incorrect:</strong></td>
+                  <td style="text-align: right;">${listening.incorrect}</td>
+                </tr>
+              </table>
+            </div>
+            `
+                : ''
+            }
+
+            ${
+              reading
+                ? `
+            <div style="background-color: #ffffff; padding: 15px; margin: 10px 0; border-left: 4px solid #3b82f6; border-radius: 4px;">
+              <h4 style="margin: 0 0 10px 0; color: #2563eb;">Reading</h4>
+              <table style="width: 100%;">
+                <tr>
+                  <td style="padding: 5px 0;"><strong>Band Score:</strong></td>
+                  <td style="text-align: right;">${reading.score}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 5px 0;"><strong>Correct Answers:</strong></td>
+                  <td style="text-align: right;">${reading.correct}/${reading.totalQuestions}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 5px 0;"><strong>Incorrect:</strong></td>
+                  <td style="text-align: right;">${reading.incorrect}</td>
+                </tr>
+              </table>
+            </div>
+            `
+                : ''
+            }
+
+            ${
+              writing
+                ? `
+            <div style="background-color: #ffffff; padding: 15px; margin: 10px 0; border-left: 4px solid #8b5cf6; border-radius: 4px;">
+              <h4 style="margin: 0 0 10px 0; color: #7c3aed;">Writing</h4>
+              <table style="width: 100%;">
+                ${
+                  writing.task1Score
+                    ? `
+                <tr>
+                  <td style="padding: 5px 0;"><strong>Task 1 Score:</strong></td>
+                  <td style="text-align: right;">${writing.task1Score}</td>
+                </tr>
+                `
+                    : ''
+                }
+                ${
+                  writing.task2Score
+                    ? `
+                <tr>
+                  <td style="padding: 5px 0;"><strong>Task 2 Score:</strong></td>
+                  <td style="text-align: right;">${writing.task2Score}</td>
+                </tr>
+                `
+                    : ''
+                }
+                ${
+                  writing.averageScore
+                    ? `
+                <tr>
+                  <td style="padding: 5px 0;"><strong>Overall Writing Score:</strong></td>
+                  <td style="text-align: right;">${writing.averageScore}</td>
+                </tr>
+                `
+                    : ''
+                }
+              </table>
+              ${
+                writing.feedback
+                  ? `
+              <div style="margin-top: 10px; padding: 10px; background-color: #faf5ff; border-radius: 4px;">
+                <strong>Feedback:</strong>
+                <p style="margin: 5px 0 0 0;">${writing.feedback}</p>
+              </div>
+              `
+                  : ''
+              }
+            </div>
+            `
+                : ''
+            }
+          </div>
+
+          <div style="background-color: #eff6ff; padding: 15px; border-left: 4px solid #3b82f6; margin: 20px 0;">
+            <p style="margin: 0; color: #1e40af;">
+              <strong>Candidate ID:</strong> ${candidateId}
+            </p>
+          </div>
+
+          <p style="color: #6b7280; font-size: 14px; margin-top: 30px;">
+            Keep practicing to improve your scores. If you have any questions about your results, please contact your teacher.
+          </p>
+          
+          <p style="color: #6b7280; font-size: 14px;">Best regards,<br>Your IELTS Test Center</p>
+        </div>
+      `,
+      text: `
+IELTS Test Results
+
+Dear ${studentName},
+
+Your test results for ${testName} are now available.
+
+${
+  listening
+    ? `\nLISTENING
+Band Score: ${listening.score}
+Correct Answers: ${listening.correct}/${listening.totalQuestions}
+Incorrect: ${listening.incorrect}`
+    : ''
+}
+
+${
+  reading
+    ? `\nREADING
+Band Score: ${reading.score}
+Correct Answers: ${reading.correct}/${reading.totalQuestions}
+Incorrect: ${reading.incorrect}`
+    : ''
+}
+
+${writing ? `\nWRITING${writing.task1Score ? `\nTask 1 Score: ${writing.task1Score}` : ''}${writing.task2Score ? `\nTask 2 Score: ${writing.task2Score}` : ''}${writing.averageScore ? `\nOverall Writing Score: ${writing.averageScore}` : ''}${writing.feedback ? `\n\nFeedback: ${writing.feedback}` : ''}` : ''}
+
+Candidate ID: ${candidateId}
+
+Keep practicing to improve your scores. If you have any questions about your results, please contact your teacher.
+
+Best regards,
+Your IELTS Test Center
+      `,
+    });
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
+
+    return { message: 'Test results email sent successfully' };
+  }
 }
