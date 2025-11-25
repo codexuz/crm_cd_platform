@@ -625,16 +625,17 @@ Good luck with your exam!
       const correctPartAnswers = partAnswerKeys[partId];
 
       if (!correctPartAnswers) {
+        console.log(`No answer key found for part: ${partId}`);
         continue; // Skip if no answer key found for this part
       }
 
-      // Process each question container
-      for (const containerId in studentPartAnswers) {
-        const containerAnswers = studentPartAnswers[containerId];
+      // studentPartAnswers is an array with a single object containing all question-answer pairs
+      if (Array.isArray(studentPartAnswers) && studentPartAnswers.length > 0) {
+        const answersObject = studentPartAnswers[0];
 
-        // Process each question
-        for (const questionNum in containerAnswers) {
-          const studentAnswer = containerAnswers[questionNum];
+        // Process each question in the answers object
+        for (const questionNum in answersObject) {
+          const studentAnswer = answersObject[questionNum];
           const correctAnswer = correctPartAnswers[questionNum];
 
           totalQuestions++;
@@ -650,6 +651,10 @@ Good luck with your exam!
             if (isCorrect) {
               correct++;
             }
+          } else {
+            console.log(
+              `Q${questionNum}: No correct answer found in answer key`,
+            );
           }
         }
       }
@@ -680,12 +685,7 @@ Good luck with your exam!
   async checkReadingAnswers(candidateId: string) {
     const assignment = await this.studentTestRepository.findOne({
       where: { candidate_id: candidateId, is_active: true },
-      relations: [
-        'test',
-        'test.reading',
-        'test.reading.parts',
-        'test.reading.parts.question',
-      ],
+      relations: ['test', 'test.reading', 'test.reading.parts'],
     });
 
     if (!assignment) {
@@ -704,68 +704,58 @@ Good luck with your exam!
     // Get answer keys from reading parts
     const readingParts = assignment.test?.reading?.parts || [];
 
-    // Build a merged answer key from all parts
-    const mergedAnswerKey: any = {};
+    // Build a map of part_id -> correct answers
+    const partAnswerKeys: Record<string, any> = {};
     for (const part of readingParts) {
-      if (part.answers) {
-        const partAnswers = part.answers as any;
-        Object.assign(mergedAnswerKey, partAnswers);
+      if (part.id && part.answers) {
+        partAnswerKeys[part.id] = part.answers;
       }
     }
 
     console.log('=== READING CHECK DEBUG ===');
     console.log('Student Answers:', JSON.stringify(studentAnswers, null, 2));
-    console.log('Merged Answer Key:', JSON.stringify(mergedAnswerKey, null, 2));
+    console.log('Part Answer Keys:', JSON.stringify(partAnswerKeys, null, 2));
 
-    // Build a list of all question containers in order from the parts
-    const orderedQuestionContainers: string[] = [];
-    for (const part of readingParts) {
-      if (part.question?.content) {
-        try {
-          const questionContent = Array.isArray(part.question.content)
-            ? part.question.content
-            : JSON.parse(part.question.content as string);
+    // Process each part in student answers
+    for (const partId in studentAnswers) {
+      const studentPartAnswers = studentAnswers[partId];
+      const correctPartAnswers = partAnswerKeys[partId];
 
-          for (const questionItem of questionContent) {
-            if (questionItem.id) {
-              orderedQuestionContainers.push(questionItem.id);
+      if (!correctPartAnswers) {
+        console.log(`No answer key found for part: ${partId}`);
+        continue; // Skip if no answer key found for this part
+      }
+
+      // studentPartAnswers is an array with a single object containing all question-answer pairs
+      if (Array.isArray(studentPartAnswers) && studentPartAnswers.length > 0) {
+        const answersObject = studentPartAnswers[0];
+
+        // Process each question in the answers object
+        for (const questionNum in answersObject) {
+          const studentAnswer = answersObject[questionNum];
+          const correctAnswer = correctPartAnswers[questionNum];
+
+          totalQuestions++;
+
+          if (correctAnswer !== undefined) {
+            const isCorrect = this.isAnswerCorrect(
+              studentAnswer,
+              correctAnswer,
+            );
+            console.log(
+              `Q${questionNum}: Student="${studentAnswer}" vs Correct="${correctAnswer}" => ${isCorrect ? 'CORRECT' : 'WRONG'}`,
+            );
+            if (isCorrect) {
+              correct++;
             }
+          } else {
+            console.log(
+              `Q${questionNum}: No correct answer found in answer key`,
+            );
           }
-        } catch (error) {
-          console.error('Error parsing question content:', error);
         }
       }
     }
-
-    console.log('Ordered Question Containers:', orderedQuestionContainers);
-
-    // Collect all student answers in the correct order based on question containers
-    const allStudentAnswers: any[] = [];
-    for (const containerId of orderedQuestionContainers) {
-      const studentContainerAnswers = studentAnswers[containerId];
-      if (Array.isArray(studentContainerAnswers)) {
-        allStudentAnswers.push(...studentContainerAnswers);
-      }
-    }
-
-    console.log('All Student Answers (ordered):', allStudentAnswers);
-
-    // Compare each answer against the merged answer key
-    allStudentAnswers.forEach((studentAnswer: any, index: number) => {
-      totalQuestions++;
-      const questionNum = (index + 1).toString();
-      const correctAnswer = mergedAnswerKey[questionNum];
-
-      if (correctAnswer !== undefined) {
-        const isCorrect = this.isAnswerCorrect(studentAnswer, correctAnswer);
-        console.log(
-          `Q${questionNum}: Student="${studentAnswer}" vs Correct="${correctAnswer}" => ${isCorrect ? 'CORRECT' : 'WRONG'}`,
-        );
-        if (isCorrect) {
-          correct++;
-        }
-      }
-    });
     /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
 
     console.log(`Total: ${correct}/${totalQuestions} correct`);
