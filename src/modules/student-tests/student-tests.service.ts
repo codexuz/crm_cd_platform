@@ -607,53 +607,41 @@ Good luck with your exam!
     // Get answer keys from listening parts
     const listeningParts = assignment.test?.listening?.parts || [];
 
-    // Collect all student answers in order with question numbers
-    const allStudentAnswers: Array<{ questionNum: string; answer: any }> = [];
+    // Build a map of part_id -> correct answers
+    const partAnswerKeys: Record<string, any> = {};
+    for (const part of listeningParts) {
+      if (part.id && part.answers) {
+        partAnswerKeys[part.id] = part.answers;
+      }
+    }
 
-    // Process each part to extract student answers
+    // Process each part in student answers
     for (const partId in studentAnswers) {
       const studentPartAnswers = studentAnswers[partId];
+      const correctPartAnswers = partAnswerKeys[partId];
+
+      if (!correctPartAnswers) {
+        continue; // Skip if no answer key found for this part
+      }
 
       // Process each question container
       for (const containerId in studentPartAnswers) {
         const containerAnswers = studentPartAnswers[containerId];
 
         // Process each question
-        for (const questionId in containerAnswers) {
-          const studentAnswer = containerAnswers[questionId];
+        for (const questionNum in containerAnswers) {
+          const studentAnswer = containerAnswers[questionNum];
+          const correctAnswer = correctPartAnswers[questionNum];
 
-          // Extract question number from questionId (e.g., "q_1763793981410" or "17")
-          // If it's just a number string, use it directly
-          // Otherwise, we need to track position or use a mapping
-          allStudentAnswers.push({
-            questionNum: questionId,
-            answer: studentAnswer,
-          });
+          totalQuestions++;
+
+          if (correctAnswer !== undefined) {
+            if (this.isAnswerCorrect(studentAnswer, correctAnswer)) {
+              correct++;
+            }
+          }
         }
       }
-    }
-
-    // Build a merged answer key from all parts
-    const mergedAnswerKey: any = {};
-    for (const part of listeningParts) {
-      if (part.answers) {
-        const partAnswers = part.answers as any;
-        Object.assign(mergedAnswerKey, partAnswers);
-      }
-    }
-
-    // Now check each student answer
-    let questionIndex = 1;
-    for (const { answer: studentAnswer } of allStudentAnswers) {
-      totalQuestions++;
-      const correctAnswer = mergedAnswerKey[questionIndex.toString()];
-
-      if (correctAnswer !== undefined) {
-        if (this.isAnswerCorrect(studentAnswer, correctAnswer)) {
-          correct++;
-        }
-      }
-      questionIndex++;
     }
     /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
 
