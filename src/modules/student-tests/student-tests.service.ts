@@ -996,7 +996,7 @@ Good luck with your exam!
             Keep practicing to improve your scores. If you have any questions about your results, please contact your teacher.
           </p>
           
-          <p style="color: #6b7280; font-size: 14px;">Best regards,<br>Your IELTS Test Center</p>
+          <p style="color: #6b7280; font-size: 14px;">Best regards,<br>Mockmee Team by Impulse Study LC</p>
         </div>
       `,
       text: `
