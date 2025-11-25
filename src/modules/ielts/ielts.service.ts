@@ -139,6 +139,89 @@ export class IeltsService {
     await this.ieltsTestRepository.save(test);
   }
 
+  async hardDeleteTest(id: string, centerId: string): Promise<void> {
+    const test = await this.ieltsTestRepository.findOne({
+      where: { id, center_id: centerId },
+      relations: ['listening', 'reading', 'writing'],
+    });
+
+    if (!test) {
+      throw new NotFoundException(`IELTS Test with ID ${id} not found`);
+    }
+
+    // Delete listening and its related data
+    if (test.listening) {
+      const listeningParts = await this.listeningPartRepository.find({
+        where: { listening_id: test.listening.id },
+      });
+
+      // Collect question and audio IDs
+      const questionIds = listeningParts
+        .map((part) => part.question_id)
+        .filter(Boolean);
+      const audioIds = listeningParts
+        .map((part) => part.audio_id)
+        .filter(Boolean);
+
+      // Delete listening parts first
+      await this.listeningPartRepository.delete({
+        listening_id: test.listening.id,
+      });
+
+      // Delete questions
+      if (questionIds.length > 0) {
+        await this.questionRepository.delete(questionIds);
+      }
+
+      // Delete audios
+      if (audioIds.length > 0) {
+        await this.audioRepository.delete(audioIds);
+      }
+
+      // Delete listening
+      await this.listeningRepository.delete(test.listening.id);
+    }
+
+    // Delete reading and its related data
+    if (test.reading) {
+      const readingParts = await this.readingPartRepository.find({
+        where: { reading_id: test.reading.id },
+      });
+
+      // Collect question IDs
+      const questionIds = readingParts
+        .map((part) => part.question_id)
+        .filter(Boolean);
+
+      // Delete reading parts first
+      await this.readingPartRepository.delete({
+        reading_id: test.reading.id,
+      });
+
+      // Delete questions
+      if (questionIds.length > 0) {
+        await this.questionRepository.delete(questionIds);
+      }
+
+      // Delete reading
+      await this.readingRepository.delete(test.reading.id);
+    }
+
+    // Delete writing and its related data
+    if (test.writing) {
+      // Delete writing tasks
+      await this.writingTaskRepository.delete({
+        writing_id: test.writing.id,
+      });
+
+      // Delete writing
+      await this.writingRepository.delete(test.writing.id);
+    }
+
+    // Finally delete the test itself
+    await this.ieltsTestRepository.delete(id);
+  }
+
   // Listening CRUD
   async createListening(
     createListeningDto: CreateListeningDto,

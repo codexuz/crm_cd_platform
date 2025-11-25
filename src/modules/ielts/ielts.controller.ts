@@ -72,7 +72,16 @@ export class IeltsController {
     @Param('id') id: string,
   ) {
     await this.ieltsService.deleteTest(id, centerId);
-    return { message: 'Test deleted successfully' };
+    return { message: 'Test soft deleted successfully' };
+  }
+
+  @Delete('centers/:centerId/tests/:id/hard')
+  async hardDeleteTest(
+    @Param('centerId') centerId: string,
+    @Param('id') id: string,
+  ) {
+    await this.ieltsService.hardDeleteTest(id, centerId);
+    return { message: 'Test permanently deleted with all related data' };
   }
 
   // Listening endpoints

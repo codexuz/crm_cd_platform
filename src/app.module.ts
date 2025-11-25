@@ -19,6 +19,7 @@ import { EmailModule } from './modules/email/email.module';
 import { SessionModule } from './modules/session/session.module';
 import { StudentTestsModule } from './modules/student-tests/student-tests.module';
 import { MediaModule } from './modules/media/media.module';
+import { LmsModule } from './modules/lms/lms.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { MediaModule } from './modules/media/media.module';
     SessionModule,
     StudentTestsModule,
     MediaModule,
+    LmsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
