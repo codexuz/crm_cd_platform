@@ -111,22 +111,15 @@ export class SubmitTestResultDto {
     example: {
       listening: {
         answers: ['A', 'B', 'C', 'A', 'B'],
-        score: 6.5,
-        correct: 27,
-        incorrect: 13,
       },
       reading: {
         answers: [14, 'TRUE', 'NOT GIVEN', 'FALSE', 27],
-        score: 6.5,
-        correct: 27,
-        incorrect: 13,
       },
       writing: {
         answers: [
-          { task_1_answer: 'The graph shows...', word_count: 290, score: 6.5 },
-          { task_2_answer: 'In conclusion...', word_count: 290, score: 6.0 },
+          { task_1_answer: 'The graph shows...', word_count: 290 },
+          { task_2_answer: 'In conclusion...', word_count: 290 },
         ],
-        feedback: 'Good structure but needs more vocabulary variety',
       },
       submitted_at: '2025-11-20T10:30:00.000Z',
       total_time_spent: 180,
@@ -146,16 +139,10 @@ export interface TestResults {
 
 export interface ListeningResults {
   answers: (string | number)[]; // Array of answers in order
-  score: number; // Band score (0-9)
-  correct: number; // Number of correct answers
-  incorrect: number; // Number of incorrect answers
 }
 
 export interface ReadingResults {
   answers: (string | number)[]; // Array of answers in order
-  score: number; // Band score (0-9)
-  correct: number; // Number of correct answers
-  incorrect: number; // Number of incorrect answers
 }
 
 export interface WritingResults {
@@ -163,76 +150,7 @@ export interface WritingResults {
     task_1_answer?: string;
     task_2_answer?: string;
     word_count: number;
-    score: number; // Band score for the task
   }[];
-  feedback: string; // Teacher feedback
-}
-
-// Individual save DTOs for incremental saving
-export class SaveListeningAnswerDto {
-  @ApiProperty({
-    description: 'Unique identifier for the listening question',
-    example: 'listening_1_1',
-  })
-  @IsString()
-  question_id: string;
-
-  @ApiProperty({
-    description: 'Answer to the listening question (string or number)',
-    example: 'A',
-  })
-  @IsString()
-  answer: string | number;
-}
-
-export class SaveReadingAnswerDto {
-  @ApiProperty({
-    description: 'Unique identifier for the reading question',
-    example: 'reading_2_3',
-  })
-  @IsString()
-  question_id: string;
-
-  @ApiProperty({
-    description: 'Answer to the reading question (string or number)',
-    example: 27,
-  })
-  @IsString()
-  answer: string | number;
-}
-
-export class SaveWritingTaskDto {
-  @ApiProperty({
-    description: 'Writing task identifier',
-    enum: ['task1', 'task2'],
-    example: 'task1',
-  })
-  @IsEnum(['task1', 'task2'])
-  task: 'task1' | 'task2';
-
-  @ApiProperty({
-    description: 'Written response for the task',
-    example:
-      'The chart illustrates the consumption of three different types of fast food in the UK over a 20-year period. Overall, pizza and hamburgers increased while fish and chips declined.',
-  })
-  @IsString()
-  answer: string;
-
-  @ApiPropertyOptional({
-    description: 'Word count of the written response',
-    example: 45,
-  })
-  @IsOptional()
-  @IsNumber()
-  word_count?: number;
-
-  @ApiPropertyOptional({
-    description: 'Band score for this writing task',
-    example: 6.5,
-  })
-  @IsOptional()
-  @IsNumber()
-  score?: number;
 }
 
 export class SaveSectionProgressDto {
@@ -256,7 +174,6 @@ export class SaveSectionProgressDto {
         task_1_answer?: string;
         task_2_answer?: string;
         word_count: number;
-        score: number;
       }[];
 
   @ApiPropertyOptional({

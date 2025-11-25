@@ -13,9 +13,6 @@ import {
   AssignTestToStudentDto,
   UpdateAssignedTestDto,
   TestResults,
-  SaveListeningAnswerDto,
-  SaveReadingAnswerDto,
-  SaveWritingTaskDto,
   SaveSectionProgressDto,
   TestContentResponse,
 } from './dto/student-test.dto';
@@ -496,132 +493,6 @@ Good luck with your exam!
     };
   }
 
-  // Save individual listening answer
-  async saveListeningAnswer(
-    candidateId: string,
-    saveDto: SaveListeningAnswerDto,
-  ): Promise<{ message: string }> {
-    const assignment = await this.getStudentAssignment(candidateId);
-
-    if (assignment.status === 'completed' || assignment.status === 'expired') {
-      throw new BadRequestException('Test is no longer active');
-    }
-
-    // Initialize test_results if not exists
-    const testResults = (assignment.test_results as TestResults) || {};
-
-    // Initialize listening section if not exists
-    if (!testResults.listening) {
-      testResults.listening = {
-        answers: [],
-        score: 0,
-        correct: 0,
-        incorrect: 0,
-      };
-    }
-
-    // Parse question_id to get index (e.g., "listening_1_1" -> index 0)
-    const parts = saveDto.question_id.split('_');
-    const questionIndex = parseInt(parts[parts.length - 1]) - 1;
-
-    // Ensure answers array is large enough
-    while (testResults.listening.answers.length <= questionIndex) {
-      testResults.listening.answers.push('');
-    }
-
-    // Save the answer at the correct index
-    testResults.listening.answers[questionIndex] = saveDto.answer;
-
-    assignment.test_results = testResults;
-    await this.studentTestRepository.save(assignment);
-
-    return { message: 'Listening answer saved successfully' };
-  }
-
-  // Save individual reading answer
-  async saveReadingAnswer(
-    candidateId: string,
-    saveDto: SaveReadingAnswerDto,
-  ): Promise<{ message: string }> {
-    const assignment = await this.getStudentAssignment(candidateId);
-
-    if (assignment.status === 'completed' || assignment.status === 'expired') {
-      throw new BadRequestException('Test is no longer active');
-    }
-
-    // Initialize test_results if not exists
-    const testResults = (assignment.test_results as TestResults) || {};
-
-    // Initialize reading section if not exists
-    if (!testResults.reading) {
-      testResults.reading = { answers: [], score: 0, correct: 0, incorrect: 0 };
-    }
-
-    // Parse question_id to get index (e.g., "reading_2_3" -> index 2)
-    const parts = saveDto.question_id.split('_');
-    const questionIndex = parseInt(parts[parts.length - 1]) - 1;
-
-    // Ensure answers array is large enough
-    while (testResults.reading.answers.length <= questionIndex) {
-      testResults.reading.answers.push('');
-    }
-
-    // Save the answer at the correct index
-    testResults.reading.answers[questionIndex] = saveDto.answer;
-
-    assignment.test_results = testResults;
-    await this.studentTestRepository.save(assignment);
-
-    return { message: 'Reading answer saved successfully' };
-  }
-
-  // Save writing task
-  async saveWritingTask(
-    candidateId: string,
-    saveDto: SaveWritingTaskDto,
-  ): Promise<{ message: string }> {
-    const assignment = await this.getStudentAssignment(candidateId);
-
-    if (assignment.status === 'completed' || assignment.status === 'expired') {
-      throw new BadRequestException('Test is no longer active');
-    }
-
-    // Initialize test_results if not exists
-    const testResults = (assignment.test_results as TestResults) || {};
-
-    // Initialize writing section if not exists
-    if (!testResults.writing) {
-      testResults.writing = { answers: [], feedback: '' };
-    }
-
-    // Ensure answers array has 2 elements (for task1 and task2)
-    while (testResults.writing.answers.length < 2) {
-      testResults.writing.answers.push({
-        task_1_answer: '',
-        task_2_answer: '',
-        word_count: 0,
-        score: 0,
-      });
-    }
-
-    // Determine which task to update
-    const taskIndex = saveDto.task === 'task1' ? 0 : 1;
-
-    // Update the task answer
-    if (saveDto.task === 'task1') {
-      testResults.writing.answers[taskIndex].task_1_answer = saveDto.answer;
-    } else {
-      testResults.writing.answers[taskIndex].task_2_answer = saveDto.answer;
-    }
-    testResults.writing.answers[taskIndex].word_count = saveDto.word_count || 0;
-    testResults.writing.answers[taskIndex].score = saveDto.score || 0;
-
-    assignment.test_results = testResults;
-    await this.studentTestRepository.save(assignment);
-
-    return { message: `${saveDto.task} saved successfully` };
-  }
-
   // Save section progress (multiple answers at once)
   async saveSectionProgress(
     candidateId: string,
@@ -640,7 +511,7 @@ Good luck with your exam!
     if (saveDto.section === 'writing') {
       // For writing, save task answers
       if (!testResults.writing) {
-        testResults.writing = { answers: [], feedback: '' };
+        testResults.writing = { answers: [] };
       }
 
       if (saveDto.answers && Array.isArray(saveDto.answers)) {
@@ -648,7 +519,6 @@ Good luck with your exam!
           task_1_answer?: string;
           task_2_answer?: string;
           word_count: number;
-          score: number;
         }[];
       }
     } else {
@@ -656,9 +526,6 @@ Good luck with your exam!
       if (!testResults[saveDto.section]) {
         testResults[saveDto.section] = {
           answers: [],
-          score: 0,
-          correct: 0,
-          incorrect: 0,
         };
       }
 

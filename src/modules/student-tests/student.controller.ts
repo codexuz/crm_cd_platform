@@ -10,11 +10,8 @@ import { StudentTestsService } from './student-tests.service';
 import { IeltsService } from '../ielts/ielts.service';
 import { StudentAuthGuard } from '../../common/guards/student-auth.guard';
 import { GetStudent } from '../../common/decorators/get-student.decorator';
-import { SubmitTestResultDto } from './dto/student-test.dto';
 import {
-  SaveListeningAnswerDto,
-  SaveReadingAnswerDto,
-  SaveWritingTaskDto,
+  SubmitTestResultDto,
   SaveSectionProgressDto,
   TestContentResponse,
 } from './dto/student-test.dto';
@@ -167,105 +164,6 @@ export class StudentController {
       candidateId,
       submitDto.test_results,
     );
-  }
-
-  // Save individual listening answer
-  @Post('save-listening-answer')
-  @ApiOperation({
-    summary: 'Save individual listening answer',
-    description:
-      'Saves a single answer for a listening question with auto-save functionality',
-  })
-  @ApiBody({ type: SaveListeningAnswerDto })
-  @ApiResponse({
-    status: 200,
-    description: 'Listening answer saved successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        message: {
-          type: 'string',
-          example: 'Listening answer saved successfully',
-        },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Test is no longer active or invalid data',
-  })
-  async saveListeningAnswer(
-    @GetStudent('candidateId') candidateId: string,
-    @Body() saveDto: SaveListeningAnswerDto,
-  ) {
-    return await this.studentTestsService.saveListeningAnswer(
-      candidateId,
-      saveDto,
-    );
-  }
-
-  // Save individual reading answer
-  @Post('save-reading-answer')
-  @ApiOperation({
-    summary: 'Save individual reading answer',
-    description:
-      'Saves a single answer for a reading question with auto-save functionality',
-  })
-  @ApiBody({ type: SaveReadingAnswerDto })
-  @ApiResponse({
-    status: 200,
-    description: 'Reading answer saved successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        message: {
-          type: 'string',
-          example: 'Reading answer saved successfully',
-        },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Test is no longer active or invalid data',
-  })
-  async saveReadingAnswer(
-    @GetStudent('candidateId') candidateId: string,
-    @Body() saveDto: SaveReadingAnswerDto,
-  ) {
-    return await this.studentTestsService.saveReadingAnswer(
-      candidateId,
-      saveDto,
-    );
-  }
-
-  // Save writing task
-  @Post('save-writing-task')
-  @ApiOperation({
-    summary: 'Save writing task',
-    description:
-      'Saves a writing task response with word count and time tracking',
-  })
-  @ApiBody({ type: SaveWritingTaskDto })
-  @ApiResponse({
-    status: 200,
-    description: 'Writing task saved successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        message: { type: 'string', example: 'task1 saved successfully' },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 400,
-    description: 'Test is no longer active or invalid data',
-  })
-  async saveWritingTask(
-    @GetStudent('candidateId') candidateId: string,
-    @Body() saveDto: SaveWritingTaskDto,
-  ) {
-    return await this.studentTestsService.saveWritingTask(candidateId, saveDto);
   }
 
   // Save section progress (multiple answers)
