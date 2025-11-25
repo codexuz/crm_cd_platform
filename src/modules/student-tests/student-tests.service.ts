@@ -615,6 +615,10 @@ Good luck with your exam!
       }
     }
 
+    console.log('=== LISTENING CHECK DEBUG ===');
+    console.log('Student Answers:', JSON.stringify(studentAnswers, null, 2));
+    console.log('Part Answer Keys:', JSON.stringify(partAnswerKeys, null, 2));
+
     // Process each part in student answers
     for (const partId in studentAnswers) {
       const studentPartAnswers = studentAnswers[partId];
@@ -636,7 +640,14 @@ Good luck with your exam!
           totalQuestions++;
 
           if (correctAnswer !== undefined) {
-            if (this.isAnswerCorrect(studentAnswer, correctAnswer)) {
+            const isCorrect = this.isAnswerCorrect(
+              studentAnswer,
+              correctAnswer,
+            );
+            console.log(
+              `Q${questionNum}: Student="${studentAnswer}" vs Correct="${correctAnswer}" => ${isCorrect ? 'CORRECT' : 'WRONG'}`,
+            );
+            if (isCorrect) {
               correct++;
             }
           }
@@ -644,6 +655,8 @@ Good luck with your exam!
       }
     }
     /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
+
+    console.log(`Total: ${correct}/${totalQuestions} correct`);
 
     const incorrect = totalQuestions - correct;
     const score = this.convertToBandScore(correct);
@@ -667,7 +680,12 @@ Good luck with your exam!
   async checkReadingAnswers(candidateId: string) {
     const assignment = await this.studentTestRepository.findOne({
       where: { candidate_id: candidateId, is_active: true },
-      relations: ['test', 'test.reading', 'test.reading.parts'],
+      relations: [
+        'test',
+        'test.reading',
+        'test.reading.parts',
+        'test.reading.parts.question',
+      ],
     });
 
     if (!assignment) {
@@ -695,17 +713,42 @@ Good luck with your exam!
       }
     }
 
-    // Collect all student answers in sequential order
-    const allStudentAnswers: any[] = [];
+    console.log('=== READING CHECK DEBUG ===');
+    console.log('Student Answers:', JSON.stringify(studentAnswers, null, 2));
+    console.log('Merged Answer Key:', JSON.stringify(mergedAnswerKey, null, 2));
 
-    // Process each question container (sorted by key for consistency)
-    const containerIds = Object.keys(studentAnswers).sort();
-    for (const containerId of containerIds) {
+    // Build a list of all question containers in order from the parts
+    const orderedQuestionContainers: string[] = [];
+    for (const part of readingParts) {
+      if (part.question?.content) {
+        try {
+          const questionContent = Array.isArray(part.question.content)
+            ? part.question.content
+            : JSON.parse(part.question.content as string);
+
+          for (const questionItem of questionContent) {
+            if (questionItem.id) {
+              orderedQuestionContainers.push(questionItem.id);
+            }
+          }
+        } catch (error) {
+          console.error('Error parsing question content:', error);
+        }
+      }
+    }
+
+    console.log('Ordered Question Containers:', orderedQuestionContainers);
+
+    // Collect all student answers in the correct order based on question containers
+    const allStudentAnswers: any[] = [];
+    for (const containerId of orderedQuestionContainers) {
       const studentContainerAnswers = studentAnswers[containerId];
       if (Array.isArray(studentContainerAnswers)) {
         allStudentAnswers.push(...studentContainerAnswers);
       }
     }
+
+    console.log('All Student Answers (ordered):', allStudentAnswers);
 
     // Compare each answer against the merged answer key
     allStudentAnswers.forEach((studentAnswer: any, index: number) => {
@@ -714,12 +757,18 @@ Good luck with your exam!
       const correctAnswer = mergedAnswerKey[questionNum];
 
       if (correctAnswer !== undefined) {
-        if (this.isAnswerCorrect(studentAnswer, correctAnswer)) {
+        const isCorrect = this.isAnswerCorrect(studentAnswer, correctAnswer);
+        console.log(
+          `Q${questionNum}: Student="${studentAnswer}" vs Correct="${correctAnswer}" => ${isCorrect ? 'CORRECT' : 'WRONG'}`,
+        );
+        if (isCorrect) {
           correct++;
         }
       }
     });
     /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument */
+
+    console.log(`Total: ${correct}/${totalQuestions} correct`);
 
     const incorrect = totalQuestions - correct;
     const score = this.convertToBandScore(correct);
