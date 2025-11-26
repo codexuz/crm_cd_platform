@@ -37,7 +37,7 @@ export class GroupsController {
   constructor(private readonly groupsService: GroupsService) {}
 
   @Post()
-  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER)
+  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER, RoleName.TEACHER)
   @ApiOperation({ summary: 'Create a new group' })
   @ApiResponse({ status: 201, description: 'Group created successfully' })
   create(@Body() createGroupDto: CreateGroupDto) {
@@ -95,7 +95,7 @@ export class GroupsController {
   }
 
   @Patch(':id')
-  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER)
+  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER, RoleName.TEACHER)
   @ApiOperation({ summary: 'Update group' })
   @ApiResponse({ status: 200, description: 'Group updated successfully' })
   @ApiResponse({ status: 404, description: 'Group not found' })
@@ -104,7 +104,7 @@ export class GroupsController {
   }
 
   @Patch(':id/add-students')
-  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER)
+  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER, RoleName.TEACHER)
   @ApiOperation({ summary: 'Add students to group' })
   @ApiResponse({
     status: 200,
@@ -123,7 +123,7 @@ export class GroupsController {
   }
 
   @Patch(':id/remove-students')
-  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER)
+  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER, RoleName.TEACHER)
   @ApiOperation({ summary: 'Remove students from group' })
   @ApiResponse({
     status: 200,
@@ -141,7 +141,7 @@ export class GroupsController {
   }
 
   @Delete(':id')
-  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER)
+  @Roles(RoleName.ADMIN, RoleName.OWNER, RoleName.MANAGER, RoleName.TEACHER)
   @ApiOperation({ summary: 'Delete group' })
   @ApiResponse({ status: 200, description: 'Group deleted successfully' })
   @ApiResponse({ status: 404, description: 'Group not found' })
