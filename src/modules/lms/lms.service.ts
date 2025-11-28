@@ -274,15 +274,28 @@ export class LmsService {
   async getQuizByLesson(
     centerId: string,
     lessonId: string,
-  ): Promise<Quiz | null> {
+  ): Promise<(Quiz & { questions: QuizQuestion[] }) | null> {
     await this.getLessonById(centerId, lessonId);
 
-    return await this.quizRepository.findOne({
+    const quiz = await this.quizRepository.findOne({
       where: { lesson_id: lessonId },
     });
+
+    if (!quiz) {
+      return null;
+    }
+
+    const questions = await this.quizQuestionRepository.find({
+      where: { quiz_id: quiz.id },
+      order: { order: 'ASC' },
+    });
+
+    return { ...quiz, questions };
   }
 
-  async getQuizById(quizId: string): Promise<Quiz> {
+  async getQuizById(
+    quizId: string,
+  ): Promise<Quiz & { questions: QuizQuestion[] }> {
     const quiz = await this.quizRepository.findOne({
       where: { id: quizId },
     });
@@ -291,7 +304,12 @@ export class LmsService {
       throw new NotFoundException(`Quiz with ID ${quizId} not found`);
     }
 
-    return quiz;
+    const questions = await this.quizQuestionRepository.find({
+      where: { quiz_id: quizId },
+      order: { order: 'ASC' },
+    });
+
+    return { ...quiz, questions };
   }
 
   async getQuizQuestions(quizId: string): Promise<QuizQuestion[]> {
