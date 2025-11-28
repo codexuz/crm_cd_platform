@@ -30,7 +30,7 @@ export class Vocabulary {
   @Column({ type: 'text' })
   word: string;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'text', nullable: true })
   uz: string;
 
   @Column({ type: 'text' })

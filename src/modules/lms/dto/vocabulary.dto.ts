@@ -14,7 +14,7 @@ export class CreateVocabularyDto {
 
   @ApiProperty({ description: 'Russian translation' })
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   ru: string;
 
   @ApiPropertyOptional({ description: 'Example sentence' })
@@ -80,9 +80,6 @@ export class VocabularyResponseDto {
 
   @ApiProperty()
   lesson_id: string;
-
-  @ApiProperty()
-  center_id: string;
 
   @ApiProperty()
   word: string;
