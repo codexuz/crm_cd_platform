@@ -5,7 +5,6 @@ import {
   IsOptional,
   IsNotEmpty,
   IsObject,
-  IsUUID,
 } from 'class-validator';
 
 export class CreateLessonDto {
@@ -27,11 +26,6 @@ export class CreateLessonDto {
   @ApiProperty({ description: 'Display order' })
   @IsInt()
   order: number;
-
-  @ApiProperty({ description: 'Center ID' })
-  @IsUUID()
-  @IsNotEmpty()
-  center_id: string;
 }
 
 export class UpdateLessonDto {
@@ -62,9 +56,6 @@ export class LessonResponseDto {
 
   @ApiProperty()
   module_id: string;
-
-  @ApiProperty()
-  center_id: string;
 
   @ApiProperty()
   title: string;

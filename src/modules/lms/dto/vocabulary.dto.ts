@@ -1,11 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  IsString,
-  IsInt,
-  IsOptional,
-  IsNotEmpty,
-  IsUUID,
-} from 'class-validator';
+import { IsString, IsInt, IsOptional, IsNotEmpty } from 'class-validator';
 
 export class CreateVocabularyDto {
   @ApiProperty({ description: 'English word' })
@@ -41,11 +35,6 @@ export class CreateVocabularyDto {
   @ApiProperty({ description: 'Display order' })
   @IsInt()
   order: number;
-
-  @ApiProperty({ description: 'Center ID' })
-  @IsUUID()
-  @IsNotEmpty()
-  center_id: string;
 }
 
 export class UpdateVocabularyDto {

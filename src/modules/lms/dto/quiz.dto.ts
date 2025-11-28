@@ -7,7 +7,6 @@ import {
   IsArray,
   ValidateNested,
   IsEnum,
-  IsObject,
   IsBoolean,
   IsUUID,
 } from 'class-validator';
@@ -46,11 +45,6 @@ export class CreateQuizQuestionDto {
   @ApiProperty({ description: 'Question order' })
   @IsInt()
   order: number;
-
-  @ApiProperty({ description: 'Center ID' })
-  @IsUUID()
-  @IsNotEmpty()
-  center_id: string;
 }
 
 export class UpdateQuizQuestionDto {
@@ -122,11 +116,6 @@ export class CreateQuizDto {
   @ValidateNested({ each: true })
   @Type(() => CreateQuizQuestionDto)
   questions: CreateQuizQuestionDto[];
-
-  @ApiProperty({ description: 'Center ID' })
-  @IsUUID()
-  @IsNotEmpty()
-  center_id: string;
 }
 
 export class UpdateQuizDto {
@@ -158,9 +147,6 @@ export class QuizResponseDto {
   @ApiProperty()
   lesson_id: string;
 
-  @ApiProperty()
-  center_id: string;
-
   @ApiProperty({ required: false })
   title?: string;
 
@@ -183,9 +169,6 @@ export class QuizQuestionResponseDto {
 
   @ApiProperty()
   quiz_id: string;
-
-  @ApiProperty()
-  center_id: string;
 
   @ApiProperty({ required: false })
   vocabulary_id?: string;
@@ -250,9 +233,4 @@ export class GenerateVocabularyQuizDto {
   @IsInt()
   @IsOptional()
   questions_per_word?: number;
-
-  @ApiProperty({ description: 'Center ID' })
-  @IsUUID()
-  @IsNotEmpty()
-  center_id: string;
 }
