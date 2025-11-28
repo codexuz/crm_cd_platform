@@ -278,7 +278,7 @@ export class LmsService {
     await this.getLessonById(centerId, lessonId);
 
     const quiz = await this.quizRepository.findOne({
-      where: { lesson_id: lessonId },
+      where: { lesson_id: lessonId, center_id: centerId },
     });
 
     if (!quiz) {
@@ -286,7 +286,7 @@ export class LmsService {
     }
 
     const questions = await this.quizQuestionRepository.find({
-      where: { quiz_id: quiz.id },
+      where: { quiz_id: quiz.id, center_id: centerId },
       order: { order: 'ASC' },
     });
 
@@ -305,7 +305,7 @@ export class LmsService {
     }
 
     const questions = await this.quizQuestionRepository.find({
-      where: { quiz_id: quizId },
+      where: { quiz_id: quizId, center_id: quiz.center_id },
       order: { order: 'ASC' },
     });
 
