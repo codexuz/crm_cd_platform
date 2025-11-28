@@ -1,7 +1,6 @@
 import {
   Injectable,
   NotFoundException,
-  BadRequestException,
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -17,8 +16,6 @@ import {
   QuizAttempt,
   CourseStatus,
   Vocabulary,
-  QuizType,
-  QuizQuestionType,
 } from '../../entities';
 import {
   CreateCourseDto,
@@ -35,7 +32,6 @@ import {
   MarkLessonCompleteDto,
   CreateVocabularyDto,
   UpdateVocabularyDto,
-  GenerateVocabularyQuizDto,
 } from './dto/index';
 
 @Injectable()
@@ -254,8 +250,7 @@ export class LmsService {
 
     const quiz = this.quizRepository.create({
       title: createQuizDto.title,
-      quiz_type: (createQuizDto.quiz_type as QuizType) ?? QuizType.GENERAL,
-      vocabulary_based: (createQuizDto.vocabulary_based as boolean) ?? false,
+      description: createQuizDto.description,
       time_limit: createQuizDto.time_limit,
       lesson_id: lessonId,
       center_id: centerId,
@@ -267,6 +262,8 @@ export class LmsService {
       const question = this.quizQuestionRepository.create({
         ...questionDto,
         quiz_id: savedQuiz.id,
+        center_id: centerId,
+        points: questionDto.points ?? 1,
       });
       await this.quizQuestionRepository.save(question);
     }
@@ -580,35 +577,61 @@ export class LmsService {
     lessonId: string,
     createVocabularyDto: CreateVocabularyDto,
   ): Promise<Vocabulary> {
-    await this.getLessonById(centerId, lessonId);
+    // Verify lesson exists and belongs to center
+    const lesson = await this.lessonRepository.findOne({
+      where: { id: lessonId },
+      relations: ['module', 'module.course'],
+    });
+
+    if (!lesson || lesson.module.course.center_id !== centerId) {
+      throw new NotFoundException(
+        `Lesson with ID ${lessonId} not found in center ${centerId}`,
+      );
+    }
 
     const vocabulary = this.vocabularyRepository.create({
       ...createVocabularyDto,
       lesson_id: lessonId,
+      center_id: centerId,
     });
+
     return await this.vocabularyRepository.save(vocabulary);
   }
 
-  async getVocabularyByLesson(
+  async getVocabulariesByLesson(
     centerId: string,
     lessonId: string,
   ): Promise<Vocabulary[]> {
-    await this.getLessonById(centerId, lessonId);
+    // Verify lesson exists and belongs to center
+    const lesson = await this.lessonRepository.findOne({
+      where: { id: lessonId },
+      relations: ['module', 'module.course'],
+    });
+
+    if (!lesson || lesson.module.course.center_id !== centerId) {
+      throw new NotFoundException(
+        `Lesson with ID ${lessonId} not found in center ${centerId}`,
+      );
+    }
 
     return await this.vocabularyRepository.find({
-      where: { lesson_id: lessonId },
+      where: { lesson_id: lessonId, center_id: centerId },
       order: { order: 'ASC' },
     });
   }
 
-  async getVocabularyById(vocabularyId: string): Promise<Vocabulary> {
+  async getVocabularyById(
+    centerId: string,
+    vocabularyId: string,
+  ): Promise<Vocabulary> {
     const vocabulary = await this.vocabularyRepository.findOne({
-      where: { id: vocabularyId },
+      where: { id: vocabularyId, center_id: centerId },
+      relations: ['lesson'],
     });
 
     if (!vocabulary) {
       throw new NotFoundException(
-        `Vocabulary with ID ${vocabularyId} not found`,
+        `Vocabulary with ID ${vocabularyId} not found in center ${centerId}`,
       );
     }
 
@@ -616,173 +639,21 @@ export class LmsService {
   }
 
   async updateVocabulary(
+    centerId: string,
     vocabularyId: string,
     updateVocabularyDto: UpdateVocabularyDto,
   ): Promise<Vocabulary> {
-    const vocabulary = await this.getVocabularyById(vocabularyId);
+    const vocabulary = await this.getVocabularyById(centerId, vocabularyId);
+
     Object.assign(vocabulary, updateVocabularyDto);
     return await this.vocabularyRepository.save(vocabulary);
   }
 
-  async deleteVocabulary(vocabularyId: string): Promise<void> {
-    const vocabulary = await this.getVocabularyById(vocabularyId);
-    await this.vocabularyRepository.remove(vocabulary);
-  }
-
-  // ============ VOCABULARY QUIZ GENERATION ============
-  async generateVocabularyQuiz(
+  async deleteVocabulary(
     centerId: string,
-    lessonId: string,
-    generateDto: GenerateVocabularyQuizDto,
-  ): Promise<Quiz> {
-    await this.getLessonById(centerId, lessonId);
-
-    // Get all vocabulary for this lesson
-    const vocabularyList = await this.getVocabularyByLesson(centerId, lessonId);
-
-    if (vocabularyList.length === 0) {
-      throw new BadRequestException(
-        'No vocabulary found for this lesson to generate a quiz',
-      );
-    }
-
-    const title = generateDto.title ?? 'Vocabulary Quiz';
-    const timeLimit = generateDto.time_limit;
-    const questionTypes = generateDto.question_types ?? [
-      QuizQuestionType.VOCABULARY_TRANSLATION,
-      QuizQuestionType.VOCABULARY_DEFINITION,
-    ];
-    const questionsPerWord = generateDto.questions_per_word ?? 1;
-
-    // Create quiz
-    const quiz = this.quizRepository.create({
-      title,
-      quiz_type: QuizType.VOCABULARY,
-      vocabulary_based: true,
-      time_limit: timeLimit,
-      lesson_id: lessonId,
-    });
-    const savedQuiz = await this.quizRepository.save(quiz);
-
-    let order = 1;
-
-    // Generate questions for each vocabulary word
-    for (const vocab of vocabularyList) {
-      for (let i = 0; i < questionsPerWord; i++) {
-        const questionType =
-          questionTypes[Math.floor(Math.random() * questionTypes.length)];
-
-        let question: string;
-        let correctAnswer: string;
-        let options: string[] | undefined;
-
-        switch (questionType) {
-          case QuizQuestionType.VOCABULARY_TRANSLATION: {
-            // Ask for Uzbek or Russian translation
-            const targetLang = Math.random() > 0.5 ? 'uz' : 'ru';
-            question = `What is the ${targetLang === 'uz' ? 'Uzbek' : 'Russian'} translation of "${vocab.word}"?`;
-            correctAnswer = targetLang === 'uz' ? vocab.uz : vocab.ru;
-
-            // Generate wrong options from other vocabulary
-            options = this.generateWrongOptions(
-              vocabularyList,
-              correctAnswer,
-              targetLang,
-              3,
-            );
-            options.push(correctAnswer);
-            options = this.shuffleArray(options);
-            break;
-          }
-
-          case QuizQuestionType.VOCABULARY_DEFINITION: {
-            // Give translation, ask for English word
-            const fromLang = Math.random() > 0.5 ? 'uz' : 'ru';
-            const translation = fromLang === 'uz' ? vocab.uz : vocab.ru;
-            question = `What is the English word for "${translation}"?`;
-            correctAnswer = vocab.word;
-
-            // Generate wrong options
-            options = this.generateWrongOptions(
-              vocabularyList,
-              correctAnswer,
-              'word',
-              3,
-            );
-            options.push(correctAnswer);
-            options = this.shuffleArray(options);
-            break;
-          }
-
-          case QuizQuestionType.GAP_FILL: {
-            // Use example sentence with gap
-            if (vocab.example) {
-              question = vocab.example.replace(
-                new RegExp(vocab.word, 'gi'),
-                '____',
-              );
-              correctAnswer = vocab.word;
-            } else {
-              // Fallback to translation if no example
-              question = `Translate: ${vocab.uz}`;
-              correctAnswer = vocab.word;
-            }
-            break;
-          }
-
-          default:
-            question = `What is the meaning of "${vocab.word}"?`;
-            correctAnswer = vocab.uz;
-        }
-
-        const quizQuestion = this.quizQuestionRepository.create({
-          quiz_id: savedQuiz.id,
-          vocabulary_id: vocab.id,
-          question,
-          type: questionType,
-          options: options || null,
-          correct_answer: correctAnswer,
-          order: order++,
-        });
-
-        await this.quizQuestionRepository.save(quizQuestion);
-      }
-    }
-
-    return savedQuiz;
-  }
-
-  private generateWrongOptions(
-    vocabularyList: Vocabulary[],
-    correctAnswer: string,
-    field: 'uz' | 'ru' | 'word',
-    count: number,
-  ): string[] {
-    const wrongOptions: string[] = [];
-    const shuffled = [...vocabularyList].sort(() => Math.random() - 0.5);
-
-    for (const vocab of shuffled) {
-      if (wrongOptions.length >= count) break;
-      const value = vocab[field];
-      if (value && value !== correctAnswer) {
-        wrongOptions.push(value);
-      }
-    }
-
-    // If not enough wrong options, add generic ones
-    while (wrongOptions.length < count) {
-      wrongOptions.push(`Option ${wrongOptions.length + 1}`);
-    }
-
-    return wrongOptions;
-  }
-
-  private shuffleArray<T>(array: T[]): T[] {
-    const shuffled = [...array];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-    }
-    return shuffled;
+    vocabularyId: string,
+  ): Promise<void> {
+    const vocabulary = await this.getVocabularyById(centerId, vocabularyId);
+    await this.vocabularyRepository.remove(vocabulary);
   }
 }

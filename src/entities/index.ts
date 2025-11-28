@@ -38,7 +38,7 @@ export { Media, MediaType } from './media.entity';
 export { Course, CourseStatus } from './course.entity';
 export { CourseModule } from './course-module.entity';
 export { Lesson } from './lesson.entity';
-export { Quiz, QuizType } from './quiz.entity';
+export { Quiz } from './quiz.entity';
 export { QuizQuestion, QuizQuestionType } from './quiz-question.entity';
 export { LessonProgress } from './lesson-progress.entity';
 export { QuizAttempt } from './quiz-attempt.entity';

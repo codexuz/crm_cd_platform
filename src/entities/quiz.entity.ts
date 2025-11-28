@@ -9,11 +9,6 @@ import {
 import { Lesson } from './lesson.entity';
 import { Center } from './center.entity';
 
-export enum QuizType {
-  GENERAL = 'general',
-  VOCABULARY = 'vocabulary',
-}
-
 @Entity('quizzes')
 export class Quiz {
   @PrimaryGeneratedColumn('uuid')
@@ -36,15 +31,8 @@ export class Quiz {
   @Column({ type: 'text', nullable: true })
   title: string;
 
-  @Column({
-    type: 'enum',
-    enum: QuizType,
-    default: QuizType.GENERAL,
-  })
-  quiz_type: QuizType;
-
-  @Column({ type: 'boolean', default: false })
-  vocabulary_based: boolean;
+  @Column({ type: 'text', nullable: true })
+  description: string;
 
   @Column({ type: 'int', nullable: true })
   time_limit: number;

@@ -6,15 +6,13 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Quiz } from './quiz.entity';
-import { Vocabulary } from './vocabulary.entity';
 import { Center } from './center.entity';
 
 export enum QuizQuestionType {
-  MCQ = 'mcq',
-  TRUE_FALSE = 'truefalse',
-  GAP_FILL = 'gapfill',
-  VOCABULARY_TRANSLATION = 'vocabulary_translation',
-  VOCABULARY_DEFINITION = 'vocabulary_definition',
+  MULTIPLE_CHOICE = 'multiple_choice',
+  TRUE_FALSE = 'true_false',
+  FILL_IN_THE_BLANK = 'fill_in_the_blank',
+  TYPING = 'typing',
 }
 
 @Entity('quiz_questions')
@@ -36,15 +34,11 @@ export class QuizQuestion {
   @JoinColumn({ name: 'center_id' })
   center: Center;
 
-  @Column({ type: 'uuid', nullable: true })
-  vocabulary_id: string;
-
-  @ManyToOne(() => Vocabulary, { nullable: true })
-  @JoinColumn({ name: 'vocabulary_id' })
-  vocabulary: Vocabulary;
-
   @Column({ type: 'text' })
   question: string;
+
+  @Column({ type: 'text', nullable: true })
+  explanation: string;
 
   @Column({
     type: 'enum',
@@ -57,6 +51,9 @@ export class QuizQuestion {
 
   @Column({ type: 'json' })
   correct_answer: any;
+
+  @Column({ type: 'int', default: 1 })
+  points: number;
 
   @Column({ type: 'int' })
   order: number;

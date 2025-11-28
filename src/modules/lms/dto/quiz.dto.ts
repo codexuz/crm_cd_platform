@@ -7,40 +7,41 @@ import {
   IsArray,
   ValidateNested,
   IsEnum,
-  IsBoolean,
-  IsUUID,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { QuizQuestionType, QuizType } from '../../../entities';
+import { QuizQuestionType } from '../../../entities';
 
 export class CreateQuizQuestionDto {
-  @ApiPropertyOptional({
-    description: 'Vocabulary ID (for vocabulary questions)',
-  })
-  @IsUUID()
-  @IsOptional()
-  vocabulary_id?: string;
-
   @ApiProperty({ description: 'Question text' })
   @IsString()
   @IsNotEmpty()
   question: string;
+
+  @ApiPropertyOptional({ description: 'Question explanation' })
+  @IsString()
+  @IsOptional()
+  explanation?: string;
 
   @ApiProperty({ enum: QuizQuestionType, description: 'Question type' })
   @IsEnum(QuizQuestionType)
   type: QuizQuestionType;
 
   @ApiPropertyOptional({
-    description: 'Options for MCQ (array of strings)',
+    description: 'Options for multiple choice questions',
     type: [String],
   })
   @IsArray()
   @IsOptional()
   options?: string[];
 
-  @ApiProperty({ description: 'Correct answer (string, boolean, or array)' })
+  @ApiProperty({ description: 'Correct answer (varies by question type)' })
   @IsNotEmpty()
   correct_answer: any;
+
+  @ApiPropertyOptional({ description: 'Points for this question', default: 1 })
+  @IsInt()
+  @IsOptional()
+  points?: number;
 
   @ApiProperty({ description: 'Question order' })
   @IsInt()
@@ -48,17 +49,15 @@ export class CreateQuizQuestionDto {
 }
 
 export class UpdateQuizQuestionDto {
-  @ApiPropertyOptional({
-    description: 'Vocabulary ID (for vocabulary questions)',
-  })
-  @IsUUID()
-  @IsOptional()
-  vocabulary_id?: string;
-
   @ApiPropertyOptional({ description: 'Question text' })
   @IsString()
   @IsOptional()
   question?: string;
+
+  @ApiPropertyOptional({ description: 'Question explanation' })
+  @IsString()
+  @IsOptional()
+  explanation?: string;
 
   @ApiPropertyOptional({ enum: QuizQuestionType, description: 'Question type' })
   @IsEnum(QuizQuestionType)
@@ -66,7 +65,7 @@ export class UpdateQuizQuestionDto {
   type?: QuizQuestionType;
 
   @ApiPropertyOptional({
-    description: 'Options for MCQ (array of strings)',
+    description: 'Options for multiple choice questions',
     type: [String],
   })
   @IsArray()
@@ -76,6 +75,11 @@ export class UpdateQuizQuestionDto {
   @ApiPropertyOptional({ description: 'Correct answer' })
   @IsOptional()
   correct_answer?: any;
+
+  @ApiPropertyOptional({ description: 'Points for this question' })
+  @IsInt()
+  @IsOptional()
+  points?: number;
 
   @ApiPropertyOptional({ description: 'Question order' })
   @IsInt()
@@ -89,22 +93,10 @@ export class CreateQuizDto {
   @IsOptional()
   title?: string;
 
-  @ApiPropertyOptional({
-    enum: QuizType,
-    description: 'Quiz type',
-    default: QuizType.GENERAL,
-  })
-  @IsEnum(QuizType)
+  @ApiPropertyOptional({ description: 'Quiz description' })
+  @IsString()
   @IsOptional()
-  quiz_type?: QuizType;
-
-  @ApiPropertyOptional({
-    description: 'Is this a vocabulary-based quiz?',
-    default: false,
-  })
-  @IsBoolean()
-  @IsOptional()
-  vocabulary_based?: boolean;
+  description?: string;
 
   @ApiPropertyOptional({ description: 'Time limit in seconds' })
   @IsInt()
@@ -124,15 +116,10 @@ export class UpdateQuizDto {
   @IsOptional()
   title?: string;
 
-  @ApiPropertyOptional({ enum: QuizType, description: 'Quiz type' })
-  @IsEnum(QuizType)
+  @ApiPropertyOptional({ description: 'Quiz description' })
+  @IsString()
   @IsOptional()
-  quiz_type?: QuizType;
-
-  @ApiPropertyOptional({ description: 'Is this a vocabulary-based quiz?' })
-  @IsBoolean()
-  @IsOptional()
-  vocabulary_based?: boolean;
+  description?: string;
 
   @ApiPropertyOptional({ description: 'Time limit in seconds' })
   @IsInt()
@@ -150,11 +137,8 @@ export class QuizResponseDto {
   @ApiProperty({ required: false })
   title?: string;
 
-  @ApiProperty({ enum: QuizType })
-  quiz_type: QuizType;
-
-  @ApiProperty()
-  vocabulary_based: boolean;
+  @ApiProperty({ required: false })
+  description?: string;
 
   @ApiProperty({ required: false })
   time_limit?: number;
@@ -170,17 +154,20 @@ export class QuizQuestionResponseDto {
   @ApiProperty()
   quiz_id: string;
 
-  @ApiProperty({ required: false })
-  vocabulary_id?: string;
-
   @ApiProperty()
   question: string;
+
+  @ApiProperty({ required: false })
+  explanation?: string;
 
   @ApiProperty({ enum: QuizQuestionType })
   type: QuizQuestionType;
 
   @ApiProperty({ required: false })
   options?: any;
+
+  @ApiProperty()
+  points: number;
 
   @ApiProperty()
   order: number;
@@ -203,34 +190,4 @@ export class SubmitQuizDto {
   @ValidateNested({ each: true })
   @Type(() => SubmitQuizAnswerDto)
   answers: SubmitQuizAnswerDto[];
-}
-
-export class GenerateVocabularyQuizDto {
-  @ApiPropertyOptional({ description: 'Quiz title' })
-  @IsString()
-  @IsOptional()
-  title?: string;
-
-  @ApiPropertyOptional({ description: 'Time limit in seconds' })
-  @IsInt()
-  @IsOptional()
-  time_limit?: number;
-
-  @ApiPropertyOptional({
-    description: 'Question types to include',
-    enum: QuizQuestionType,
-    isArray: true,
-  })
-  @IsArray()
-  @IsEnum(QuizQuestionType, { each: true })
-  @IsOptional()
-  question_types?: QuizQuestionType[];
-
-  @ApiPropertyOptional({
-    description: 'Number of questions per vocabulary word',
-    default: 1,
-  })
-  @IsInt()
-  @IsOptional()
-  questions_per_word?: number;
 }

@@ -45,7 +45,6 @@ import {
   CreateVocabularyDto,
   UpdateVocabularyDto,
   VocabularyResponseDto,
-  GenerateVocabularyQuizDto,
 } from './dto/index';
 
 @ApiTags('LMS - Learning Management System')
@@ -608,12 +607,14 @@ export class LmsController {
   @Post('lessons/:lessonId/vocabulary')
   @UseGuards(RolesGuard)
   @Roles(RoleName.OWNER, RoleName.TEACHER)
-  @ApiOperation({ summary: 'Add vocabulary to lesson (Owner/Teacher only)' })
+  @ApiOperation({
+    summary: 'Create vocabulary for lesson (Owner/Teacher only)',
+  })
   @ApiParam({ name: 'centerId', description: 'Center ID' })
   @ApiParam({ name: 'lessonId', description: 'Lesson ID' })
   @ApiResponse({
     status: 201,
-    description: 'Vocabulary added successfully',
+    description: 'Vocabulary created successfully',
     type: VocabularyResponseDto,
   })
   async createVocabulary(
@@ -629,23 +630,24 @@ export class LmsController {
   }
 
   @Get('lessons/:lessonId/vocabulary')
-  @ApiOperation({ summary: 'Get all vocabulary for a lesson' })
+  @ApiOperation({ summary: 'Get all vocabularies for lesson' })
   @ApiParam({ name: 'centerId', description: 'Center ID' })
   @ApiParam({ name: 'lessonId', description: 'Lesson ID' })
   @ApiResponse({
     status: 200,
-    description: 'List of vocabulary',
+    description: 'List of vocabularies for lesson',
     type: [VocabularyResponseDto],
   })
-  async getVocabularyByLesson(
+  async getVocabulariesByLesson(
     @Param('centerId') centerId: string,
     @Param('lessonId') lessonId: string,
   ): Promise<VocabularyResponseDto[]> {
-    return await this.lmsService.getVocabularyByLesson(centerId, lessonId);
+    return await this.lmsService.getVocabulariesByLesson(centerId, lessonId);
   }
 
   @Get('vocabulary/:vocabularyId')
   @ApiOperation({ summary: 'Get vocabulary by ID' })
+  @ApiParam({ name: 'centerId', description: 'Center ID' })
   @ApiParam({ name: 'vocabularyId', description: 'Vocabulary ID' })
   @ApiResponse({
     status: 200,
@@ -653,15 +655,17 @@ export class LmsController {
     type: VocabularyResponseDto,
   })
   async getVocabularyById(
+    @Param('centerId') centerId: string,
     @Param('vocabularyId') vocabularyId: string,
   ): Promise<VocabularyResponseDto> {
-    return await this.lmsService.getVocabularyById(vocabularyId);
+    return await this.lmsService.getVocabularyById(centerId, vocabularyId);
   }
 
   @Put('vocabulary/:vocabularyId')
   @UseGuards(RolesGuard)
   @Roles(RoleName.OWNER, RoleName.TEACHER)
   @ApiOperation({ summary: 'Update vocabulary (Owner/Teacher only)' })
+  @ApiParam({ name: 'centerId', description: 'Center ID' })
   @ApiParam({ name: 'vocabularyId', description: 'Vocabulary ID' })
   @ApiResponse({
     status: 200,
@@ -669,10 +673,12 @@ export class LmsController {
     type: VocabularyResponseDto,
   })
   async updateVocabulary(
+    @Param('centerId') centerId: string,
     @Param('vocabularyId') vocabularyId: string,
     @Body() updateVocabularyDto: UpdateVocabularyDto,
   ): Promise<VocabularyResponseDto> {
     return await this.lmsService.updateVocabulary(
+      centerId,
       vocabularyId,
       updateVocabularyDto,
     );
@@ -682,38 +688,16 @@ export class LmsController {
   @UseGuards(RolesGuard)
   @Roles(RoleName.OWNER, RoleName.TEACHER)
   @ApiOperation({ summary: 'Delete vocabulary (Owner/Teacher only)' })
+  @ApiParam({ name: 'centerId', description: 'Center ID' })
   @ApiParam({ name: 'vocabularyId', description: 'Vocabulary ID' })
-  @ApiResponse({ status: 200, description: 'Vocabulary deleted successfully' })
-  async deleteVocabulary(
-    @Param('vocabularyId') vocabularyId: string,
-  ): Promise<{ message: string }> {
-    await this.lmsService.deleteVocabulary(vocabularyId);
-    return { message: 'Vocabulary deleted successfully' };
-  }
-
-  // ============ VOCABULARY QUIZ GENERATION ============
-  @Post('lessons/:lessonId/quiz/generate-vocabulary')
-  @UseGuards(RolesGuard)
-  @Roles(RoleName.OWNER, RoleName.TEACHER)
-  @ApiOperation({
-    summary:
-      'Auto-generate vocabulary quiz from lesson vocabulary (Owner/Teacher only)',
-  })
-  @ApiParam({ name: 'lessonId', description: 'Lesson ID' })
   @ApiResponse({
-    status: 201,
-    description: 'Vocabulary quiz generated successfully',
-    type: QuizResponseDto,
+    status: 200,
+    description: 'Vocabulary deleted successfully',
   })
-  async generateVocabularyQuiz(
+  async deleteVocabulary(
     @Param('centerId') centerId: string,
-    @Param('lessonId') lessonId: string,
-    @Body() generateDto: GenerateVocabularyQuizDto,
-  ): Promise<QuizResponseDto> {
-    return await this.lmsService.generateVocabularyQuiz(
-      centerId,
-      lessonId,
-      generateDto,
-    );
+    @Param('vocabularyId') vocabularyId: string,
+  ): Promise<void> {
+    return await this.lmsService.deleteVocabulary(centerId, vocabularyId);
   }
 }
