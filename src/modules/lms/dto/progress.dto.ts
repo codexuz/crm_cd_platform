@@ -9,6 +9,9 @@ export class LessonProgressResponseDto {
   user_id: string;
 
   @ApiProperty()
+  center_id: string;
+
+  @ApiProperty()
   lesson_id: string;
 
   @ApiProperty()
@@ -21,6 +24,9 @@ export class LessonProgressResponseDto {
 export class CourseProgressResponseDto {
   @ApiProperty()
   user_id: string;
+
+  @ApiProperty()
+  center_id: string;
 
   @ApiProperty()
   course_id: string;
@@ -38,6 +44,9 @@ export class QuizAttemptResponseDto {
 
   @ApiProperty()
   user_id: string;
+
+  @ApiProperty()
+  center_id: string;
 
   @ApiProperty()
   quiz_id: string;

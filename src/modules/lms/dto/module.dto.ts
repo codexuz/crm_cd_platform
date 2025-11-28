@@ -16,6 +16,11 @@ export class CreateModuleDto {
   @ApiProperty({ description: 'Display order' })
   @IsInt()
   order: number;
+
+  @ApiProperty({ description: 'Center ID' })
+  @IsUUID()
+  @IsNotEmpty()
+  center_id: string;
 }
 
 export class UpdateModuleDto {
@@ -36,6 +41,9 @@ export class ModuleResponseDto {
 
   @ApiProperty()
   course_id: string;
+
+  @ApiProperty()
+  center_id: string;
 
   @ApiProperty()
   title: string;

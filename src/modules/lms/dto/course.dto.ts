@@ -4,10 +4,8 @@ import {
   IsEnum,
   IsOptional,
   IsNotEmpty,
-  IsArray,
-  ValidateNested,
+  IsUUID,
 } from 'class-validator';
-import { Type } from 'class-transformer';
 import { CourseStatus } from '../../../entities';
 
 export class CreateCourseDto {
@@ -34,6 +32,11 @@ export class CreateCourseDto {
   @IsEnum(CourseStatus)
   @IsOptional()
   status?: CourseStatus;
+
+  @ApiProperty({ description: 'Center ID' })
+  @IsUUID()
+  @IsNotEmpty()
+  center_id: string;
 }
 
 export class UpdateCourseDto {
@@ -79,6 +82,9 @@ export class CourseResponseDto {
 
   @ApiProperty()
   created_by: string;
+
+  @ApiProperty()
+  center_id: string;
 
   @ApiProperty()
   created_at: Date;

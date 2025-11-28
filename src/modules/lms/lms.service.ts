@@ -63,47 +63,53 @@ export class LmsService {
 
   // ============ COURSE CRUD ============
   async createCourse(
+    centerId: string,
     createCourseDto: CreateCourseDto,
     userId: string,
   ): Promise<Course> {
     const course = this.courseRepository.create({
       ...createCourseDto,
       created_by: userId,
+      center_id: centerId,
     });
     return await this.courseRepository.save(course);
   }
 
-  async getAllCourses(): Promise<Course[]> {
+  async getAllCourses(centerId: string): Promise<Course[]> {
     return await this.courseRepository.find({
+      where: { center_id: centerId },
       order: { created_at: 'DESC' },
     });
   }
 
-  async getPublishedCourses(): Promise<Course[]> {
+  async getPublishedCourses(centerId: string): Promise<Course[]> {
     return await this.courseRepository.find({
-      where: { status: CourseStatus.PUBLISHED },
+      where: { status: CourseStatus.PUBLISHED, center_id: centerId },
       order: { created_at: 'DESC' },
     });
   }
 
-  async getCourseById(courseId: string): Promise<Course> {
+  async getCourseById(centerId: string, courseId: string): Promise<Course> {
     const course = await this.courseRepository.findOne({
-      where: { id: courseId },
+      where: { id: courseId, center_id: centerId },
     });
 
     if (!course) {
-      throw new NotFoundException(`Course with ID ${courseId} not found`);
+      throw new NotFoundException(
+        `Course with ID ${courseId} not found in center ${centerId}`,
+      );
     }
 
     return course;
   }
 
   async updateCourse(
+    centerId: string,
     courseId: string,
     updateCourseDto: UpdateCourseDto,
     userId: string,
   ): Promise<Course> {
-    const course = await this.getCourseById(courseId);
+    const course = await this.getCourseById(centerId, courseId);
 
     if (course.created_by !== userId) {
       throw new ForbiddenException('You can only update your own courses');
@@ -113,8 +119,12 @@ export class LmsService {
     return await this.courseRepository.save(course);
   }
 
-  async deleteCourse(courseId: string, userId: string): Promise<void> {
-    const course = await this.getCourseById(courseId);
+  async deleteCourse(
+    centerId: string,
+    courseId: string,
+    userId: string,
+  ): Promise<void> {
+    const course = await this.getCourseById(centerId, courseId);
 
     if (course.created_by !== userId) {
       throw new ForbiddenException('You can only delete your own courses');
@@ -125,23 +135,28 @@ export class LmsService {
 
   // ============ MODULE CRUD ============
   async createModule(
+    centerId: string,
     courseId: string,
     createModuleDto: CreateModuleDto,
   ): Promise<CourseModule> {
-    await this.getCourseById(courseId);
+    await this.getCourseById(centerId, courseId);
 
     const module = this.moduleRepository.create({
       ...createModuleDto,
       course_id: courseId,
+      center_id: centerId,
     });
     return await this.moduleRepository.save(module);
   }
 
-  async getModulesByCourse(courseId: string): Promise<CourseModule[]> {
-    await this.getCourseById(courseId);
+  async getModulesByCourse(
+    centerId: string,
+    courseId: string,
+  ): Promise<CourseModule[]> {
+    await this.getCourseById(centerId, courseId);
 
     return await this.moduleRepository.find({
-      where: { course_id: courseId },
+      where: { course_id: courseId, center_id: centerId },
       order: { order: 'ASC' },
     });
   }
@@ -611,33 +626,23 @@ export class LmsService {
       );
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const title = generateDto.title ?? 'Vocabulary Quiz';
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
     const timeLimit = generateDto.time_limit;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-    const questionTypesInput = generateDto.question_types;
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-    const questionsPerWordInput = generateDto.questions_per_word;
-
-    // Create quiz
-    const quiz = this.quizRepository.create({
-      title: title as string,
-      quiz_type: QuizType.VOCABULARY,
-      vocabulary_based: true,
-      time_limit: timeLimit as number | undefined,
-      lesson_id: lessonId,
-    });
-    const savedQuiz = await this.quizRepository.save(quiz);
-
-    const questionTypes: QuizQuestionType[] = (questionTypesInput as
-      | QuizQuestionType[]
-      | undefined) ?? [
+    const questionTypes = generateDto.question_types ?? [
       QuizQuestionType.VOCABULARY_TRANSLATION,
       QuizQuestionType.VOCABULARY_DEFINITION,
     ];
-    const questionsPerWord: number =
-      (questionsPerWordInput as number | undefined) ?? 1;
+    const questionsPerWord = generateDto.questions_per_word ?? 1;
+
+    // Create quiz
+    const quiz = this.quizRepository.create({
+      title,
+      quiz_type: QuizType.VOCABULARY,
+      vocabulary_based: true,
+      time_limit: timeLimit,
+      lesson_id: lessonId,
+    });
+    const savedQuiz = await this.quizRepository.save(quiz);
 
     let order = 1;
 

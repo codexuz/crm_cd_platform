@@ -7,6 +7,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { Lesson } from './lesson.entity';
+import { Center } from './center.entity';
 
 export enum QuizType {
   GENERAL = 'general',
@@ -21,9 +22,16 @@ export class Quiz {
   @Column({ type: 'uuid' })
   lesson_id: string;
 
+  @Column({ type: 'uuid' })
+  center_id: string;
+
   @ManyToOne(() => Lesson)
   @JoinColumn({ name: 'lesson_id' })
   lesson: Lesson;
+
+  @ManyToOne(() => Center)
+  @JoinColumn({ name: 'center_id' })
+  center: Center;
 
   @Column({ type: 'text', nullable: true })
   title: string;

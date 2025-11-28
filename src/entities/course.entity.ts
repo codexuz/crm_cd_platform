@@ -7,6 +7,7 @@ import {
   JoinColumn,
 } from 'typeorm';
 import { User } from './user.entity';
+import { Center } from './center.entity';
 
 export enum CourseStatus {
   DRAFT = 'draft',
@@ -37,9 +38,16 @@ export class Course {
   @Column({ type: 'uuid' })
   created_by: string;
 
+  @Column({ type: 'uuid' })
+  center_id: string;
+
   @ManyToOne(() => User)
   @JoinColumn({ name: 'created_by' })
   creator: User;
+
+  @ManyToOne(() => Center)
+  @JoinColumn({ name: 'center_id' })
+  center: Center;
 
   @CreateDateColumn({ type: 'timestamp' })
   created_at: Date;

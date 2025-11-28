@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { Quiz } from './quiz.entity';
 import { Vocabulary } from './vocabulary.entity';
+import { Center } from './center.entity';
 
 export enum QuizQuestionType {
   MCQ = 'mcq',
@@ -24,9 +25,16 @@ export class QuizQuestion {
   @Column({ type: 'uuid' })
   quiz_id: string;
 
+  @Column({ type: 'uuid' })
+  center_id: string;
+
   @ManyToOne(() => Quiz)
   @JoinColumn({ name: 'quiz_id' })
   quiz: Quiz;
+
+  @ManyToOne(() => Center)
+  @JoinColumn({ name: 'center_id' })
+  center: Center;
 
   @Column({ type: 'uuid', nullable: true })
   vocabulary_id: string;

@@ -7,7 +7,6 @@ import {
   Body,
   Param,
   UseGuards,
-  Req,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -20,6 +19,7 @@ import { LmsService } from './lms.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { GetUser } from '../../common/decorators/get-user.decorator';
 import { RoleName } from '../../entities';
 import {
   CreateCourseDto,
@@ -49,7 +49,7 @@ import {
 } from './dto/index';
 
 @ApiTags('LMS - Learning Management System')
-@Controller('lms')
+@Controller('centers/:centerId/lms')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class LmsController {
@@ -60,42 +60,55 @@ export class LmsController {
   @UseGuards(RolesGuard)
   @Roles(RoleName.OWNER, RoleName.TEACHER)
   @ApiOperation({ summary: 'Create a new course (Owner/Teacher only)' })
+  @ApiParam({ name: 'centerId', description: 'Center ID' })
   @ApiResponse({
     status: 201,
     description: 'Course created successfully',
     type: CourseResponseDto,
   })
   async createCourse(
+    @Param('centerId') centerId: string,
     @Body() createCourseDto: CreateCourseDto,
-    @Req() req: any,
+    @GetUser('userId') userId: string,
   ): Promise<CourseResponseDto> {
-    return await this.lmsService.createCourse(createCourseDto, req.user.userId);
+    return await this.lmsService.createCourse(
+      centerId,
+      createCourseDto,
+      userId,
+    );
   }
 
   @Get('courses')
-  @ApiOperation({ summary: 'Get all courses' })
+  @ApiOperation({ summary: 'Get all courses for center' })
+  @ApiParam({ name: 'centerId', description: 'Center ID' })
   @ApiResponse({
     status: 200,
-    description: 'List of all courses',
+    description: 'List of all courses for center',
     type: [CourseResponseDto],
   })
-  async getAllCourses(): Promise<CourseResponseDto[]> {
-    return await this.lmsService.getAllCourses();
+  async getAllCourses(
+    @Param('centerId') centerId: string,
+  ): Promise<CourseResponseDto[]> {
+    return await this.lmsService.getAllCourses(centerId);
   }
 
   @Get('courses/published')
-  @ApiOperation({ summary: 'Get all published courses' })
+  @ApiOperation({ summary: 'Get all published courses for center' })
+  @ApiParam({ name: 'centerId', description: 'Center ID' })
   @ApiResponse({
     status: 200,
-    description: 'List of published courses',
+    description: 'List of published courses for center',
     type: [CourseResponseDto],
   })
-  async getPublishedCourses(): Promise<CourseResponseDto[]> {
-    return await this.lmsService.getPublishedCourses();
+  async getPublishedCourses(
+    @Param('centerId') centerId: string,
+  ): Promise<CourseResponseDto[]> {
+    return await this.lmsService.getPublishedCourses(centerId);
   }
 
   @Get('courses/:courseId')
   @ApiOperation({ summary: 'Get course by ID' })
+  @ApiParam({ name: 'centerId', description: 'Center ID' })
   @ApiParam({ name: 'courseId', description: 'Course ID' })
   @ApiResponse({
     status: 200,
@@ -103,15 +116,17 @@ export class LmsController {
     type: CourseResponseDto,
   })
   async getCourseById(
+    @Param('centerId') centerId: string,
     @Param('courseId') courseId: string,
   ): Promise<CourseResponseDto> {
-    return await this.lmsService.getCourseById(courseId);
+    return await this.lmsService.getCourseById(centerId, courseId);
   }
 
   @Put('courses/:courseId')
   @UseGuards(RolesGuard)
   @Roles(RoleName.OWNER, RoleName.TEACHER)
   @ApiOperation({ summary: 'Update course (Owner/Teacher only)' })
+  @ApiParam({ name: 'centerId', description: 'Center ID' })
   @ApiParam({ name: 'courseId', description: 'Course ID' })
   @ApiResponse({
     status: 200,
@@ -119,14 +134,16 @@ export class LmsController {
     type: CourseResponseDto,
   })
   async updateCourse(
+    @Param('centerId') centerId: string,
     @Param('courseId') courseId: string,
     @Body() updateCourseDto: UpdateCourseDto,
-    @Req() req: any,
+    @GetUser('userId') userId: string,
   ): Promise<CourseResponseDto> {
     return await this.lmsService.updateCourse(
+      centerId,
       courseId,
       updateCourseDto,
-      req.user.userId,
+      userId,
     );
   }
 
@@ -134,13 +151,15 @@ export class LmsController {
   @UseGuards(RolesGuard)
   @Roles(RoleName.OWNER, RoleName.TEACHER)
   @ApiOperation({ summary: 'Delete course (Owner/Teacher only)' })
+  @ApiParam({ name: 'centerId', description: 'Center ID' })
   @ApiParam({ name: 'courseId', description: 'Course ID' })
   @ApiResponse({ status: 200, description: 'Course deleted successfully' })
   async deleteCourse(
+    @Param('centerId') centerId: string,
     @Param('courseId') courseId: string,
-    @Req() req: any,
+    @GetUser('userId') userId: string,
   ): Promise<{ message: string }> {
-    await this.lmsService.deleteCourse(courseId, req.user.userId);
+    await this.lmsService.deleteCourse(centerId, courseId, userId);
     return { message: 'Course deleted successfully' };
   }
 
@@ -149,6 +168,7 @@ export class LmsController {
   @UseGuards(RolesGuard)
   @Roles(RoleName.OWNER, RoleName.TEACHER)
   @ApiOperation({ summary: 'Create module in course (Owner/Teacher only)' })
+  @ApiParam({ name: 'centerId', description: 'Center ID' })
   @ApiParam({ name: 'courseId', description: 'Course ID' })
   @ApiResponse({
     status: 201,
@@ -156,14 +176,20 @@ export class LmsController {
     type: ModuleResponseDto,
   })
   async createModule(
+    @Param('centerId') centerId: string,
     @Param('courseId') courseId: string,
     @Body() createModuleDto: CreateModuleDto,
   ): Promise<ModuleResponseDto> {
-    return await this.lmsService.createModule(courseId, createModuleDto);
+    return await this.lmsService.createModule(
+      centerId,
+      courseId,
+      createModuleDto,
+    );
   }
 
   @Get('courses/:courseId/modules')
   @ApiOperation({ summary: 'Get all modules in a course' })
+  @ApiParam({ name: 'centerId', description: 'Center ID' })
   @ApiParam({ name: 'courseId', description: 'Course ID' })
   @ApiResponse({
     status: 200,
@@ -171,9 +197,10 @@ export class LmsController {
     type: [ModuleResponseDto],
   })
   async getModulesByCourse(
+    @Param('centerId') centerId: string,
     @Param('courseId') courseId: string,
   ): Promise<ModuleResponseDto[]> {
-    return await this.lmsService.getModulesByCourse(courseId);
+    return await this.lmsService.getModulesByCourse(centerId, courseId);
   }
 
   @Get('modules/:moduleId')
@@ -447,10 +474,10 @@ export class LmsController {
   async markLessonComplete(
     @Param('lessonId') lessonId: string,
     @Body() markCompleteDto: MarkLessonCompleteDto,
-    @Req() req: any,
+    @GetUser('userId') userId: string,
   ): Promise<LessonProgressResponseDto> {
     return await this.lmsService.markLessonComplete(
-      req.user.userId,
+      userId,
       lessonId,
       markCompleteDto,
     );
@@ -468,9 +495,9 @@ export class LmsController {
   })
   async getLessonProgress(
     @Param('lessonId') lessonId: string,
-    @Req() req: any,
+    @GetUser('userId') userId: string,
   ) {
-    return await this.lmsService.getLessonProgress(req.user.userId, lessonId);
+    return await this.lmsService.getLessonProgress(userId, lessonId);
   }
 
   @Get('courses/:courseId/progress')
@@ -485,9 +512,9 @@ export class LmsController {
   })
   async getCourseProgress(
     @Param('courseId') courseId: string,
-    @Req() req: any,
+    @GetUser('userId') userId: string,
   ): Promise<CourseProgressResponseDto> {
-    return await this.lmsService.getCourseProgress(req.user.userId, courseId);
+    return await this.lmsService.getCourseProgress(userId, courseId);
   }
 
   @Get('my-progress')
@@ -502,9 +529,9 @@ export class LmsController {
     type: [CourseProgressResponseDto],
   })
   async getUserCourseProgress(
-    @Req() req: any,
+    @GetUser('userId') userId: string,
   ): Promise<CourseProgressResponseDto[]> {
-    return await this.lmsService.getUserCourseProgress(req.user.userId);
+    return await this.lmsService.getUserCourseProgress(userId);
   }
 
   // ============ QUIZ SUBMISSION ENDPOINTS ============
@@ -521,13 +548,9 @@ export class LmsController {
   async submitQuiz(
     @Param('quizId') quizId: string,
     @Body() submitQuizDto: SubmitQuizDto,
-    @Req() req: any,
+    @GetUser('userId') userId: string,
   ): Promise<QuizAttemptResponseDto> {
-    return await this.lmsService.submitQuiz(
-      req.user.userId,
-      quizId,
-      submitQuizDto,
-    );
+    return await this.lmsService.submitQuiz(userId, quizId, submitQuizDto);
   }
 
   @Get('quizzes/:quizId/attempts')
@@ -542,9 +565,9 @@ export class LmsController {
   })
   async getQuizAttempts(
     @Param('quizId') quizId: string,
-    @Req() req: any,
+    @GetUser('userId') userId: string,
   ): Promise<QuizAttemptResponseDto[]> {
-    return await this.lmsService.getQuizAttempts(req.user.userId, quizId);
+    return await this.lmsService.getQuizAttempts(userId, quizId);
   }
 
   // ============ VOCABULARY ENDPOINTS ============

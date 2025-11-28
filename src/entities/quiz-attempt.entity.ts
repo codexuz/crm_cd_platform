@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { User } from './user.entity';
 import { Quiz } from './quiz.entity';
+import { Center } from './center.entity';
 
 @Entity('quiz_attempts')
 export class QuizAttempt {
@@ -16,9 +17,16 @@ export class QuizAttempt {
   @Column({ type: 'uuid' })
   user_id: string;
 
+  @Column({ type: 'uuid' })
+  center_id: string;
+
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user: User;
+
+  @ManyToOne(() => Center)
+  @JoinColumn({ name: 'center_id' })
+  center: Center;
 
   @Column({ type: 'uuid' })
   quiz_id: string;
