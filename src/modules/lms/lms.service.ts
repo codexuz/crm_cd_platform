@@ -248,16 +248,40 @@ export class LmsService {
   ): Promise<Quiz> {
     await this.getLessonById(centerId, lessonId);
 
-    const quiz = this.quizRepository.create({
-      title: createQuizDto.title,
-      description: createQuizDto.description,
-      time_limit: createQuizDto.time_limit,
-      lesson_id: lessonId,
-      center_id: centerId,
+    // Check if quiz already exists for this lesson
+    let existingQuiz = await this.quizRepository.findOne({
+      where: { lesson_id: lessonId, center_id: centerId },
     });
-    const savedQuiz = await this.quizRepository.save(quiz);
 
-    // Create questions
+    let savedQuiz: Quiz;
+
+    if (existingQuiz) {
+      // Update existing quiz
+      Object.assign(existingQuiz, {
+        title: createQuizDto.title,
+        description: createQuizDto.description,
+        time_limit: createQuizDto.time_limit,
+      });
+      savedQuiz = await this.quizRepository.save(existingQuiz);
+
+      // Delete existing questions
+      await this.quizQuestionRepository.delete({
+        quiz_id: savedQuiz.id,
+        center_id: centerId,
+      });
+    } else {
+      // Create new quiz
+      const quiz = this.quizRepository.create({
+        title: createQuizDto.title,
+        description: createQuizDto.description,
+        time_limit: createQuizDto.time_limit,
+        lesson_id: lessonId,
+        center_id: centerId,
+      });
+      savedQuiz = await this.quizRepository.save(quiz);
+    }
+
+    // Create/recreate questions
     for (const questionDto of createQuizDto.questions) {
       const question = this.quizQuestionRepository.create({
         ...questionDto,
