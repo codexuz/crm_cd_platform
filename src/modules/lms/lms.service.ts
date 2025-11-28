@@ -189,6 +189,7 @@ export class LmsService {
 
   // ============ LESSON CRUD ============
   async createLesson(
+    centerId: string,
     moduleId: string,
     createLessonDto: CreateLessonDto,
   ): Promise<Lesson> {
@@ -197,51 +198,59 @@ export class LmsService {
     const lesson = this.lessonRepository.create({
       ...createLessonDto,
       module_id: moduleId,
+      center_id: centerId,
     });
     return await this.lessonRepository.save(lesson);
   }
 
-  async getLessonsByModule(moduleId: string): Promise<Lesson[]> {
+  async getLessonsByModule(
+    centerId: string,
+    moduleId: string,
+  ): Promise<Lesson[]> {
     await this.getModuleById(moduleId);
 
     return await this.lessonRepository.find({
-      where: { module_id: moduleId },
+      where: { module_id: moduleId, center_id: centerId },
       order: { order: 'ASC' },
     });
   }
 
-  async getLessonById(lessonId: string): Promise<Lesson> {
+  async getLessonById(centerId: string, lessonId: string): Promise<Lesson> {
     const lesson = await this.lessonRepository.findOne({
-      where: { id: lessonId },
+      where: { id: lessonId, center_id: centerId },
     });
 
     if (!lesson) {
-      throw new NotFoundException(`Lesson with ID ${lessonId} not found`);
+      throw new NotFoundException(
+        `Lesson with ID ${lessonId} not found in center ${centerId}`,
+      );
     }
 
     return lesson;
   }
 
   async updateLesson(
+    centerId: string,
     lessonId: string,
     updateLessonDto: UpdateLessonDto,
   ): Promise<Lesson> {
-    const lesson = await this.getLessonById(lessonId);
+    const lesson = await this.getLessonById(centerId, lessonId);
     Object.assign(lesson, updateLessonDto);
     return await this.lessonRepository.save(lesson);
   }
 
-  async deleteLesson(lessonId: string): Promise<void> {
-    const lesson = await this.getLessonById(lessonId);
+  async deleteLesson(centerId: string, lessonId: string): Promise<void> {
+    const lesson = await this.getLessonById(centerId, lessonId);
     await this.lessonRepository.remove(lesson);
   }
 
   // ============ QUIZ CRUD ============
   async createQuiz(
+    centerId: string,
     lessonId: string,
     createQuizDto: CreateQuizDto,
   ): Promise<Quiz> {
-    await this.getLessonById(lessonId);
+    await this.getLessonById(centerId, lessonId);
 
     const quiz = this.quizRepository.create({
       title: createQuizDto.title,
@@ -249,6 +258,7 @@ export class LmsService {
       vocabulary_based: (createQuizDto.vocabulary_based as boolean) ?? false,
       time_limit: createQuizDto.time_limit,
       lesson_id: lessonId,
+      center_id: centerId,
     });
     const savedQuiz = await this.quizRepository.save(quiz);
 
@@ -264,8 +274,11 @@ export class LmsService {
     return savedQuiz;
   }
 
-  async getQuizByLesson(lessonId: string): Promise<Quiz | null> {
-    await this.getLessonById(lessonId);
+  async getQuizByLesson(
+    centerId: string,
+    lessonId: string,
+  ): Promise<Quiz | null> {
+    await this.getLessonById(centerId, lessonId);
 
     return await this.quizRepository.findOne({
       where: { lesson_id: lessonId },
@@ -352,10 +365,11 @@ export class LmsService {
   // ============ STUDENT PROGRESS ============
   async markLessonComplete(
     userId: string,
+    centerId: string,
     lessonId: string,
     markCompleteDto: MarkLessonCompleteDto,
   ): Promise<LessonProgress> {
-    await this.getLessonById(lessonId);
+    await this.getLessonById(centerId, lessonId);
 
     let progress = await this.lessonProgressRepository.findOne({
       where: { user_id: userId, lesson_id: lessonId },
@@ -379,7 +393,7 @@ export class LmsService {
     const savedProgress = await this.lessonProgressRepository.save(progress);
 
     // Update course progress
-    const lesson = await this.getLessonById(lessonId);
+    const lesson = await this.getLessonById(centerId, lessonId);
     const module = await this.getModuleById(lesson.module_id);
     await this.updateCourseProgress(userId, module.course_id);
 
@@ -467,6 +481,7 @@ export class LmsService {
   // ============ QUIZ SUBMISSION ============
   async submitQuiz(
     userId: string,
+    centerId: string,
     quizId: string,
     submitQuizDto: SubmitQuizDto,
   ): Promise<QuizAttempt> {
@@ -510,7 +525,7 @@ export class LmsService {
 
     // If passed, mark lesson as complete
     if (isPassed) {
-      await this.markLessonComplete(userId, quiz.lesson_id, {
+      await this.markLessonComplete(userId, centerId, quiz.lesson_id, {
         is_completed: true,
       });
     }
@@ -561,10 +576,11 @@ export class LmsService {
 
   // ============ VOCABULARY CRUD ============
   async createVocabulary(
+    centerId: string,
     lessonId: string,
     createVocabularyDto: CreateVocabularyDto,
   ): Promise<Vocabulary> {
-    await this.getLessonById(lessonId);
+    await this.getLessonById(centerId, lessonId);
 
     const vocabulary = this.vocabularyRepository.create({
       ...createVocabularyDto,
@@ -573,8 +589,11 @@ export class LmsService {
     return await this.vocabularyRepository.save(vocabulary);
   }
 
-  async getVocabularyByLesson(lessonId: string): Promise<Vocabulary[]> {
-    await this.getLessonById(lessonId);
+  async getVocabularyByLesson(
+    centerId: string,
+    lessonId: string,
+  ): Promise<Vocabulary[]> {
+    await this.getLessonById(centerId, lessonId);
 
     return await this.vocabularyRepository.find({
       where: { lesson_id: lessonId },
@@ -612,13 +631,14 @@ export class LmsService {
 
   // ============ VOCABULARY QUIZ GENERATION ============
   async generateVocabularyQuiz(
+    centerId: string,
     lessonId: string,
     generateDto: GenerateVocabularyQuizDto,
   ): Promise<Quiz> {
-    await this.getLessonById(lessonId);
+    await this.getLessonById(centerId, lessonId);
 
     // Get all vocabulary for this lesson
-    const vocabularyList = await this.getVocabularyByLesson(lessonId);
+    const vocabularyList = await this.getVocabularyByLesson(centerId, lessonId);
 
     if (vocabularyList.length === 0) {
       throw new BadRequestException(

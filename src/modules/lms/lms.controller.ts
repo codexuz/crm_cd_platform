@@ -252,6 +252,7 @@ export class LmsController {
   @UseGuards(RolesGuard)
   @Roles(RoleName.OWNER, RoleName.TEACHER)
   @ApiOperation({ summary: 'Create lesson in module (Owner/Teacher only)' })
+  @ApiParam({ name: 'centerId', description: 'Center ID' })
   @ApiParam({ name: 'moduleId', description: 'Module ID' })
   @ApiResponse({
     status: 201,
@@ -259,14 +260,20 @@ export class LmsController {
     type: LessonResponseDto,
   })
   async createLesson(
+    @Param('centerId') centerId: string,
     @Param('moduleId') moduleId: string,
     @Body() createLessonDto: CreateLessonDto,
   ): Promise<LessonResponseDto> {
-    return await this.lmsService.createLesson(moduleId, createLessonDto);
+    return await this.lmsService.createLesson(
+      centerId,
+      moduleId,
+      createLessonDto,
+    );
   }
 
   @Get('modules/:moduleId/lessons')
   @ApiOperation({ summary: 'Get all lessons in a module' })
+  @ApiParam({ name: 'centerId', description: 'Center ID' })
   @ApiParam({ name: 'moduleId', description: 'Module ID' })
   @ApiResponse({
     status: 200,
@@ -274,13 +281,15 @@ export class LmsController {
     type: [LessonResponseDto],
   })
   async getLessonsByModule(
+    @Param('centerId') centerId: string,
     @Param('moduleId') moduleId: string,
   ): Promise<LessonResponseDto[]> {
-    return await this.lmsService.getLessonsByModule(moduleId);
+    return await this.lmsService.getLessonsByModule(centerId, moduleId);
   }
 
   @Get('lessons/:lessonId')
   @ApiOperation({ summary: 'Get lesson by ID' })
+  @ApiParam({ name: 'centerId', description: 'Center ID' })
   @ApiParam({ name: 'lessonId', description: 'Lesson ID' })
   @ApiResponse({
     status: 200,
@@ -288,15 +297,17 @@ export class LmsController {
     type: LessonResponseDto,
   })
   async getLessonById(
+    @Param('centerId') centerId: string,
     @Param('lessonId') lessonId: string,
   ): Promise<LessonResponseDto> {
-    return await this.lmsService.getLessonById(lessonId);
+    return await this.lmsService.getLessonById(centerId, lessonId);
   }
 
   @Put('lessons/:lessonId')
   @UseGuards(RolesGuard)
   @Roles(RoleName.OWNER, RoleName.TEACHER)
   @ApiOperation({ summary: 'Update lesson (Owner/Teacher only)' })
+  @ApiParam({ name: 'centerId', description: 'Center ID' })
   @ApiParam({ name: 'lessonId', description: 'Lesson ID' })
   @ApiResponse({
     status: 200,
@@ -304,22 +315,29 @@ export class LmsController {
     type: LessonResponseDto,
   })
   async updateLesson(
+    @Param('centerId') centerId: string,
     @Param('lessonId') lessonId: string,
     @Body() updateLessonDto: UpdateLessonDto,
   ): Promise<LessonResponseDto> {
-    return await this.lmsService.updateLesson(lessonId, updateLessonDto);
+    return await this.lmsService.updateLesson(
+      centerId,
+      lessonId,
+      updateLessonDto,
+    );
   }
 
   @Delete('lessons/:lessonId')
   @UseGuards(RolesGuard)
   @Roles(RoleName.OWNER, RoleName.TEACHER)
   @ApiOperation({ summary: 'Delete lesson (Owner/Teacher only)' })
+  @ApiParam({ name: 'centerId', description: 'Center ID' })
   @ApiParam({ name: 'lessonId', description: 'Lesson ID' })
   @ApiResponse({ status: 200, description: 'Lesson deleted successfully' })
   async deleteLesson(
+    @Param('centerId') centerId: string,
     @Param('lessonId') lessonId: string,
   ): Promise<{ message: string }> {
-    await this.lmsService.deleteLesson(lessonId);
+    await this.lmsService.deleteLesson(centerId, lessonId);
     return { message: 'Lesson deleted successfully' };
   }
 
@@ -328,6 +346,7 @@ export class LmsController {
   @UseGuards(RolesGuard)
   @Roles(RoleName.OWNER, RoleName.TEACHER)
   @ApiOperation({ summary: 'Create quiz for lesson (Owner/Teacher only)' })
+  @ApiParam({ name: 'centerId', description: 'Center ID' })
   @ApiParam({ name: 'lessonId', description: 'Lesson ID' })
   @ApiResponse({
     status: 201,
@@ -335,22 +354,27 @@ export class LmsController {
     type: QuizResponseDto,
   })
   async createQuiz(
+    @Param('centerId') centerId: string,
     @Param('lessonId') lessonId: string,
     @Body() createQuizDto: CreateQuizDto,
   ): Promise<QuizResponseDto> {
-    return await this.lmsService.createQuiz(lessonId, createQuizDto);
+    return await this.lmsService.createQuiz(centerId, lessonId, createQuizDto);
   }
 
   @Get('lessons/:lessonId/quiz')
-  @ApiOperation({ summary: 'Get quiz for a lesson' })
+  @ApiOperation({ summary: 'Get quiz for lesson' })
+  @ApiParam({ name: 'centerId', description: 'Center ID' })
   @ApiParam({ name: 'lessonId', description: 'Lesson ID' })
   @ApiResponse({
     status: 200,
     description: 'Quiz details',
     type: QuizResponseDto,
   })
-  async getQuizByLesson(@Param('lessonId') lessonId: string) {
-    return await this.lmsService.getQuizByLesson(lessonId);
+  async getQuizByLesson(
+    @Param('centerId') centerId: string,
+    @Param('lessonId') lessonId: string,
+  ) {
+    return await this.lmsService.getQuizByLesson(centerId, lessonId);
   }
 
   @Get('quizzes/:quizId')
@@ -465,6 +489,7 @@ export class LmsController {
   @UseGuards(RolesGuard)
   @Roles(RoleName.STUDENT)
   @ApiOperation({ summary: 'Mark lesson as complete (Student only)' })
+  @ApiParam({ name: 'centerId', description: 'Center ID' })
   @ApiParam({ name: 'lessonId', description: 'Lesson ID' })
   @ApiResponse({
     status: 200,
@@ -472,12 +497,14 @@ export class LmsController {
     type: LessonProgressResponseDto,
   })
   async markLessonComplete(
+    @Param('centerId') centerId: string,
     @Param('lessonId') lessonId: string,
     @Body() markCompleteDto: MarkLessonCompleteDto,
     @GetUser('userId') userId: string,
   ): Promise<LessonProgressResponseDto> {
     return await this.lmsService.markLessonComplete(
       userId,
+      centerId,
       lessonId,
       markCompleteDto,
     );
@@ -539,6 +566,7 @@ export class LmsController {
   @UseGuards(RolesGuard)
   @Roles(RoleName.STUDENT)
   @ApiOperation({ summary: 'Submit quiz answers (Student only)' })
+  @ApiParam({ name: 'centerId', description: 'Center ID' })
   @ApiParam({ name: 'quizId', description: 'Quiz ID' })
   @ApiResponse({
     status: 201,
@@ -546,11 +574,17 @@ export class LmsController {
     type: QuizAttemptResponseDto,
   })
   async submitQuiz(
+    @Param('centerId') centerId: string,
     @Param('quizId') quizId: string,
     @Body() submitQuizDto: SubmitQuizDto,
     @GetUser('userId') userId: string,
   ): Promise<QuizAttemptResponseDto> {
-    return await this.lmsService.submitQuiz(userId, quizId, submitQuizDto);
+    return await this.lmsService.submitQuiz(
+      userId,
+      centerId,
+      quizId,
+      submitQuizDto,
+    );
   }
 
   @Get('quizzes/:quizId/attempts')
@@ -575,6 +609,7 @@ export class LmsController {
   @UseGuards(RolesGuard)
   @Roles(RoleName.OWNER, RoleName.TEACHER)
   @ApiOperation({ summary: 'Add vocabulary to lesson (Owner/Teacher only)' })
+  @ApiParam({ name: 'centerId', description: 'Center ID' })
   @ApiParam({ name: 'lessonId', description: 'Lesson ID' })
   @ApiResponse({
     status: 201,
@@ -582,10 +617,12 @@ export class LmsController {
     type: VocabularyResponseDto,
   })
   async createVocabulary(
+    @Param('centerId') centerId: string,
     @Param('lessonId') lessonId: string,
     @Body() createVocabularyDto: CreateVocabularyDto,
   ): Promise<VocabularyResponseDto> {
     return await this.lmsService.createVocabulary(
+      centerId,
       lessonId,
       createVocabularyDto,
     );
@@ -593,6 +630,7 @@ export class LmsController {
 
   @Get('lessons/:lessonId/vocabulary')
   @ApiOperation({ summary: 'Get all vocabulary for a lesson' })
+  @ApiParam({ name: 'centerId', description: 'Center ID' })
   @ApiParam({ name: 'lessonId', description: 'Lesson ID' })
   @ApiResponse({
     status: 200,
@@ -600,9 +638,10 @@ export class LmsController {
     type: [VocabularyResponseDto],
   })
   async getVocabularyByLesson(
+    @Param('centerId') centerId: string,
     @Param('lessonId') lessonId: string,
   ): Promise<VocabularyResponseDto[]> {
-    return await this.lmsService.getVocabularyByLesson(lessonId);
+    return await this.lmsService.getVocabularyByLesson(centerId, lessonId);
   }
 
   @Get('vocabulary/:vocabularyId')
@@ -667,9 +706,14 @@ export class LmsController {
     type: QuizResponseDto,
   })
   async generateVocabularyQuiz(
+    @Param('centerId') centerId: string,
     @Param('lessonId') lessonId: string,
     @Body() generateDto: GenerateVocabularyQuizDto,
   ): Promise<QuizResponseDto> {
-    return await this.lmsService.generateVocabularyQuiz(lessonId, generateDto);
+    return await this.lmsService.generateVocabularyQuiz(
+      centerId,
+      lessonId,
+      generateDto,
+    );
   }
 }
