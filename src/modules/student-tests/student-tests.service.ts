@@ -561,6 +561,17 @@ Good luck with your exam!
       );
     }
 
+    // Handle slash-separated multiple correct answers (e.g., "insulation/heat insulation")
+    const correctAnswerStr = correctAnswer.toString();
+    if (correctAnswerStr.includes('/')) {
+      const acceptableAnswers = correctAnswerStr
+        .split('/')
+        .map((ans) => ans.trim());
+      return acceptableAnswers.some(
+        (ans) => this.normalizeAnswer(ans) === normalized,
+      );
+    }
+
     return this.normalizeAnswer(correctAnswer) === normalized;
   }
 
