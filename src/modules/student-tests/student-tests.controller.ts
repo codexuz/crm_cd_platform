@@ -109,6 +109,31 @@ export class StudentTestsController {
     );
   }
 
+  @Post('centers/:centerId/check-speaking/:candidateId')
+  async checkSpeaking(
+    @Param('centerId') centerId: string,
+    @Param('candidateId') candidateId: string,
+    @Body()
+    gradeDto: {
+      overall?: number;
+      fluencyCoherence?: number;
+      lexicalResource?: number;
+      grammaticalRange?: number;
+      pronunciation?: number;
+      feedback?: string;
+    },
+  ) {
+    return await this.studentTestsService.checkSpeakingAnswers(
+      candidateId,
+      gradeDto.overall,
+      gradeDto.fluencyCoherence,
+      gradeDto.lexicalResource,
+      gradeDto.grammaticalRange,
+      gradeDto.pronunciation,
+      gradeDto.feedback,
+    );
+  }
+
   @Post('centers/:centerId/auto-grade/:candidateId')
   async autoGrade(
     @Param('centerId') centerId: string,
