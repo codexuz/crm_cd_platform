@@ -75,6 +75,9 @@ export class StudentAssignedTest {
   @Column({ type: 'json', nullable: true })
   writing_final?: any; // Checked writing results: { task1Score, task2Score, averageScore, feedback }
 
+  @Column({ type: 'json', nullable: true })
+  speaking_final?: any; // Checked speaking results: { overall, feedback }
+
   @Column({ type: 'text', nullable: true })
   notes?: string | null; // Teacher notes
 

@@ -222,3 +222,12 @@ export interface WritingFinalResult {
   averageScore?: number;
   feedback?: string;
 }
+
+export interface SpeakingFinalResult {
+  overall?: number; // Overall band score (0-9)
+  fluencyCoherence?: number;
+  lexicalResource?: number;
+  grammaticalRange?: number;
+  pronunciation?: number;
+  feedback?: string;
+}

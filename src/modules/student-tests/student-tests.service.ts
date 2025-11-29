@@ -189,6 +189,7 @@ Good luck with your exam!
         listening_final: true,
         reading_final: true,
         writing_final: true,
+        speaking_final: true,
         notes: true,
         is_active: true,
         created_at: true,
@@ -229,10 +230,18 @@ Good luck with your exam!
   async getAssignedTestById(
     id: string,
     centerId: string,
-  ): Promise<StudentAssignedTest> {
+  ): Promise<StudentAssignedTest & { answersComparison?: any }> {
     const assignment = await this.studentTestRepository.findOne({
       where: { id, center_id: centerId, is_active: true },
-      relations: ['test', 'teacher', 'student'],
+      relations: [
+        'test',
+        'teacher',
+        'student',
+        'test.listening',
+        'test.listening.parts',
+        'test.reading',
+        'test.reading.parts',
+      ],
       select: {
         id: true,
         candidate_id: true,
@@ -248,6 +257,7 @@ Good luck with your exam!
         listening_final: true,
         reading_final: true,
         writing_final: true,
+        speaking_final: true,
         notes: true,
         is_active: true,
         created_at: true,
@@ -285,6 +295,123 @@ Good luck with your exam!
 
     if (!assignment) {
       throw new NotFoundException('Assignment not found');
+    }
+
+    // If test is completed, add answers comparison
+    if (assignment.status === 'completed' && assignment.test_results) {
+      const testResults = assignment.test_results as TestResults;
+      /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument */
+      const answersComparison: any = {};
+
+      // Process Listening Answers
+      if (testResults.listening?.answers && assignment.test?.listening?.parts) {
+        const listeningComparison: any = {
+          parts: [],
+        };
+
+        const studentAnswers = testResults.listening.answers as any;
+        const listeningParts = assignment.test.listening.parts;
+
+        for (const part of listeningParts) {
+          if (part.id && part.answers) {
+            const partComparison: any = {
+              partId: part.id,
+              part: part.part,
+              questions: [],
+            };
+
+            const studentPartAnswers = studentAnswers[part.id];
+            const correctPartAnswers = part.answers;
+
+            if (
+              Array.isArray(studentPartAnswers) &&
+              studentPartAnswers.length > 0
+            ) {
+              const answersObject = studentPartAnswers[0];
+
+              for (const questionNum in answersObject) {
+                const studentAnswer = answersObject[questionNum];
+                const correctAnswer = correctPartAnswers[questionNum];
+
+                if (correctAnswer !== undefined) {
+                  const isCorrect = this.isAnswerCorrect(
+                    studentAnswer,
+                    correctAnswer,
+                  );
+
+                  partComparison.questions.push({
+                    questionNumber: questionNum,
+                    studentAnswer: studentAnswer,
+                    correctAnswer: correctAnswer,
+                    isCorrect: isCorrect,
+                  });
+                }
+              }
+            }
+
+            listeningComparison.parts.push(partComparison);
+          }
+        }
+
+        answersComparison.listening = listeningComparison;
+      }
+
+      // Process Reading Answers
+      if (testResults.reading?.answers && assignment.test?.reading?.parts) {
+        const readingComparison: any = {
+          parts: [],
+        };
+
+        const studentAnswers = testResults.reading.answers as any;
+        const readingParts = assignment.test.reading.parts;
+
+        for (const part of readingParts) {
+          if (part.id && part.answers) {
+            const partComparison: any = {
+              partId: part.id,
+              part: part.part,
+              questions: [],
+            };
+
+            const studentPartAnswers = studentAnswers[part.id];
+            const correctPartAnswers = part.answers;
+
+            if (
+              Array.isArray(studentPartAnswers) &&
+              studentPartAnswers.length > 0
+            ) {
+              const answersObject = studentPartAnswers[0];
+
+              for (const questionNum in answersObject) {
+                const studentAnswer = answersObject[questionNum];
+                const correctAnswer = correctPartAnswers[questionNum];
+
+                if (correctAnswer !== undefined) {
+                  const isCorrect = this.isAnswerCorrect(
+                    studentAnswer,
+                    correctAnswer,
+                  );
+
+                  partComparison.questions.push({
+                    questionNumber: questionNum,
+                    studentAnswer: studentAnswer,
+                    correctAnswer: correctAnswer,
+                    isCorrect: isCorrect,
+                  });
+                }
+              }
+            }
+
+            readingComparison.parts.push(partComparison);
+          }
+        }
+
+        answersComparison.reading = readingComparison;
+      }
+      /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument */
+
+      // Add the comparison to the assignment
+      return { ...assignment, answersComparison };
     }
 
     return assignment;
@@ -839,6 +966,77 @@ Good luck with your exam!
     return writingFinal;
   }
 
+  // Check/Grade speaking section
+  async checkSpeakingAnswers(
+    candidateId: string,
+    overall?: number,
+    fluencyCoherence?: number,
+    lexicalResource?: number,
+    grammaticalRange?: number,
+    pronunciation?: number,
+    feedback?: string,
+  ) {
+    const assignment = await this.getStudentAssignment(candidateId);
+
+    const speakingFinal: {
+      overall?: number;
+      fluencyCoherence?: number;
+      lexicalResource?: number;
+      grammaticalRange?: number;
+      pronunciation?: number;
+      averageScore?: number;
+      feedback: string;
+    } = {
+      feedback: feedback || '',
+    };
+
+    if (overall !== undefined) {
+      speakingFinal.overall = overall;
+    }
+    if (fluencyCoherence !== undefined) {
+      speakingFinal.fluencyCoherence = fluencyCoherence;
+    }
+    if (lexicalResource !== undefined) {
+      speakingFinal.lexicalResource = lexicalResource;
+    }
+    if (grammaticalRange !== undefined) {
+      speakingFinal.grammaticalRange = grammaticalRange;
+    }
+    if (pronunciation !== undefined) {
+      speakingFinal.pronunciation = pronunciation;
+    }
+
+    // Calculate average if all component scores available
+    if (
+      typeof fluencyCoherence === 'number' &&
+      typeof lexicalResource === 'number' &&
+      typeof grammaticalRange === 'number' &&
+      typeof pronunciation === 'number'
+    ) {
+      const average =
+        (fluencyCoherence +
+          lexicalResource +
+          grammaticalRange +
+          pronunciation) /
+        4;
+      // Round to nearest 0.5 using IELTS rounding rules
+      const decimal = average - Math.floor(average);
+      if (decimal < 0.25) {
+        speakingFinal.averageScore = Math.floor(average);
+      } else if (decimal < 0.75) {
+        speakingFinal.averageScore = Math.floor(average) + 0.5;
+      } else {
+        speakingFinal.averageScore = Math.ceil(average);
+      }
+    }
+
+    // Save to speaking_final field
+    assignment.speaking_final = speakingFinal;
+    await this.studentTestRepository.save(assignment);
+
+    return speakingFinal;
+  }
+
   // Auto-grade entire test (listening and reading only)
   async autoGradeTest(candidateId: string) {
     const listeningResult = await this.checkListeningAnswers(candidateId);
@@ -873,12 +1071,14 @@ Good luck with your exam!
     const listening = assignment.listening_final;
     const reading = assignment.reading_final;
     const writing = assignment.writing_final;
+    const speaking = assignment.speaking_final;
 
     // Calculate overall band score (average of all sections)
     const scores: number[] = [];
     if (listening?.score) scores.push(listening.score);
     if (reading?.score) scores.push(reading.score);
     if (writing?.averageScore) scores.push(writing.averageScore);
+    if (speaking?.overall) scores.push(speaking.overall);
     const testName = assignment.test?.title || 'IELTS Mock Test';
     const studentName = assignment.student.name;
 
@@ -995,6 +1195,78 @@ Good luck with your exam!
             `
                 : ''
             }
+
+            ${
+              speaking
+                ? `
+            <div style="background-color: #ffffff; padding: 15px; margin: 10px 0; border-left: 4px solid #f59e0b; border-radius: 4px;">
+              <h4 style="margin: 0 0 10px 0; color: #d97706;">Speaking</h4>
+              <table style="width: 100%;">
+                ${
+                  speaking.overall
+                    ? `
+                <tr>
+                  <td style="padding: 5px 0;"><strong>Overall Score:</strong></td>
+                  <td style="text-align: right;">${speaking.overall}</td>
+                </tr>
+                `
+                    : ''
+                }
+                ${
+                  speaking.fluencyCoherence
+                    ? `
+                <tr>
+                  <td style="padding: 5px 0;"><strong>Fluency & Coherence:</strong></td>
+                  <td style="text-align: right;">${speaking.fluencyCoherence}</td>
+                </tr>
+                `
+                    : ''
+                }
+                ${
+                  speaking.lexicalResource
+                    ? `
+                <tr>
+                  <td style="padding: 5px 0;"><strong>Lexical Resource:</strong></td>
+                  <td style="text-align: right;">${speaking.lexicalResource}</td>
+                </tr>
+                `
+                    : ''
+                }
+                ${
+                  speaking.grammaticalRange
+                    ? `
+                <tr>
+                  <td style="padding: 5px 0;"><strong>Grammatical Range:</strong></td>
+                  <td style="text-align: right;">${speaking.grammaticalRange}</td>
+                </tr>
+                `
+                    : ''
+                }
+                ${
+                  speaking.pronunciation
+                    ? `
+                <tr>
+                  <td style="padding: 5px 0;"><strong>Pronunciation:</strong></td>
+                  <td style="text-align: right;">${speaking.pronunciation}</td>
+                </tr>
+                `
+                    : ''
+                }
+              </table>
+              ${
+                speaking.feedback
+                  ? `
+              <div style="margin-top: 10px; padding: 10px; background-color: #fef3c7; border-radius: 4px;">
+                <strong>Feedback:</strong>
+                <p style="margin: 5px 0 0 0;">${speaking.feedback}</p>
+              </div>
+              `
+                  : ''
+              }
+            </div>
+            `
+                : ''
+            }
           </div>
 
           <div style="background-color: #eff6ff; padding: 15px; border-left: 4px solid #3b82f6; margin: 20px 0;">
@@ -1036,6 +1308,8 @@ Incorrect: ${reading.incorrect}`
 }
 
 ${writing ? `\nWRITING${writing.task1Score ? `\nTask 1 Score: ${writing.task1Score}` : ''}${writing.task2Score ? `\nTask 2 Score: ${writing.task2Score}` : ''}${writing.averageScore ? `\nOverall Writing Score: ${writing.averageScore}` : ''}${writing.feedback ? `\n\nFeedback: ${writing.feedback}` : ''}` : ''}
+
+${speaking ? `\nSPEAKING${speaking.overall ? `\nOverall Score: ${speaking.overall}` : ''}${speaking.fluencyCoherence ? `\nFluency & Coherence: ${speaking.fluencyCoherence}` : ''}${speaking.lexicalResource ? `\nLexical Resource: ${speaking.lexicalResource}` : ''}${speaking.grammaticalRange ? `\nGrammatical Range: ${speaking.grammaticalRange}` : ''}${speaking.pronunciation ? `\nPronunciation: ${speaking.pronunciation}` : ''}${speaking.feedback ? `\n\nFeedback: ${speaking.feedback}` : ''}` : ''}
 
 Candidate ID: ${candidateId}
 
