@@ -1108,7 +1108,7 @@ Good luck with your exam!
                 </tr>
                 <tr>
                   <td style="padding: 5px 0;"><strong>Correct Answers:</strong></td>
-                  <td style="text-align: right;">${listening.correct}/${listening.totalQuestions}</td>
+                  <td style="text-align: right;">${listening.correct}/40</td>
                 </tr>
                 <tr>
                   <td style="padding: 5px 0;"><strong>Incorrect:</strong></td>
@@ -1132,7 +1132,7 @@ Good luck with your exam!
                 </tr>
                 <tr>
                   <td style="padding: 5px 0;"><strong>Correct Answers:</strong></td>
-                  <td style="text-align: right;">${reading.correct}/${reading.totalQuestions}</td>
+                  <td style="text-align: right;">${reading.correct}/40</td>
                 </tr>
                 <tr>
                   <td style="padding: 5px 0;"><strong>Incorrect:</strong></td>
