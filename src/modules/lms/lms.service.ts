@@ -85,6 +85,13 @@ export class LmsService {
     });
   }
 
+  async getMyCourses(centerId: string, userId: string): Promise<Course[]> {
+    return await this.courseRepository.find({
+      where: { created_by: userId, center_id: centerId },
+      order: { created_at: 'DESC' },
+    });
+  }
+
   async getCourseById(centerId: string, courseId: string): Promise<Course> {
     const course = await this.courseRepository.findOne({
       where: { id: courseId, center_id: centerId },
@@ -249,7 +256,7 @@ export class LmsService {
     await this.getLessonById(centerId, lessonId);
 
     // Check if quiz already exists for this lesson
-    let existingQuiz = await this.quizRepository.findOne({
+    const existingQuiz = await this.quizRepository.findOne({
       where: { lesson_id: lessonId, center_id: centerId },
     });
 

@@ -105,6 +105,21 @@ export class LmsController {
     return await this.lmsService.getPublishedCourses(centerId);
   }
 
+  @Get('my-courses')
+  @ApiOperation({ summary: 'Get my courses (created by current user)' })
+  @ApiParam({ name: 'centerId', description: 'Center ID' })
+  @ApiResponse({
+    status: 200,
+    description: 'List of courses created by current user',
+    type: [CourseResponseDto],
+  })
+  async getMyCourses(
+    @Param('centerId') centerId: string,
+    @GetUser('userId') userId: string,
+  ): Promise<CourseResponseDto[]> {
+    return await this.lmsService.getMyCourses(centerId, userId);
+  }
+
   @Get('courses/:courseId')
   @ApiOperation({ summary: 'Get course by ID' })
   @ApiParam({ name: 'centerId', description: 'Center ID' })
